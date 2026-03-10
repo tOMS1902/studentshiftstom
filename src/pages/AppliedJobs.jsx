@@ -1,196 +1,50 @@
 import React from "react";
-
 import PageWrapper from "../components/PageWrapper";
+import "../StudentShiftWeb.css";
 
-
-
-
-
-export default function AppliedJobs({
-
-  appliedJobs,
-
-  setSelectedJob,
-
-  setPage,
-
-}) {
+export default function AppliedJobs({ appliedJobs, setSelectedJob, setPage }) {
 
   return (
-
     <PageWrapper>
-
       <h1 style={{ textAlign: "center", marginBottom: "2rem" }}>✅ Applied Jobs</h1>
 
-
-
-
-
       {appliedJobs.length === 0 ? (
-
-        <div style={{ textAlign: "center" }}>
-
-          <p style={{ marginBottom: "1.5rem" }}>
-
-            You haven’t applied for any jobs yet.
-
-          </p>
-
-          <button
-
-            onClick={() => setPage("studentDashboard")}
-
-            style={backButtonStyle}
-
-          >
-
-            Back to Home
-
-          </button>
-
+        <div style={{ textAlign: "center", padding: "3rem 1rem", color: "#6b7280" }}>
+          <p style={{ fontSize: "1.25rem", fontWeight: "600", marginBottom: "0.5rem" }}>No applications yet</p>
+          <p style={{ marginBottom: "1.5rem" }}>Like a job first, then apply from the job details page.</p>
+          <button onClick={() => setPage("studentDashboard")} style={btnGray}>Browse Jobs</button>
         </div>
-
       ) : (
-
         <>
-
           {appliedJobs.map((job) => (
-
-            <div
-
-              key={job.id}
-
-              style={{
-
-                padding: "1.5rem",
-
-                marginBottom: "1.5rem",
-
-                borderRadius: "0.75rem",
-
-                backgroundColor: "white",
-
-                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-
-                display: "flex",
-
-                justifyContent: "space-between",
-
-                alignItems: "center",
-
-              }}
-
-            >
-
-              <div>
-
-                <h2 style={{ fontWeight: "bold", fontSize: "1.5rem" }}>
-
-                  {job.title}
-
-                </h2>
-
-                <p>{job.company}</p>
-
+            <div key={job.id} className="job-card" style={{ flexDirection: "column", alignItems: "stretch" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem", marginBottom: "0.4rem" }}>
+                <h2 style={{ fontWeight: "bold", fontSize: "1.25rem", margin: 0 }}>{job.title}</h2>
+                <div style={{ flexShrink: 0 }}>
+                  <button onClick={() => { setSelectedJob(job); setPage("jobDetails"); }} style={btnBlue}>View</button>
+                </div>
               </div>
-
-
-
-
-
-              <div>
-
-                <button
-
-                  onClick={() => {
-
-                    setSelectedJob(job);
-
-                    setPage("jobDetails");
-
-                  }}
-
-                  style={viewButtonStyle}
-
-                >
-
-                  View Details
-
-                </button>
-
+              <p style={{ color: "#6b7280", marginBottom: "0.1rem", fontSize: "0.9rem" }}>{job.company} · {job.location}</p>
+              <p style={{ fontWeight: "600", color: "#111827", marginBottom: "0.5rem", fontSize: "0.9rem" }}>{job.pay}</p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem" }}>
+                {job.days.map(day => (
+                  <span key={day} style={{ fontSize: "0.75rem", backgroundColor: "#f0fdf4", color: "#16a34a", padding: "0.2rem 0.55rem", borderRadius: "999px", fontWeight: "600" }}>
+                    {day.slice(0, 3)} · {job.times[day]?.join(", ")}
+                  </span>
+                ))}
               </div>
-
             </div>
-
           ))}
 
-
-
-
-
           <div style={{ textAlign: "center", marginTop: "2rem" }}>
-
-            <button
-
-              onClick={() => setPage("studentDashboard")}
-
-              style={backButtonStyle}
-
-            >
-
-              Back to Home
-
-            </button>
-
+            <button onClick={() => setPage("studentDashboard")} style={btnGray}>Back to Jobs</button>
           </div>
-
         </>
-
       )}
-
     </PageWrapper>
-
   );
-
 }
 
-
-
-
-
-const viewButtonStyle = {
-
-  padding: "0.5rem 1rem",
-
-  borderRadius: "0.5rem",
-
-  backgroundColor: "#3b82f6",
-
-  color: "white",
-
-  border: "none",
-
-  cursor: "pointer",
-
-};
-
-
-
-
-
-const backButtonStyle = {
-
-  padding: "0.75rem 1.5rem",
-
-  borderRadius: "0.5rem",
-
-  backgroundColor: "#6b7280",
-
-  color: "white",
-
-  border: "none",
-
-  cursor: "pointer",
-
-};
-
+const btnBase = { padding: "0.4rem 0.9rem", borderRadius: "0.5rem", color: "white", border: "none", cursor: "pointer", fontWeight: "500", fontSize: "0.875rem" };
+const btnBlue = { ...btnBase, backgroundColor: "#3b82f6" };
+const btnGray = { ...btnBase, backgroundColor: "#6b7280", padding: "0.75rem 1.5rem", fontSize: "0.95rem" };

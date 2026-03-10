@@ -23,11 +23,42 @@ import AppliedJobs from "./pages/AppliedJobs"; // new page
 
 
 const mockUsers = [
-
-  { name: "John Student", email: "student@test.com", password: "123456", role: "student" },
-
-  { name: "Acme Corp", email: "company@test.com", password: "abcdef", role: "company" },
-
+  {
+    id: 1,
+    name: "John Student",
+    email: "student@test.com",
+    password: "123456",
+    role: "student",
+    studentIdCardName: "student_id.jpg",
+    governmentIdName: "passport.jpg",
+    cvName: "john_cv.pdf",
+    linkedIn: "https://linkedin.com/in/johnstudent",
+    coverLetterName: null,
+  },
+  {
+    id: 3,
+    name: "Jane Student",
+    email: "jane@test.com",
+    password: "123456",
+    role: "student",
+    studentIdCardName: "jane_student_id.jpg",
+    governmentIdName: "jane_passport.jpg",
+    cvName: null,
+    linkedIn: "",
+    coverLetterName: null,
+  },
+  {
+    id: 2,
+    name: "Acme Corp",
+    email: "company@test.com",
+    password: "abcdef",
+    role: "company",
+    studentIdCardName: null,
+    governmentIdName: null,
+    cvName: null,
+    linkedIn: "",
+    coverLetterName: null,
+  },
 ];
 
 

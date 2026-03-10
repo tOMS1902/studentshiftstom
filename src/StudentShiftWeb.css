@@ -152,9 +152,7 @@ header {
 
 
 
-/* Dashboard job cards */
 
-.job-card {
 
   width: 100%;
 
@@ -250,4 +248,56 @@ header {
 
   }
 
+}
+
+/* Job card buttons */
+
+.job-card-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  margin-left: 1rem;
+}
+
+@media (max-width: 640px) {
+
+  .job-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .job-card-buttons {
+    margin-left: 0;
+    margin-top: 1rem;
+    width: 100%;
+  }
+
+  .job-card-buttons button {
+    flex: 1;
+  }
+
+  /* Filter bar dropdowns shouldn't overflow on small screens */
+  .filter-dropdown {
+    position: fixed;
+    left: 1rem;
+    right: 1rem;
+    width: auto;
+  }
+
+}
+
+/* Ensure job card padding doesn't add to width */
+.job-card {
+  box-sizing: border-box;
+}
+
+/* Clearer card separation */
+.job-card {
+  margin-bottom: 1.25rem;
+  border: 1.5px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.job-card:last-child {
+  margin-bottom: 0;
 }
