@@ -1,0 +1,101 @@
+/**
+ * Shared job categories used across StudentDashboard (filter) and
+ * CompanyDashboard (new/edit job form).
+ *
+ * Structure: { categoryName: [jobTitle, ...] }
+ */
+export const jobCategories = {
+  "Hospitality": [
+    "Bar Staff",
+    "Bartender",
+    "Waiter",
+    "Waitress",
+    "Front of House",
+    "Host",
+    "Hostess",
+    "Food Runner",
+    "Catering Assistant",
+    "Kitchen Staff",
+    "Kitchen Porter",
+    "Food Prep",
+    "Dishwasher",
+    "Lounge Staff",
+  ],
+  "Café & Coffee": [
+    "Barista",
+    "Café Assistant",
+    "Sandwich Artist",
+    "Deli Assistant",
+  ],
+  "Retail": [
+    "Retail Assistant",
+    "Shop Assistant",
+    "Sales Assistant",
+    "Cashier",
+    "Stockroom Assistant",
+    "Stock Clerk",
+    "Visual Merchandiser",
+    "Fitting Room Assistant",
+    "Pharmacy Assistant",
+  ],
+  "Campus": [
+    "Library Assistant",
+    "Lab Assistant",
+    "Campus Ambassador",
+    "Student Tutor",
+    "Research Assistant",
+    "Admin Assistant",
+  ],
+  "Service & Reception": [
+    "Receptionist",
+    "Hotel Receptionist",
+    "Customer Service",
+    "Call Centre Agent",
+    "Concierge",
+    "Housekeeper",
+    "Cleaner",
+    "Laundry Assistant",
+  ],
+  "Events & Promo": [
+    "Event Staff",
+    "Promoter",
+    "Brand Ambassador",
+    "Usher",
+    "Box Office",
+    "Steward",
+  ],
+  "Security": [
+    "Security Guard",
+    "Door Staff",
+    "Venue Security",
+  ],
+  "Delivery & Logistics": [
+    "Delivery Driver",
+    "Delivery Cyclist",
+    "Courier",
+    "Warehouse Assistant",
+    "Delivery Assistant",
+  ],
+  "Care": [
+    "Childcare Assistant",
+    "Crèche Assistant",
+    "Care Assistant",
+    "Healthcare Support",
+    "Support Worker",
+  ],
+  "Admin & Office": [
+    "Office Assistant",
+    "Data Entry",
+    "Filing Clerk",
+    "Receptionist / Admin",
+    "Social Media Assistant",
+  ],
+};
+
+/** Flat sorted list of all job titles (for search/autocomplete use) */
+export const allJobTitles = [...new Set(Object.values(jobCategories).flat())].sort();
+
+/** Get the category name for a given job title */
+export function getCategoryForTitle(title) {
+  return Object.entries(jobCategories).find(([, titles]) => titles.includes(title))?.[0] ?? null;
+}

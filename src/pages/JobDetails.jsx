@@ -1,97 +1,129 @@
-import React from "react";
+import { useState } from "react";
 import PageWrapper from "../components/PageWrapper";
 
 export default function JobDetails({
-  job,
-  setPage,
-  currentUser,
-  likedJobs,
-  setLikedJobs,
-  appliedJobs,
-  setAppliedJobs,
+  job, setPage, currentUser, likedJobs, setLikedJobs, appliedJobs, setAppliedJobs,
 }) {
+  const [applyModal, setApplyModal] = useState(null); // "confirm" | "success"
 
   if (!job) return null;
 
-  const isLiked   = likedJobs.some((j) => j.id === job.id);
-  const isApplied = appliedJobs.some((j) => j.id === job.id);
+  const isLiked   = likedJobs.some(j => j.id === job.id);
+  const isApplied = appliedJobs.some(j => j.id === job.id);
 
   const toggleLike = () => {
     if (!currentUser) { setPage("login"); return; }
     if (isApplied) return;
-    if (isLiked) {
-      setLikedJobs(likedJobs.filter((j) => j.id !== job.id));
-    } else {
-      setLikedJobs([...likedJobs, job]);
-    }
+    setLikedJobs(isLiked ? likedJobs.filter(j => j.id !== job.id) : [...likedJobs, job]);
   };
 
   const handleApply = () => {
     if (!currentUser) { setPage("login"); return; }
     if (isApplied) return;
-
-    // Gate on CV
     if (!currentUser.cvName) {
-      if (window.confirm("You need to upload a CV before applying. Go to your Account page to upload one?")) {
-        setPage("account");
-      }
+      if (window.confirm("You need to upload a CV before applying. Go to your Account page?")) setPage("account");
       return;
     }
-
-    if (window.confirm("Do you want to apply for this job?")) {
-      setAppliedJobs([...appliedJobs, job]);
-      if (isLiked) setLikedJobs(likedJobs.filter((j) => j.id !== job.id));
-    }
+    setApplyModal("confirm");
   };
+
+  const confirmApply = () => {
+    setAppliedJobs([...appliedJobs, job]);
+    if (isLiked) setLikedJobs(likedJobs.filter(j => j.id !== job.id));
+    setApplyModal("success");
+  };
+
+  const deadlineStr = job.deadline
+    ? new Date(job.deadline).toLocaleDateString("en-IE", { month: "long", day: "numeric", year: "numeric" })
+    : null;
 
   return (
     <PageWrapper>
-      <h1 style={{ fontWeight: "bold", fontSize: "1.75rem", marginBottom: "0.5rem" }}>{job.title}</h1>
+      <h1 style={{ fontWeight: "800", fontSize: "1.75rem", marginBottom: "0.2rem", color: "#1e293b" }}>{job.title}</h1>
+      <p style={{ color: "#64748b", fontSize: "0.95rem", marginBottom: "1.5rem", fontWeight: "500" }}>{job.company}</p>
 
-      <div style={{ backgroundColor: "#f9fafb", border: "1.5px solid #e5e7eb", borderRadius: "0.75rem", padding: "1rem 1.25rem", marginBottom: "1.5rem" }}>
-        <InfoRow label="Company"  value={job.company} />
+      {/* Description */}
+      {job.description && (
+        <div style={{ backgroundColor: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: "0.85rem", padding: "1rem 1.25rem", marginBottom: "1.25rem" }}>
+          <p style={{ fontWeight: "700", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "#94a3b8", marginBottom: "0.5rem" }}>About This Role</p>
+          <p style={{ fontSize: "0.9rem", color: "#374151", lineHeight: "1.65", margin: 0 }}>{job.description}</p>
+        </div>
+      )}
+
+      {/* Details */}
+      <div style={{ backgroundColor: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: "0.85rem", padding: "1rem 1.25rem", marginBottom: "1.25rem" }}>
         <InfoRow label="Location" value={job.location} />
         <InfoRow label="Pay"      value={job.pay} />
         <InfoRow label="Weekend"  value={job.weekendRequired ? "Required" : "Not required"} />
+        {deadlineStr && <InfoRow label="Apply By" value={deadlineStr} highlight={true} />}
       </div>
 
-      <div style={{ backgroundColor: "#f9fafb", border: "1.5px solid #e5e7eb", borderRadius: "0.75rem", padding: "1rem 1.25rem", marginBottom: "2rem" }}>
-        <p style={{ fontWeight: "700", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "#6b7280", marginBottom: "0.75rem" }}>Availability</p>
+      {/* Availability */}
+      <div style={{ backgroundColor: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: "0.85rem", padding: "1rem 1.25rem", marginBottom: "1.75rem" }}>
+        <p style={{ fontWeight: "700", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "#94a3b8", marginBottom: "0.75rem" }}>Availability</p>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
           {job.days.map(day => (
-            <span key={day} style={{ fontSize: "0.8rem", backgroundColor: "#eff6ff", color: "#1d4ed8", padding: "0.25rem 0.65rem", borderRadius: "999px", fontWeight: "600" }}>
+            <span key={day} style={{ fontSize: "0.8rem", backgroundColor: "#eef2ff", color: "#4f46e5", padding: "0.25rem 0.65rem", borderRadius: "999px", fontWeight: "600" }}>
               {day} · {job.times[day]?.join(", ")}
             </span>
           ))}
         </div>
       </div>
 
+      {/* Action buttons */}
       <div className="job-details-buttons" style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
         {!isApplied && (
-          <button onClick={toggleLike} style={{ ...btn, backgroundColor: isLiked ? "#16a34a" : "#f87171" }}>
+          <button onClick={toggleLike} style={{ ...btn, backgroundColor: isLiked ? "#10b981" : "#f43f5e" }}>
             {isLiked ? "✅ Liked" : "❤️ Like"}
           </button>
         )}
-
-        <button onClick={handleApply} style={{ ...btn, backgroundColor: isApplied ? "#16a34a" : "#3b82f6" }}>
-          {isApplied ? "✅ Applied" : "Apply"}
+        <button onClick={handleApply} style={{ ...btn, backgroundColor: isApplied ? "#10b981" : "#6366f1" }}>
+          {isApplied ? "✅ Applied" : "Apply Now"}
         </button>
-
-        <button onClick={() => setPage("studentDashboard")} style={{ ...btn, backgroundColor: "#6b7280" }}>
-          Back
-        </button>
+        <button onClick={() => setPage("studentDashboard")} style={{ ...btn, backgroundColor: "#64748b" }}>Back</button>
       </div>
+
+      {/* Apply modal */}
+      {applyModal && (
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(15,23,42,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "1rem", backdropFilter: "blur(2px)" }}>
+          <div style={{ backgroundColor: "white", borderRadius: "1.25rem", padding: "2rem 1.75rem", maxWidth: "360px", width: "100%", textAlign: "center", boxShadow: "0 24px 64px rgba(0,0,0,0.2)" }}>
+            {applyModal === "confirm" ? (
+              <>
+                <div style={{ width: "56px", height: "56px", borderRadius: "1rem", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1rem", fontSize: "1.5rem", boxShadow: "0 8px 20px rgba(99,102,241,0.35)" }}>📋</div>
+                <h3 style={{ fontWeight: "800", fontSize: "1.1rem", marginBottom: "0.4rem", color: "#1e293b" }}>Apply for {job.title}?</h3>
+                <p style={{ fontSize: "0.875rem", color: "#64748b", marginBottom: "1.5rem" }}>{job.company} — your CV will be shared with the employer.</p>
+                <div style={{ display: "flex", gap: "0.75rem" }}>
+                  <button onClick={() => setApplyModal(null)} style={{ flex: 1, padding: "0.7rem", borderRadius: "0.75rem", border: "1.5px solid #e2e8f0", backgroundColor: "white", color: "#374151", fontWeight: "600", cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
+                  <button onClick={confirmApply} style={{ flex: 1, padding: "0.7rem", borderRadius: "0.75rem", border: "none", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "white", fontWeight: "700", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 4px 14px rgba(99,102,241,0.35)" }}>Apply Now</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ width: "56px", height: "56px", borderRadius: "1rem", backgroundColor: "#f0fdf4", border: "2px solid #86efac", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1rem", fontSize: "1.5rem" }}>🎉</div>
+                <h3 style={{ fontWeight: "800", fontSize: "1.1rem", marginBottom: "0.25rem", color: "#1e293b" }}>Application Sent!</h3>
+                <p style={{ fontSize: "0.875rem", color: "#64748b", marginBottom: "1.5rem" }}>
+                  You've applied for <strong>{job.title}</strong> at {job.company}. Good luck!
+                </p>
+                <div style={{ display: "flex", gap: "0.75rem" }}>
+                  <button onClick={() => setApplyModal(null)} style={{ flex: 1, padding: "0.7rem", borderRadius: "0.75rem", border: "1.5px solid #e2e8f0", backgroundColor: "white", color: "#374151", fontWeight: "600", cursor: "pointer", fontFamily: "inherit" }}>Stay Here</button>
+                  <button onClick={() => { setApplyModal(null); setPage("appliedJobs"); }} style={{ flex: 1, padding: "0.7rem", borderRadius: "0.75rem", border: "none", backgroundColor: "#10b981", color: "white", fontWeight: "700", cursor: "pointer", fontFamily: "inherit" }}>View Applications</button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </PageWrapper>
   );
 }
 
-function InfoRow({ label, value }) {
+function InfoRow({ label, value, highlight }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem", fontSize: "0.95rem" }}>
-      <span style={{ color: "#6b7280" }}>{label}</span>
-      <span style={{ fontWeight: "600", color: "#111827" }}>{value}</span>
+      <span style={{ color: "#64748b" }}>{label}</span>
+      <span style={{ fontWeight: "600", color: highlight ? "#f59e0b" : "#1e293b" }}>{value}</span>
     </div>
   );
 }
 
-const btn = { padding: "0.75rem 1.5rem", borderRadius: "0.5rem", color: "white", border: "none", cursor: "pointer", fontWeight: "600" };
+const btn = { padding: "0.75rem 1.5rem", borderRadius: "2rem", color: "white", border: "none", cursor: "pointer", fontWeight: "700", fontFamily: "inherit", fontSize: "0.9rem" };

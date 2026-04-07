@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 export default function PageWrapper({ children }) {
 
@@ -18,27 +18,25 @@ export default function PageWrapper({ children }) {
       minHeight: "100vh",
       display: "flex",
       justifyContent: "center",
-      padding: "3rem 1rem",
+      padding: "2.5rem 1rem",
       boxSizing: "border-box",
-      backgroundColor: "#f9fafb",
-      fontFamily: "Arial, sans-serif",
-      color: "#000",
+      backgroundColor: "#f1f5f9",
+      fontFamily: "'Poppins', sans-serif",
     }}>
 
       <div style={{
         width: "100%",
-        maxWidth: "860px",
+        maxWidth: "880px",
         margin: "0 auto",
-        padding: "2rem",
+        padding: "2rem 2.5rem",
         boxSizing: "border-box",
         backgroundColor: "white",
-        borderRadius: "0.75rem",
-        boxShadow: "0 6px 18px rgba(0,0,0,0.1)",
+        borderRadius: "1.25rem",
+        boxShadow: "0 4px 24px rgba(0,0,0,0.07)",
       }}>
         {children}
       </div>
 
-      {/* Back to top button */}
       {showTop && (
         <button
           onClick={scrollToTop}
@@ -49,12 +47,12 @@ export default function PageWrapper({ children }) {
             width: "44px",
             height: "44px",
             borderRadius: "50%",
-            backgroundColor: "#1f2937",
+            background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
             color: "white",
             border: "none",
-            fontSize: "1.2rem",
+            fontSize: "1.1rem",
             cursor: "pointer",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+            boxShadow: "0 4px 16px rgba(99,102,241,0.45)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",

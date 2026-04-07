@@ -1,8 +1,5 @@
-import React from "react";
+export default function Header({ currentUser, setPage, likedJobs, appliedJobs, notifCount }) {
 
-export default function Header({ currentUser, setPage, likedJobs, appliedJobs }) {
-
-  // Count unfilled profile items for students (CV, Cover Letter, LinkedIn)
   const optionalBadge = (() => {
     if (currentUser?.role !== "student") return 0;
     let missing = 0;
@@ -14,66 +11,70 @@ export default function Header({ currentUser, setPage, likedJobs, appliedJobs })
 
   return (
     <header style={{
-      display: "flex",
-      justifyContent: "space-between",
+      display: "grid",
+      gridTemplateColumns: "1fr auto 1fr",
       alignItems: "center",
-      padding: "1rem 3rem",
-      backgroundColor: "#1f2937",
+      padding: "0.9rem 2.5rem",
+      background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
       color: "white",
-      boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
+      boxShadow: "0 4px 20px rgba(0,0,0,0.25)",
+      position: "sticky",
+      top: 0,
+      zIndex: 100,
     }}>
 
-      <h1
-        style={{ fontSize: "1.8rem", fontWeight: "bold", cursor: "pointer" }}
+      {/* Left — About */}
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <button onClick={() => setPage("about")} style={navBtnOutline}>About</button>
+      </div>
+
+      {/* Centre — Logo */}
+      <div
+        style={{ display: "flex", alignItems: "center", gap: "0.85rem", cursor: "pointer" }}
         onClick={() => setPage(currentUser?.role === "company" ? "companyDashboard" : "studentDashboard")}
       >
-        StudentShifts.ie
-      </h1>
+        <LogoIcon />
+        <div style={{ lineHeight: "1.15" }}>
+          <div style={{ margin: 0, fontSize: "2.1rem", fontWeight: "800", background: "linear-gradient(90deg, #6366f1, #8b5cf6, #a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", letterSpacing: "-0.02em" }}>Student</div>
+          <div style={{ margin: 0, fontSize: "2.1rem", fontWeight: "800", letterSpacing: "-0.02em" }}>
+            <span style={{ color: "white" }}>Shifts</span><span style={{ color: "#6366f1" }}>.ie</span>
+          </div>
+        </div>
+      </div>
 
-      <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+      {/* Right — Nav */}
+      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", justifyContent: "flex-end" }}>
         {currentUser ? (
           <>
             {currentUser.role === "student" && (
               <>
-                <button onClick={() => setPage("likedJobs")} style={buttonStyle}>
-                  ❤️ Liked ({likedJobs.length})
+                <button onClick={() => setPage("likedJobs")} style={{ ...navBtnOutline, display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
+                  ❤️ Liked <CountBadge n={likedJobs.length} />
                 </button>
-                <button onClick={() => setPage("appliedJobs")} style={buttonStyle}>
-                  ✅ Applied ({appliedJobs.length})
-                </button>
+                <div style={{ position: "relative", display: "inline-block" }}>
+                  <button onClick={() => setPage("appliedJobs")} style={{ ...navBtnOutline, display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
+                    ✅ Applied <CountBadge n={appliedJobs.length} />
+                  </button>
+                  {notifCount > 0 && <span style={notifDot}>{notifCount}</span>}
+                </div>
               </>
             )}
 
+            {/* Account button */}
             <div style={{ position: "relative", display: "inline-block" }}>
-              <button onClick={() => setPage("account")} style={buttonStyle}>
-                Account
+              <button onClick={() => setPage("account")} style={{ ...navBtnPrimary, display: "inline-flex", alignItems: "center", gap: "0.45rem" }}>
+                {currentUser.profilePhoto
+                  ? <img src={currentUser.profilePhoto} alt="Profile" style={{ width: "22px", height: "22px", borderRadius: "50%", objectFit: "cover", display: "block", flexShrink: 0 }} />
+                  : <PersonIcon />
+                }
               </button>
-              {optionalBadge > 0 && (
-                <span style={{
-                  position: "absolute",
-                  top: "-6px",
-                  right: "-6px",
-                  backgroundColor: "#ef4444",
-                  color: "white",
-                  fontSize: "0.7rem",
-                  fontWeight: "700",
-                  width: "18px",
-                  height: "18px",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  pointerEvents: "none",
-                }}>
-                  {optionalBadge}
-                </span>
-              )}
+              {optionalBadge > 0 && <span style={notifDot}>{optionalBadge}</span>}
             </div>
           </>
         ) : (
           <>
-            <button onClick={() => setPage("login")} style={buttonStyle}>Login</button>
-            <button onClick={() => setPage("signup")} style={buttonStyle}>Sign Up</button>
+            <button onClick={() => setPage("login")} style={navBtnOutline}>Login</button>
+            <button onClick={() => setPage("signup")} style={navBtnPrimary}>Sign Up</button>
           </>
         )}
       </div>
@@ -81,12 +82,88 @@ export default function Header({ currentUser, setPage, likedJobs, appliedJobs })
   );
 }
 
-const buttonStyle = {
-  padding: "0.6rem 1.2rem",
-  borderRadius: "0.5rem",
-  backgroundColor: "#3b82f6",
+function LogoIcon() {
+  return (
+    <svg width="68" height="76" viewBox="0 0 46 52" fill="none">
+      <defs>
+        <linearGradient id="logoHeart" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#f43f5e" />
+          <stop offset="100%" stopColor="#e11d48" />
+        </linearGradient>
+        <clipPath id="logoHeartClip">
+          <path d="M23 48 C23 48 3 36 3 22 C3 14 9 8 16.5 8 C19.8 8 22.5 9.6 23 12 C23.5 9.6 26.2 8 29.5 8 C37 8 43 14 43 22 C43 36 23 48 23 48Z" />
+        </clipPath>
+      </defs>
+      <path d="M23 48 C23 48 3 36 3 22 C3 14 9 8 16.5 8 C19.8 8 22.5 9.6 23 12 C23.5 9.6 26.2 8 29.5 8 C37 8 43 14 43 22 C43 36 23 48 23 48Z" fill="url(#logoHeart)" />
+      <g clipPath="url(#logoHeartClip)">
+        <line x1="3" y1="20" x2="43" y2="20" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
+        <line x1="3" y1="28" x2="43" y2="28" stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" />
+        <line x1="3" y1="36" x2="43" y2="36" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" />
+      </g>
+      <rect x="14" y="3" width="4" height="9" rx="2" fill="white" opacity="0.8" />
+      <rect x="28" y="3" width="4" height="9" rx="2" fill="white" opacity="0.8" />
+    </svg>
+  );
+}
+
+function PersonIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+    </svg>
+  );
+}
+
+function CountBadge({ n }) {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.18)", borderRadius: "999px", padding: "0 0.45rem", fontSize: "0.68rem", fontWeight: "700", minWidth: "18px", height: "18px" }}>
+      {n}
+    </span>
+  );
+}
+
+
+
+const navBtnPrimary = {
+  padding: "0.48rem 1.1rem",
+  borderRadius: "2rem",
+  background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
   color: "white",
   border: "none",
   cursor: "pointer",
-  fontWeight: "500",
+  fontWeight: "700",
+  fontSize: "0.82rem",
+  boxShadow: "0 4px 14px rgba(99,102,241,0.45)",
+  fontFamily: "inherit",
+};
+
+const navBtnOutline = {
+  padding: "0.45rem 1.1rem",
+  borderRadius: "2rem",
+  backgroundColor: "transparent",
+  color: "white",
+  border: "1.5px solid rgba(255,255,255,0.28)",
+  cursor: "pointer",
+  fontWeight: "600",
+  fontSize: "0.82rem",
+  fontFamily: "inherit",
+};
+
+const notifDot = {
+  position: "absolute",
+  top: "-4px",
+  right: "-4px",
+  backgroundColor: "#f43f5e",
+  color: "white",
+  fontSize: "0.62rem",
+  fontWeight: "700",
+  width: "16px",
+  height: "16px",
+  borderRadius: "50%",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  pointerEvents: "none",
+  border: "2px solid #0f172a",
 };

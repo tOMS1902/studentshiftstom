@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudentShifts — Calendar + Heart Logo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Poppins', sans-serif; background: #0f172a; padding: 3rem 2rem; min-height: 100vh; }
+    h1 { text-align: center; font-size: 0.75rem; font-weight: 600; color: #475569; margin-bottom: 0.25rem; letter-spacing: 0.12em; text-transform: uppercase; }
+    p.sub { text-align: center; color: #334155; font-size: 0.75rem; margin-bottom: 3rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.25rem; max-width: 1080px; margin: 0 auto; }
+    .card { background: #1e293b; border-radius: 1.25rem; padding: 2rem 1.75rem; display: flex; flex-direction: column; align-items: center; gap: 1.75rem; border: 1px solid #334155; }
+    .card:hover { border-color: #6366f1; transition: border-color 0.2s; }
+    .tag { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #475569; align-self: flex-start; }
+    .name { font-size: 0.82rem; font-weight: 600; color: #64748b; align-self: flex-start; }
+    .row { display: flex; gap: 1.25rem; align-items: center; justify-content: center; width: 100%; flex-wrap: wrap; }
+    .bg-dark { background: #0f172a; border-radius: 0.75rem; padding: 1.25rem 1.75rem; display:flex; align-items:center; justify-content:center; flex:1; min-width: 120px; }
+    .bg-light { background: #f8fafc; border-radius: 0.75rem; padding: 1.25rem 1.75rem; display:flex; align-items:center; justify-content:center; flex:1; min-width: 120px; }
+  </style>
+</head>
+<body>
+
+  <h1>StudentShifts — Calendar + Heart</h1>
+  <p class="sub">5 variations · dark bg · light bg</p>
+
+  <div class="grid">
+
+    <!-- V1: Classic calendar, heart as the date -->
+    <div class="card">
+      <span class="tag">Option 1 — "Classic"</span>
+      <div class="row">
+        <div class="bg-dark">
+          <svg width="180" height="52" viewBox="0 0 180 52" fill="none">
+            <defs>
+              <linearGradient id="cal1" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#6366f1"/>
+                <stop offset="100%" stop-color="#4f46e5"/>
+              </linearGradient>
+            </defs>
+            <!-- Calendar body -->
+            <rect x="1" y="8" width="42" height="38" rx="5" fill="white"/>
+            <!-- Header -->
+            <rect x="1" y="8" width="42" height="14" rx="5" fill="url(#cal1)"/>
+            <rect x="1" y="16" width="42" height="6" fill="#4f46e5"/>
+            <!-- Rings -->
+            <rect x="11" y="4" width="5" height="10" rx="2.5" fill="#312e81"/>
+            <rect x="28" y="4" width="5" height="10" rx="2.5" fill="#312e81"/>
+            <!-- Heart -->
+            <path d="M22 42 C22 42 13 36 13 30 C13 27 15.5 25 18.5 25 C20.2 25 21.5 25.8 22 27 C22.5 25.8 23.8 25 25.5 25 C28.5 25 31 27 31 30 C31 36 22 42 22 42Z" fill="#f43f5e"/>
+            <!-- Text -->
+            <text x="52" y="24" font-family="Poppins,sans-serif" font-weight="800" font-size="13" fill="white">Student</text>
+            <text x="52" y="41" font-family="Poppins,sans-serif" font-weight="800" font-size="13" fill="#a5b4fc">Shifts.ie</text>
+          </svg>
+        </div>
+        <div class="bg-light">
+          <svg width="180" height="52" viewBox="0 0 180 52" fill="none">
+            <defs>
+              <linearGradient id="cal1b" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#6366f1"/>
+                <stop offset="100%" stop-color="#4f46e5"/>
+              </linearGradient>
+            </defs>
+            <rect x="1" y="8" width="42" height="38" rx="5" fill="white" stroke="#e2e8f0" stroke-width="1.5"/>
+            <rect x="1" y="8" width="42" height="14" rx="5" fill="url(#cal1b)"/>
+            <rect x="1" y="16" width="42" height="6" fill="#4f46e5"/>
+            <rect x="11" y="4" width="5" height="10" rx="2.5" fill="#312e81"/>
+            <rect x="28" y="4" width="5" height="10" rx="2.5" fill="#312e81"/>
+            <path d="M22 42 C22 42 13 36 13 30 C13 27 15.5 25 18.5 25 C20.2 25 21.5 25.8 22 27 C22.5 25.8 23.8 25 25.5 25 C28.5 25 31 27 31 30 C31 36 22 42 22 42Z" fill="#f43f5e"/>
+            <text x="52" y="24" font-family="Poppins,sans-serif" font-weight="800" font-size="13" fill="#1e293b">Student</text>
+            <text x="52" y="41" font-family="Poppins,sans-serif" font-weight="800" font-size="13" fill="#6366f1">Shifts.ie</text>
+          </svg>
+        </div>
+      </div>
+      <span class="name">Classic — Indigo header, rose heart date</span>
+    </div>
+
+    <!-- V2: Dark calendar, glowing heart -->
+    <div class="card">
+      <span class="tag">Option 2 — "Dark & Bold"</span>
+      <div class="row">
+        <div class="bg-dark">
+          <svg width="180" height="52" viewBox="0 0 180 52" fill="none">
+            <defs>
+              <linearGradient id="cal2" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#1e293b"/>
+                <stop offset="100%" stop-color="#0f172a"/>
+              </linearGradient>
+              <linearGradient id="heart2" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#f43f5e"/>
+                <stop offset="100%" stop-color="#e11d48"/>
+              </linearGradient>
+            </defs>
+            <rect x="1" y="8" width="42" height="38" rx="5" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+            <rect x="1" y="8" width="42" height="14" rx="5" fill="#0f172a"/>
+            <rect x="1" y="16" width="42" height="6" fill="#0f172a"/>
+            <rect x="11" y="4" width="5" height="10" rx="2.5" fill="#6366f1"/>
+            <rect x="28" y="4" width="5" height="10" rx="2.5" fill="#6366f1"/>
+            <!-- Small dots in header -->
+            <circle cx="10" cy="15" r="1.5" fill="#334155"/>
+            <circle cx="16" cy="15" r="1.5" fill="#334155"/>
+            <circle cx="22" cy="15" r="1.5" fill="#334155"/>
+            <circle cx="28" cy="15" r="1.5" fill="#334155"/>
+            <circle cx="34" cy="15" r="1.5" fill="#334155"/>
+            <!-- Heart -->
+            <path d="M22 42 C22 42 12 35 12 29 C12 25.5 14.8 23 18.2 23 C20 23 21.5 23.9 22 25.2 C22.5 23.9 24 23 25.8 23 C29.2 23 32 25.5 32 29 C32 35 22 42 22 42Z" fill="url(#heart2)"/>
+            <text x="52" y="24" font-family="Poppins,sans-serif" font-weight="800" font-size="13" fill="white">Student</text>
+            <text x="52" y="41" font-family="Poppins,sans-serif" font-weight="800" font-size="13" fill="#a5b4fc">Shifts.ie</text>
+          </svg>
+        </div>
+        <div class="bg-light">
+          <svg width="180" height="52" viewBox="0 0 180 52" fill="none">
+            <rect x="1" y="8" width="42" height="38" rx="5" fill="#1e293b"/>
+            <rect x="1" y="8" width="42" height="14" rx="5" fill="#0f172a"/>
+            <rect x="1" y="16" width="42" height="6" fill="#0f172a"/>
+            <rect x="11" y="4" width="5" height="10" rx="2.5" fill="#6366f1"/>
+            <rect x="28" y="4" width="5" height="10" rx="2.5" fill="#6366f1"/>
+            <circle cx="10" cy="15" r="1.5" fill="#334155"/>
+            <circle cx="16" cy="15" r="1.5" fill="#334155"/>
+            <circle cx="22" cy="15" r="1.5" fill="#334155"/>
+            <circle cx="28" cy="15" r="1.5" fill="#334155"/>
+            <circle cx="34" cy="15" r="1.5" fill="#334155"/>
+            <path d="M22 42 C22 42 12 35 12 29 C12 25.5 14.8 23 18.2 23 C20 23 21.5 23.9 22 25.2 C22.5 23.9 24 23 25.8 23 C29.2 23 32 25.5 32 29 C32 35 22 42 22 42Z" fill="#f43f5e"/>
+            <text x="52" y="24" font-family="Poppins,sans-serif" font-weight="800" font-size="13" fill="#1e293b">Student</text>
+            <text x="52" y="41" font-family="Poppins,sans-serif" font-weight="800" font-size="13" fill="#6366f1">Shifts.ie</text>
+          </svg>
+        </div>
+      </div>
+      <span class="name">Dark & Bold — Dark calendar, vivid heart</span>
+    </div>
+
+    <!-- V3: Rounded soft pastel -->
+    <div class="card">
+      <span class="tag">Option 3 — "Soft"</span>
+      <div class="row">
+        <div class="bg-dark">
+          <svg width="180" height="52" viewBox="0 0 180 52" fill="none">
+            <defs>
+              <linearGradient id="cal3h" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#f43f5e"/>
+                <stop offset="100%" stop-color="#e11d48"/>
+              </linearGradient>
+              <linearGradient id="cal3" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#6366f1"/>
+                <stop offset="100%" stop-color="#8b5cf6"/>
+              </linearGradient>
+            </defs>
+            <!-- Rounded square bg -->
+            <rect x="0" y="4" width="46" height="46" rx="14" fill="url(#cal3)"/>
+            <!-- Calendar lines -->
+            <rect x="8" y="16" width="30" height="2" rx="1" fill="rgba(255,255,255,0.3)"/>
+            <rect x="8" y="22" width="20" height="2" rx="1" fill="rgba(255,255,255,0.2)"/>
+            <!-- Rings at top -->
+            <rect x="13" y="0" width="5" height="10" rx="2.5" fill="white" opacity="0.9"/>
+            <rect x="28" y="0" width="5" height="10" rx="2.5" fill="white" opacity="0.9"/>
+            <!-- Heart bottom right -->
+            <path d="M23 44 C23 44 15 39 15 34.5 C15 32 17 30.5 19.5 30.5 C21 30.5 22.2 31.2 23 32.2 C23.8 31.2 25 30.5 26.5 30.5 C29 30.5 31 32 31 34.5 C31 39 23 44 23 44Z" fill="url(#cal3h)"/>
+            <text x="56" y="24" font-family="Poppins,sans-serif" font-weight="800" font-size="13" fill="white">Student</text>
+            <text x="56" y="41" font-family="Poppins,sans-serif" font-weight="800" font-size="13" fill="#c7d2fe">Shifts.ie</text>
+          </svg>
+        </div>
+        <div class="bg-light">
+          <svg width="180" height="52" viewBox="0 0 180 52" fill="none">
+            <defs>
+              <linearGradient id="cal3hb" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#f43f5e"/>
+                <stop offset="100%" stop-color="#e11d48"/>
+              </linearGradient>
+              <linearGradient id="cal3b" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#6366f1"/>
+                <stop offset="100%" stop-color="#8b5cf6"/>
+              </linearGradient>
+            </defs>
+            <rect x="0" y="4" width="46" height="46" rx="14" fill="url(#cal3b)"/>
+            <rect x="8" y="16" width="30" height="2" rx="1" fill="rgba(255,255,255,0.3)"/>
+            <rect x="8" y="22" width="20" height="2" rx="1" fill="rgba(255,255,255,0.2)"/>
+            <rect x="13" y="0" width="5" height="10" rx="2.5" fill="white" opacity="0.9"/>
+            <rect x="28" y="0" width="5" height="10" rx="2.5" fill="white" opacity="0.9"/>
+            <path d="M23 44 C23 44 15 39 15 34.5 C15 32 17 30.5 19.5 30.5 C21 30.5 22.2 31.2 23 32.2 C23.8 31.2 25 30.5 26.5 30.5 C29 30.5 31 32 31 34.5 C31 39 23 44 23 44Z" fill="url(#cal3hb)"/>
+            <text x="56" y="24" font-family="Poppins,sans-serif" font-weight="800" font-size="13" fill="#1e293b">Student</text>
+            <text x="56" y="41" font-family="Poppins,sans-serif" font-weight="800" font-size="13" fill="#6366f1">Shifts.ie</text>
+          </svg>
+        </div>
+      </div>
+      <span class="name">Soft — App icon style, rounded square</span>
+    </div>
+
+    <!-- V4: Outline minimal -->
+    <div class="card">
+      <span class="tag">Option 4 — "Outline"</span>
+      <div class="row">
+        <div class="bg-dark">
+          <svg width="180" height="52" viewBox="0 0 180 52" fill="none">
+            <!-- Calendar outline only -->
+            <rect x="2" y="9" width="40" height="36" rx="5" stroke="#6366f1" stroke-width="2.5" fill="none"/>
+            <!-- Header line -->
+            <line x1="2" y1="20" x2="42" y2="20" stroke="#6366f1" stroke-width="2"/>
+            <!-- Rings -->
+            <rect x="11" y="5" width="5" height="10" rx="2.5" stroke="#6366f1" stroke-width="2" fill="none"/>
+            <rect x="28" y="5" width="5" height="10" rx="2.5" stroke="#6366f1" stroke-width="2" fill="none"/>
+            <!-- Heart (solid) -->
+            <path d="M22 41 C22 41 13 35 13 29.5 C13 26.5 15.5 24.5 18.5 24.5 C20.2 24.5 21.5 25.3 22 26.5 C22.5 25.3 23.8 24.5 25.5 24.5 C28.5 24.5 31 26.5 31 29.5 C31 35 22 41 22 41Z" fill="#f43f5e"/>
+            <text x="52" y="24" font-family="Poppins,sans-serif" font-weight="800" font-size="13" fill="white">Student</text>
+            <text x="52" y="41" font-family="Poppins,sans-serif" font-weight="800" font-size="13" fill="#a5b4fc">Shifts.ie</text>
+          </svg>
+        </div>
+        <div class="bg-light">
+          <svg width="180" height="52" viewBox="0 0 180 52" fill="none">
+            <rect x="2" y="9" width="40" height="36" rx="5" stroke="#6366f1" stroke-width="2.5" fill="none"/>
+            <line x1="2" y1="20" x2="42" y2="20" stroke="#6366f1" stroke-width="2"/>
+            <rect x="11" y="5" width="5" height="10" rx="2.5" stroke="#6366f1" stroke-width="2" fill="none"/>
+            <rect x="28" y="5" width="5" height="10" rx="2.5" stroke="#6366f1" stroke-width="2" fill="none"/>
+            <path d="M22 41 C22 41 13 35 13 29.5 C13 26.5 15.5 24.5 18.5 24.5 C20.2 24.5 21.5 25.3 22 26.5 C22.5 25.3 23.8 24.5 25.5 24.5 C28.5 24.5 31 26.5 31 29.5 C31 35 22 41 22 41Z" fill="#f43f5e"/>
+            <text x="52" y="24" font-family="Poppins,sans-serif" font-weight="800" font-size="13" fill="#1e293b">Student</text>
+            <text x="52" y="41" font-family="Poppins,sans-serif" font-weight="800" font-size="13" fill="#6366f1">Shifts.ie</text>
+          </svg>
+        </div>
+      </div>
+      <span class="name">Outline — Clean stroke calendar, solid heart</span>
+    </div>
+
+    <!-- V5: Heart with calendar grid inside -->
+    <div class="card">
+      <span class="tag">Option 5 — "Heart First"</span>
+      <div class="row">
+        <div class="bg-dark">
+          <svg width="190" height="52" viewBox="0 0 190 52" fill="none">
+            <defs>
+              <linearGradient id="hf5" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#f43f5e"/>
+                <stop offset="100%" stop-color="#e11d48"/>
+              </linearGradient>
+              <clipPath id="heartClip">
+                <path d="M23 48 C23 48 3 36 3 22 C3 14 9 8 16.5 8 C19.8 8 22.5 9.6 23 12 C23.5 9.6 26.2 8 29.5 8 C37 8 43 14 43 22 C43 36 23 48 23 48Z"/>
+              </clipPath>
+            </defs>
+            <!-- Heart shape filled -->
+            <path d="M23 48 C23 48 3 36 3 22 C3 14 9 8 16.5 8 C19.8 8 22.5 9.6 23 12 C23.5 9.6 26.2 8 29.5 8 C37 8 43 14 43 22 C43 36 23 48 23 48Z" fill="url(#hf5)"/>
+            <!-- Calendar lines clipped inside heart -->
+            <g clip-path="url(#heartClip)">
+              <line x1="3" y1="20" x2="43" y2="20" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+              <line x1="3" y1="28" x2="43" y2="28" stroke="rgba(255,255,255,0.18)" stroke-width="1.5"/>
+              <line x1="3" y1="36" x2="43" y2="36" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+            </g>
+            <!-- Small calendar rings at top -->
+            <rect x="14" y="3" width="4" height="9" rx="2" fill="white" opacity="0.8"/>
+            <rect x="28" y="3" width="4" height="9" rx="2" fill="white" opacity="0.8"/>
+            <text x="54" y="24" font-family="Poppins,sans-serif" font-weight="800" font-size="13" fill="white">Student</text>
+            <text x="54" y="41" font-family="Poppins,sans-serif" font-weight="800" font-size="13" fill="#fda4af">Shifts.ie</text>
+          </svg>
+        </div>
+        <div class="bg-light">
+          <svg width="190" height="52" viewBox="0 0 190 52" fill="none">
+            <defs>
+              <linearGradient id="hf5b" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#f43f5e"/>
+                <stop offset="100%" stop-color="#e11d48"/>
+              </linearGradient>
+              <clipPath id="heartClipB">
+                <path d="M23 48 C23 48 3 36 3 22 C3 14 9 8 16.5 8 C19.8 8 22.5 9.6 23 12 C23.5 9.6 26.2 8 29.5 8 C37 8 43 14 43 22 C43 36 23 48 23 48Z"/>
+              </clipPath>
+            </defs>
+            <path d="M23 48 C23 48 3 36 3 22 C3 14 9 8 16.5 8 C19.8 8 22.5 9.6 23 12 C23.5 9.6 26.2 8 29.5 8 C37 8 43 14 43 22 C43 36 23 48 23 48Z" fill="url(#hf5b)"/>
+            <g clip-path="url(#heartClipB)">
+              <line x1="3" y1="20" x2="43" y2="20" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+              <line x1="3" y1="28" x2="43" y2="28" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+              <line x1="3" y1="36" x2="43" y2="36" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+            </g>
+            <rect x="14" y="3" width="4" height="9" rx="2" fill="#1e293b" opacity="0.6"/>
+            <rect x="28" y="3" width="4" height="9" rx="2" fill="#1e293b" opacity="0.6"/>
+            <text x="54" y="24" font-family="Poppins,sans-serif" font-weight="800" font-size="13" fill="#1e293b">Student</text>
+            <text x="54" y="41" font-family="Poppins,sans-serif" font-weight="800" font-size="13" fill="#f43f5e">Shifts.ie</text>
+          </svg>
+        </div>
+      </div>
+      <span class="name">Heart First — Heart shape containing calendar lines</span>
+    </div>
+
+  </div>
+
+</body>
+</html>

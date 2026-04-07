@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 
 import Header from "./components/Header";
 
@@ -17,6 +17,7 @@ import JobDetails from "./pages/JobDetails";
 import LikedJobs from "./pages/LikedJobs";
 
 import AppliedJobs from "./pages/AppliedJobs"; // new page
+import AboutPage from "./pages/AboutPage";
 
 
 
@@ -77,6 +78,37 @@ export default function StudentShiftsWeb() {
 
   const [appliedJobs, setAppliedJobs] = useState([]);
 
+  const [studentLocation, setStudentLocation] = useState(null);
+  const [notifCount, setNotifCount] = useState(0);
+
+  // Sync studentLocation when user logs in/out
+  useEffect(() => {
+    setStudentLocation(currentUser?.savedLocation ?? null);
+  }, [currentUser?.id]);
+
+  // Recompute notification badge for student
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== "student") { setNotifCount(0); return; }
+    const seen = JSON.parse(localStorage.getItem("ss_notif_seen_" + currentUser.id) || "{}");
+    const count = appliedJobs.reduce((acc, job) => {
+      const cur  = localStorage.getItem("ss_appstatus_" + currentUser.id + "_" + job.id) || "Pending";
+      const prev = seen[job.id] || "Pending";
+      return acc + (cur !== prev && cur !== "Pending" ? 1 : 0);
+    }, 0);
+    setNotifCount(count);
+  }, [page, appliedJobs, currentUser?.id]);
+
+  // Mark notifications as seen when student opens Applied Jobs
+  useEffect(() => {
+    if (page !== "appliedJobs" || !currentUser) return;
+    const seen = {};
+    appliedJobs.forEach(job => {
+      seen[job.id] = localStorage.getItem("ss_appstatus_" + currentUser.id + "_" + job.id) || "Pending";
+    });
+    localStorage.setItem("ss_notif_seen_" + currentUser.id, JSON.stringify(seen));
+    setNotifCount(0);
+  }, [page]);
+
 
 
 
@@ -107,9 +139,11 @@ export default function StudentShiftsWeb() {
 
             setLikedJobs={setLikedJobs}
 
-            appliedJobs={appliedJobs} // pass appliedJobs
+            appliedJobs={appliedJobs}
 
             currentUser={currentUser}
+
+            studentLocation={studentLocation}
 
           />
 
@@ -123,7 +157,7 @@ export default function StudentShiftsWeb() {
 
         return currentUser ? (
 
-          <AccountPage currentUser={currentUser} setCurrentUser={setCurrentUser} setPage={setPage} setLikedJobs={setLikedJobs} setAppliedJobs={setAppliedJobs}/>
+          <AccountPage currentUser={currentUser} setCurrentUser={setCurrentUser} setPage={setPage} setLikedJobs={setLikedJobs} setAppliedJobs={setAppliedJobs} setStudentLocation={setStudentLocation} />
 
         ) : null;
 
@@ -181,9 +215,14 @@ export default function StudentShiftsWeb() {
 
             setPage={setPage}
 
+            currentUser={currentUser}
+
           />
 
         );
+
+      case "about":
+        return <AboutPage setPage={setPage} />;
 
       default:
 
@@ -199,9 +238,11 @@ export default function StudentShiftsWeb() {
 
             setLikedJobs={setLikedJobs}
 
-            appliedJobs={appliedJobs} // default case also passes appliedJobs
+            appliedJobs={appliedJobs}
 
             currentUser={currentUser}
+
+            studentLocation={studentLocation}
 
           />
 
@@ -227,7 +268,9 @@ export default function StudentShiftsWeb() {
 
         likedJobs={likedJobs}
 
-        appliedJobs={appliedJobs} // pass appliedJobs
+        appliedJobs={appliedJobs}
+
+        notifCount={notifCount}
 
       />
 

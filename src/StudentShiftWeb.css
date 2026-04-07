@@ -1,256 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+
 html, body, #root {
-
   margin: 0;
-
   padding: 0;
-
-  height: 100%;
-
+  min-height: 100%;
   width: 100%;
-
-  font-family: Arial, sans-serif;
-
-  color: #111827; /* dark text for everything */
-
-  background-color: #f9fafb;
-
+  font-family: 'Poppins', sans-serif;
+  color: #1e293b;
+  background-color: #f1f5f9;
 }
-
-
-
-
 
 .app-wrapper {
-
   display: flex;
-
   flex-direction: column;
-
-  height: 100%;
-
+  min-height: 100vh;
   width: 100%;
-
 }
-
-
-
-
 
 header {
-
   width: 100%;
-
-  background-color: #1f2937;
-
-  color: white; /* keep header text white */
-
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: white;
   display: flex;
-
   justify-content: space-between;
-
   align-items: center;
-
-  padding: 1rem 2rem;
-
+  padding: 0.9rem 2.5rem;
   box-sizing: border-box;
-
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
-
-
-
-
 
 .page-content {
-
   flex: 1;
-
   width: 100%;
-
   display: flex;
-
   flex-direction: column;
-
 }
-
-
-
-
 
 .full-page {
-
   flex: 1;
-
   width: 100%;
-
   display: flex;
-
   flex-direction: column;
-
   align-items: center;
-
   justify-content: flex-start;
-
   padding: 2rem;
-
-  background-color: #f9fafb;
-
+  background-color: #f1f5f9;
   box-sizing: border-box;
-
-  color: #111827; /* dark text */
-
 }
-
-
-
-
-
-/* Login box */
 
 .login-box {
-
   width: 100%;
-
   padding: 2rem;
-
   background-color: white;
-
-  border-radius: 0.75rem;
-
-  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-
+  border-radius: 1.25rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
   text-align: center;
-
-  color: #111827; /* dark text */
-
 }
-
-
-
-
-
-/* Job details container */
 
 .job-details-container {
-
   width: 100%;
-
   padding: 2rem;
-
-  background-color: #f0f4f8;
-
-  border-radius: 0.75rem;
-
-  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-
-  margin: 2rem 0;
-
-  color: #111827; /* dark text */
-
-}
-
-
-
-
-
-
-
-  width: 100%;
-
-  padding: 1.5rem;
-
-  margin-bottom: 1.5rem;
-
   background-color: white;
-
-  border-radius: 0.75rem;
-
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-
-  display: flex;
-
-  justify-content: space-between;
-
-  align-items: center;
-
-  color: #111827; /* dark text */
-
+  border-radius: 1.25rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  margin: 2rem 0;
 }
-
-
-
-
 
 .job-card p {
-
-  color: #111827;
-
+  color: #1e293b;
 }
 
-
-
-
-
-/* Buttons */
-
-.view-btn { background-color: #3b82f6; color: white; }
-
+.view-btn  { background-color: #6366f1; color: white; }
 .apply-btn { background-color: #10b981; color: white; }
-
-.back-btn { background-color: #6b7280; color: white; }
-
-
-
-
-
-/* Responsive */
+.back-btn  { background-color: #64748b; color: white; }
 
 @media (max-width: 768px) {
-
   .job-card {
-
     flex-direction: column;
-
     align-items: flex-start;
-
   }
-
-
-
-
-
   .job-card button {
-
     width: 100%;
-
     margin-top: 0.5rem;
-
   }
-
-
-
-
-
   .job-details-buttons {
-
     flex-direction: column-reverse;
-
     align-items: stretch;
-
   }
-
-
-
-
-
   .job-details-buttons button {
-
     width: 100%;
-
   }
-
 }
-
-/* Job card buttons */
 
 .job-card-buttons {
   display: flex;
@@ -260,42 +103,44 @@ header {
 }
 
 @media (max-width: 640px) {
-
+  header {
+    padding: 0.9rem 1.25rem;
+  }
   .job-card {
     flex-direction: column;
     align-items: flex-start;
   }
-
   .job-card-buttons {
     margin-left: 0;
     margin-top: 1rem;
     width: 100%;
   }
-
   .job-card-buttons button {
     flex: 1;
   }
-
-  /* Filter bar dropdowns shouldn't overflow on small screens */
   .filter-dropdown {
     position: fixed;
     left: 1rem;
     right: 1rem;
     width: auto;
   }
-
 }
 
-/* Ensure job card padding doesn't add to width */
+/* Job card */
 .job-card {
   box-sizing: border-box;
+  border-radius: 1rem;
+  background: white;
+  border: none;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  margin-bottom: 1.25rem;
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-/* Clearer card separation */
-.job-card {
-  margin-bottom: 1.25rem;
-  border: 1.5px solid #e5e7eb;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+.job-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 32px rgba(99,102,241,0.14);
 }
 
 .job-card:last-child {
