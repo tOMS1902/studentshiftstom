@@ -107,7 +107,10 @@ function AppliedJobCard({ job, currentUser, setSelectedJob, setPage }) {
 export default function AppliedJobs({ appliedJobs, setSelectedJob, setPage, currentUser }) {
   return (
     <PageWrapper>
-      <h1 style={{ textAlign: "center", marginBottom: "2rem", fontWeight: "800", color: "#1e293b" }}>✅ Applied Jobs</h1>
+      <div style={{ textAlign: "center", marginBottom: "1.75rem" }}>
+        <h1 style={{ margin: 0, fontWeight: "800", fontSize: "1.85rem", color: "#1e293b" }}>✅ Applied Jobs</h1>
+        <p style={{ margin: "0.35rem 0 0", color: "#64748b", fontSize: "0.9rem" }}>Track your applications and hear back from employers</p>
+      </div>
 
       {appliedJobs.length === 0 ? (
         <div style={{ textAlign: "center", padding: "3rem 1rem", color: "#6b7280" }}>
@@ -138,4 +141,4 @@ export default function AppliedJobs({ appliedJobs, setSelectedJob, setPage, curr
 
 const btnBase = { padding: "0.4rem 0.9rem", borderRadius: "2rem", color: "white", border: "none", cursor: "pointer", fontWeight: "700", fontSize: "0.82rem", fontFamily: "inherit" };
 const btnBlue = { ...btnBase, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", boxShadow: "0 2px 8px rgba(99,102,241,0.3)" };
-const btnGray = { ...btnBase, backgroundColor: "#64748b", padding: "0.75rem 1.75rem", fontSize: "0.9rem" };
+const btnGray = { ...btnBase, background: "linear-gradient(135deg, #f43f5e, #e11d48)", boxShadow: "0 4px 14px rgba(244,63,94,0.3)", padding: "0.75rem 1.75rem", fontSize: "0.9rem" };
