@@ -48,17 +48,22 @@ export default function StudentShiftsWeb() {
 
   // Restore session on page load + listen for auth changes
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        try {
-          const profile = await getProfile(session.user.id);
-          setCurrentUser(normaliseProfile(profile));
-        } catch (e) {
-          console.error("Failed to load profile", e);
+    supabase.auth.getSession()
+      .then(async ({ data: { session } }) => {
+        if (session?.user) {
+          try {
+            const profile = await getProfile(session.user.id);
+            setCurrentUser(normaliseProfile(profile));
+          } catch (e) {
+            console.error("Failed to load profile", e);
+          }
         }
-      }
-      setAuthLoading(false);
-    });
+        setAuthLoading(false);
+      })
+      .catch(e => {
+        console.error("getSession failed", e);
+        setAuthLoading(false);
+      });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session?.user) {
