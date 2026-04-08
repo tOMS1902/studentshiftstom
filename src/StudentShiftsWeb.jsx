@@ -48,34 +48,18 @@ export default function StudentShiftsWeb() {
 
   // Restore session on page load + listen for auth changes
   useEffect(() => {
-    console.log("[SS] auth init, supabase:", typeof supabase);
-    // Failsafe: never stay on loading screen more than 6s
-    const failsafe = setTimeout(() => {
-      console.warn("[SS] failsafe timeout hit — forcing authLoading false");
-      setAuthLoading(false);
-    }, 6000);
-
-    supabase.auth.getSession()
-      .then(async ({ data: { session } }) => {
-        console.log("[SS] getSession resolved, session:", session ? session.user?.id : "null");
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "INITIAL_SESSION") {
         if (session?.user) {
           try {
             const profile = await getProfile(session.user.id);
             setCurrentUser(normaliseProfile(profile));
           } catch (e) {
-            console.error("[SS] Failed to load profile", e);
+            console.error("Failed to load profile", e);
           }
         }
-        clearTimeout(failsafe);
         setAuthLoading(false);
-      })
-      .catch(e => {
-        console.error("[SS] getSession failed", e);
-        clearTimeout(failsafe);
-        setAuthLoading(false);
-      });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      }
       if (event === "SIGNED_IN" && session?.user) {
         try {
           const profile = await getProfile(session.user.id);
@@ -94,7 +78,7 @@ export default function StudentShiftsWeb() {
       }
     });
 
-    return () => { clearTimeout(failsafe); subscription.unsubscribe(); };
+    return () => subscription.unsubscribe();
   }, []);
 
   // Sync studentLocation when user logs in/out
