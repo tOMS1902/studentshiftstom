@@ -106,19 +106,12 @@ header {
 @media (max-width: 640px) {
   header {
     padding: 0.55rem 0.85rem !important;
-    /* 1fr auto 1fr keeps logo centred; equal side columns mirror each other */
-    grid-template-columns: 1fr auto 1fr !important;
-    align-items: center !important;
+    /* Switch to auto 1fr auto so sides shrink to content width */
+    grid-template-columns: auto 1fr auto !important;
   }
-  /* Right nav: allow liked/applied buttons to wrap onto a second row */
-  header > div:last-child {
-    flex-wrap: wrap !important;
-    justify-content: flex-end !important;
-    gap: 0.3rem !important;
-  }
-  /* Compact nav buttons so they fit within 1fr */
+  /* Compact nav buttons so the right side fits on narrow screens */
   header button {
-    padding: 0.3rem 0.55rem !important;
+    padding: 0.32rem 0.6rem !important;
     font-size: 0.78rem !important;
   }
   .job-card {
@@ -139,13 +132,14 @@ header {
     right: 1rem;
     width: auto;
   }
-  /* Header logo — hide SVG icon, shrink text */
-  .header-logo-icon {
-    display: none;
+  /* Header logo — shrink SVG icon and text on mobile */
+  .header-logo-icon svg {
+    width: 32px !important;
+    height: 36px !important;
   }
   .header-logo-text .logo-student,
   .header-logo-text .logo-shifts {
-    font-size: 1.15rem !important;
+    font-size: 1.05rem !important;
   }
   /* Hide nav button text labels, keep emoji */
   .nav-label {
