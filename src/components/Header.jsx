@@ -23,8 +23,19 @@ export default function Header({ currentUser, setPage, likedJobs, appliedJobs, n
       zIndex: 100,
     }}>
 
-      {/* Left — About */}
+      {/* Left — Account (when logged in) + About */}
       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        {currentUser && (
+          <div style={{ position: "relative", display: "inline-block" }}>
+            <button onClick={() => setPage("account")} style={{ ...navBtnPrimary, display: "inline-flex", alignItems: "center", gap: "0.45rem" }}>
+              {currentUser.profilePhoto
+                ? <img src={currentUser.profilePhoto} alt="Profile" style={{ width: "22px", height: "22px", borderRadius: "50%", objectFit: "cover", display: "block", flexShrink: 0 }} />
+                : <PersonIcon />
+              }
+            </button>
+            {optionalBadge > 0 && <span style={notifDot}>{optionalBadge}</span>}
+          </div>
+        )}
         <button onClick={() => setPage("about")} style={navBtnOutline}>About</button>
       </div>
 
@@ -43,7 +54,7 @@ export default function Header({ currentUser, setPage, likedJobs, appliedJobs, n
         </div>
       </div>
 
-      {/* Right — Nav */}
+      {/* Right — Liked/Applied (student) or Login/Sign Up (logged out) */}
       <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", justifyContent: "flex-end" }}>
         {currentUser ? (
           <>
@@ -60,17 +71,6 @@ export default function Header({ currentUser, setPage, likedJobs, appliedJobs, n
                 </div>
               </>
             )}
-
-            {/* Account button */}
-            <div style={{ position: "relative", display: "inline-block" }}>
-              <button onClick={() => setPage("account")} style={{ ...navBtnPrimary, display: "inline-flex", alignItems: "center", gap: "0.45rem" }}>
-                {currentUser.profilePhoto
-                  ? <img src={currentUser.profilePhoto} alt="Profile" style={{ width: "22px", height: "22px", borderRadius: "50%", objectFit: "cover", display: "block", flexShrink: 0 }} />
-                  : <PersonIcon />
-                }
-              </button>
-              {optionalBadge > 0 && <span style={notifDot}>{optionalBadge}</span>}
-            </div>
           </>
         ) : (
           <>
