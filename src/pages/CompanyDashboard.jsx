@@ -1,114 +1,90 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PageWrapper from "../components/PageWrapper";
 import { jobCategories } from "../data/jobCategories";
 import { geocodeAddress } from "../utils/geo";
+import { supabase } from "../lib/supabase";
 
 const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const timeSlots = ["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00"];
 
-const seedPostings = [
-  {
-    id: 1, title: "Bar Staff", category: "Hospitality", location: "City Centre", pay: "€12/hr",
-    days: ["Tuesday", "Thursday"], times: { Tuesday: "18:00", Thursday: "18:00" }, weekendRequired: true, status: "Active",
-    description: "Join our bar team serving drinks and looking after customers. Some experience preferred — full training provided for the right candidate.",
-    deadline: "2026-05-15",
-    applicants: [
-      { id: 1, name: "John Student", email: "student@test.com", cvName: "john_cv.pdf", status: "Pending" },
-      { id: 3, name: "Emily Clarke", email: "emily@test.com", cvName: "emily_cv.pdf", status: "Pending" },
-      { id: 5, name: "Sarah Murphy", email: "sarah@test.com", cvName: "sarah_cv.pdf", status: "Pending" },
-    ],
-  },
-  {
-    id: 2, title: "Barista", category: "Café & Coffee", location: "Near Campus", pay: "€11/hr",
-    days: ["Monday", "Wednesday", "Friday"], times: { Monday: "08:00", Wednesday: "08:00", Friday: "08:00" }, weekendRequired: false, status: "Active",
-    description: "Craft specialty coffees and serve customers in a fast-paced campus café. Latte art training provided to the successful candidate!",
-    deadline: "2026-04-25",
-    applicants: [
-      { id: 2, name: "Jane Student", email: "jane@test.com", cvName: null, status: "Pending" },
-      { id: 4, name: "Mark Ryan", email: "mark@test.com", cvName: "mark_cv.pdf", status: "Accepted" },
-    ],
-  },
-  {
-    id: 3, title: "Waiter", category: "Hospitality", location: "Near Campus", pay: "€11/hr",
-    days: ["Tuesday", "Friday"], times: { Tuesday: "12:00", Friday: "12:00" }, weekendRequired: true, status: "Active",
-    description: "Serve food and drinks with a friendly, professional attitude. Teamwork is essential — we're a busy restaurant and need reliable staff.",
-    deadline: "",
-    applicants: [
-      { id: 6, name: "Cian Byrne", email: "cian@test.com", cvName: "cian_cv.pdf", status: "Pending" },
-      { id: 7, name: "Aoife Walsh", email: "aoife@test.com", cvName: "aoife_cv.pdf", status: "Rejected" },
-      { id: 8, name: "Liam Kelly", email: "liam@test.com", cvName: "liam_cv.pdf", status: "Pending" },
-      { id: 9, name: "Niamh Burke", email: "niamh@test.com", cvName: "niamh_cv.pdf", status: "Pending" },
-    ],
-  },
-  {
-    id: 4, title: "Receptionist", category: "Service & Reception", location: "Downtown", pay: "€13/hr",
-    days: ["Monday", "Wednesday", "Friday"], times: { Monday: "09:00", Wednesday: "09:00", Friday: "09:00" }, weekendRequired: false, status: "Closed",
-    description: "Welcome guests, manage bookings, and handle front-desk enquiries at our city centre hotel. Excellent communication skills required.",
-    deadline: "",
-    applicants: [
-      { id: 10, name: "Tom Hennessy", email: "tom@test.com", cvName: "tom_cv.pdf", status: "Accepted" },
-    ],
-  },
-  {
-    id: 5, title: "Kitchen Staff", category: "Hospitality", location: "City Centre", pay: "€11/hr",
-    days: ["Thursday", "Friday"], times: { Thursday: "17:00", Friday: "17:00" }, weekendRequired: true, status: "Active",
-    description: "Support our chefs with food prep and maintaining kitchen hygiene standards. No experience needed — great for culinary students.",
-    deadline: "2026-06-01",
-    applicants: [],
-  },
-  {
-    id: 6, title: "Delivery Assistant", category: "Delivery & Logistics", location: "Downtown", pay: "€12/hr",
-    days: ["Tuesday", "Thursday"], times: { Tuesday: "09:00", Thursday: "09:00" }, weekendRequired: false, status: "Active",
-    description: "Help with local deliveries, packing orders, and warehouse duties around the city. A full clean driving licence is advantageous.",
-    deadline: "",
-    applicants: [
-      { id: 11, name: "Roisin Doyle", email: "roisin@test.com", cvName: "roisin_cv.pdf", status: "Pending" },
-      { id: 12, name: "Conor Flood", email: "conor@test.com", cvName: "conor_cv.pdf", status: "Pending" },
-    ],
-  },
-  {
-    id: 7, title: "Bar Staff", category: "Hospitality", location: "City Centre", pay: "€13/hr",
-    days: ["Saturday", "Sunday"], times: { Saturday: "18:00", Sunday: "17:00" }, weekendRequired: false, status: "Active",
-    description: "Weekend bar staff for our busy city centre venue. Ideal for students who have Saturday and Sunday free. Experience preferred.",
-    deadline: "2026-05-10",
-    applicants: [
-      { id: 13, name: "Darragh Quinn", email: "darragh@test.com", cvName: "darragh_cv.pdf", status: "Pending" },
-      { id: 14, name: "Sinead Carr", email: "sinead@test.com", cvName: "sinead_cv.pdf", status: "Pending" },
-      { id: 15, name: "Kevin Moore", email: "kevin@test.com", cvName: "kevin_cv.pdf", status: "Pending" },
-    ],
-  },
-  {
-    id: 8, title: "Cashier", category: "Retail", location: "5 min walk", pay: "€10/hr",
-    days: ["Saturday", "Sunday"], times: { Saturday: "09:00", Sunday: "10:00" }, weekendRequired: false, status: "Active",
-    description: "Operate tills, process payments, and provide excellent customer service in our busy retail store. Friendly attitude is a must.",
-    deadline: "",
-    applicants: [
-      { id: 16, name: "Aisling Boyle", email: "aisling@test.com", cvName: "aisling_cv.pdf", status: "Pending" },
-    ],
-  },
-];
+function normaliseJob(j) {
+  return {
+    id:              j.id,
+    title:           j.title,
+    category:        j.category,
+    location:        j.location,
+    lat:             j.lat,
+    lng:             j.lng,
+    pay:             j.pay,
+    description:     j.description || "",
+    deadline:        j.deadline || "",
+    days:            j.days || [],
+    times:           j.times || {},
+    weekendRequired: j.weekend_required || false,
+    status:          j.status || "Active",
+    photos:          j.photos || [],
+    applicants:      [],
+    applicantCount:  j.applicant_count || 0,
+  };
+}
 
 export default function CompanyDashboard({ setPage, currentUser }) {
-  const [postings, setPostings] = useState(seedPostings);
-  const [modal, setModal] = useState(null); // "applicants" | "form"
+  const [postings, setPostings]   = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [formSaving, setFormSaving] = useState(false);
+  const [modal, setModal]         = useState(null);
   const [activePosting, setActivePosting] = useState(null);
-  const [formData, setFormData] = useState(null);
+  const [formData, setFormData]   = useState(null);
 
-  const totalApplicants = postings.reduce((sum, p) => sum + p.applicants.length, 0);
-  const activeCount = postings.filter(p => p.status === "Active").length;
+  // Load this company's jobs on mount
+  useEffect(() => {
+    if (!currentUser) return;
+    supabase
+      .from("jobs")
+      .select("*, applications(id, status)")
+      .eq("company_id", currentUser.id)
+      .order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (!error && data) {
+          setPostings(data.map(j => ({
+            ...normaliseJob(j),
+            applicantCount: j.applications?.length || 0,
+          })));
+        }
+        setLoading(false);
+      });
+  }, [currentUser?.id]);
 
-  const openApplicants = (posting) => {
-    setActivePosting(posting);
+  const totalApplicants = postings.reduce((sum, p) => sum + p.applicantCount, 0);
+  const activeCount     = postings.filter(p => p.status === "Active").length;
+
+  const openApplicants = async (posting) => {
+    setActivePosting({ ...posting, applicants: [] });
     setModal("applicants");
+    const { data, error } = await supabase
+      .from("applications")
+      .select("id, status, created_at, profiles:student_id(id, name, email), students:student_id(cv_url)")
+      .eq("job_id", posting.id)
+      .order("created_at", { ascending: true });
+    if (!error && data) {
+      const applicants = data.map(a => ({
+        id:     a.id,
+        name:   a.profiles?.name   || "Unknown",
+        email:  a.profiles?.email  || "",
+        cvName: a.students?.cv_url || null,
+        status: a.status,
+      }));
+      setActivePosting(prev => ({ ...prev, applicants }));
+    }
   };
 
   const openCreate = () => {
-    setFormData({ title: "", category: "", location: "", pay: "", description: "", deadline: "", days: [], times: {}, weekendRequired: false, status: "Active", photos: [] });
+    setFormData({ title: "", category: "", location: "", pay: "", description: "", deadline: "", days: [], times: {}, weekendRequired: false, status: "Active", photos: [], photoFiles: [] });
     setModal("form");
   };
 
   const openEdit = (posting) => {
-    setFormData({ ...posting, days: [...posting.days], times: { ...posting.times } });
+    setFormData({ ...posting, days: [...posting.days], times: { ...posting.times }, photoFiles: [] });
     setModal("form");
   };
 
@@ -118,37 +94,76 @@ export default function CompanyDashboard({ setPage, currentUser }) {
     setFormData(null);
   };
 
-  const toggleStatus = (id) => {
-    setPostings(prev =>
-      prev.map(p => p.id === id ? { ...p, status: p.status === "Active" ? "Closed" : "Active" } : p)
-    );
+  const toggleStatus = async (id) => {
+    const posting = postings.find(p => p.id === id);
+    const newStatus = posting.status === "Active" ? "Closed" : "Active";
+    const { error } = await supabase.from("jobs").update({ status: newStatus }).eq("id", id);
+    if (!error) setPostings(prev => prev.map(p => p.id === id ? { ...p, status: newStatus } : p));
   };
 
-  const deletePosting = (id) => {
-    if (window.confirm("Delete this job posting? This cannot be undone.")) {
-      setPostings(prev => prev.filter(p => p.id !== id));
-    }
+  const deletePosting = async (id) => {
+    if (!window.confirm("Delete this job posting? This cannot be undone.")) return;
+    const { error } = await supabase.from("jobs").delete().eq("id", id);
+    if (!error) setPostings(prev => prev.filter(p => p.id !== id));
   };
 
-  const saveForm = () => {
+  const saveForm = async () => {
     if (!formData.title.trim() || !formData.location.trim() || !formData.pay.trim()) {
-      alert("Please fill in Title, Location, and Pay.");
-      return;
+      alert("Please fill in Title, Location, and Pay."); return;
     }
-    if (formData.days.length === 0) {
-      alert("Please select at least one day.");
-      return;
+    if (formData.days.length === 0) { alert("Please select at least one day."); return; }
+    const existingPhotoUrls = (formData.photos || []).filter(p => typeof p === "string" && p.startsWith("http"));
+    if (existingPhotoUrls.length === 0 && (!formData.photoFiles || formData.photoFiles.length === 0)) {
+      alert("Please upload at least 1 photo."); return;
     }
-    if (!formData.photos || formData.photos.length === 0) {
-      alert("Please upload at least 1 photo.");
-      return;
+    setFormSaving(true);
+    try {
+      // Upload any new photo files to Storage
+      const photoUrls = [...existingPhotoUrls];
+      for (const file of (formData.photoFiles || [])) {
+        const path = `${currentUser.id}/${Date.now()}_${file.name}`;
+        const { error: upErr } = await supabase.storage.from("job-photos").upload(path, file, { upsert: true });
+        if (!upErr) {
+          const { data: { publicUrl } } = supabase.storage.from("job-photos").getPublicUrl(path);
+          photoUrls.push(publicUrl);
+        }
+      }
+
+      const jobData = {
+        company_id:      currentUser.id,
+        title:           formData.title,
+        category:        formData.category,
+        location:        formData.location,
+        lat:             formData.lat || null,
+        lng:             formData.lng || null,
+        pay:             formData.pay,
+        description:     formData.description || "",
+        deadline:        formData.deadline || null,
+        days:            formData.days,
+        times:           formData.times,
+        weekend_required: formData.weekendRequired || false,
+        status:          formData.status || "Active",
+        photos:          photoUrls,
+      };
+
+      if (formData.id) {
+        const { error } = await supabase.from("jobs").update(jobData).eq("id", formData.id);
+        if (error) throw error;
+        setPostings(prev => prev.map(p => p.id === formData.id
+          ? { ...normaliseJob({ ...jobData, id: formData.id }), applicants: p.applicants, applicantCount: p.applicantCount }
+          : p
+        ));
+      } else {
+        const { data, error } = await supabase.from("jobs").insert(jobData).select().single();
+        if (error) throw error;
+        setPostings(prev => [{ ...normaliseJob(data), applicants: [], applicantCount: 0 }, ...prev]);
+      }
+      closeModal();
+    } catch (e) {
+      alert("Error saving job: " + e.message);
+    } finally {
+      setFormSaving(false);
     }
-    if (formData.id) {
-      setPostings(prev => prev.map(p => p.id === formData.id ? { ...p, ...formData } : p));
-    } else {
-      setPostings(prev => [...prev, { ...formData, id: Date.now(), applicants: [] }]);
-    }
-    closeModal();
   };
 
   const toggleDay = (day) => {
@@ -161,24 +176,13 @@ export default function CompanyDashboard({ setPage, currentUser }) {
     });
   };
 
-  const updateApplicantStatus = (applicantId, newStatus) => {
-    // Persist status for student notification
-    localStorage.setItem("ss_appstatus_" + applicantId + "_" + activePosting.id, newStatus);
-    // Auto-message on first acceptance
-    if (newStatus === "Accepted") {
-      const msgKey = "ss_msgs_" + applicantId + "_" + activePosting.id;
-      if (!localStorage.getItem(msgKey)) {
-        localStorage.setItem(msgKey, JSON.stringify([{
-          from: "company",
-          text: `Hi! We reviewed your application for ${activePosting.title} and we'd love to have you on board. Please confirm your availability for an induction this week.`,
-          time: new Date().toISOString(),
-        }]));
-      }
-    }
-    const updater = (p) => ({
-      ...p,
-      applicants: p.applicants.map(a => a.id === applicantId ? { ...a, status: newStatus } : a),
-    });
+  const updateApplicantStatus = async (applicationId, newStatus) => {
+    const { error } = await supabase
+      .from("applications")
+      .update({ status: newStatus })
+      .eq("id", applicationId);
+    if (error) { alert("Failed to update status."); return; }
+    const updater = (p) => ({ ...p, applicants: p.applicants.map(a => a.id === applicationId ? { ...a, status: newStatus } : a) });
     setPostings(prev => prev.map(p => p.id === activePosting.id ? updater(p) : p));
     setActivePosting(prev => updater(prev));
   };
@@ -205,13 +209,17 @@ export default function CompanyDashboard({ setPage, currentUser }) {
       </div>
 
       {/* Postings */}
-      {postings.length === 0 ? (
+      {loading ? (
+        <div style={{ textAlign: "center", padding: "3rem 1rem", color: "#64748b" }}>
+          <p style={{ fontWeight: "600" }}>Loading your job postings…</p>
+        </div>
+      ) : postings.length === 0 ? (
         <div style={{ textAlign: "center", padding: "4rem 1rem", color: "#6b7280" }}>
           <p style={{ fontSize: "1.25rem", fontWeight: "600", marginBottom: "0.5rem" }}>No job postings yet</p>
           <p style={{ marginBottom: "1.5rem" }}>Create your first posting to start receiving applicants.</p>
           <button onClick={openCreate} style={btnGreen}>+ Create Job Posting</button>
         </div>
-      ) : (
+      ) : loading ? null : (
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           {postings.map(posting => (
             <JobPostingCard
@@ -247,6 +255,7 @@ export default function CompanyDashboard({ setPage, currentUser }) {
             onSave={saveForm}
             onCancel={closeModal}
             toggleDay={toggleDay}
+            formSaving={formSaving}
           />
         </Modal>
       )}
@@ -309,7 +318,7 @@ function JobPostingCard({ posting, onViewApplicants, onEdit, onDelete, onToggleS
           )}
         </div>
         <p style={{ fontSize: "0.8rem", color: "#374151", fontWeight: "600", margin: 0 }}>
-          {posting.applicants.length} applicant{posting.applicants.length !== 1 ? "s" : ""}
+          {posting.applicantCount} applicant{posting.applicantCount !== 1 ? "s" : ""}
         </p>
       </div>
 
@@ -416,7 +425,7 @@ function StatusBadge({ status }) {
   );
 }
 
-function JobForm({ formData, setFormData, onSave, onCancel, toggleDay }) {
+function JobForm({ formData, setFormData, onSave, onCancel, toggleDay, formSaving }) {
   const isEdit = !!formData.id;
   const set = (key) => (e) => setFormData(prev => ({ ...prev, [key]: e.target.value }));
 
@@ -427,31 +436,27 @@ function JobForm({ formData, setFormData, onSave, onCancel, toggleDay }) {
     setFormData(prev => ({ ...prev, category: e.target.value, title: "" }));
   };
 
-  // Photo state — File objects for preview; existing names from edit mode
-  const [photoFiles, setPhotoFiles] = useState([]);
-  const existingPhotos = (formData.photos || []).filter(p => typeof p === "string");
-  const totalPhotos = existingPhotos.length + photoFiles.length;
+  // Photos: existing URLs (edit mode) + new File objects to upload
+  const photoFiles     = formData.photoFiles || [];
+  const existingPhotos = (formData.photos    || []).filter(p => typeof p === "string" && p.startsWith("http"));
+  const totalPhotos    = existingPhotos.length + photoFiles.length;
 
   const handlePhotoAdd = (e) => {
-    const incoming = Array.from(e.target.files);
+    const incoming  = Array.from(e.target.files);
     const remaining = 10 - totalPhotos;
     if (remaining <= 0) return;
-    const toAdd = incoming.slice(0, remaining);
+    const toAdd    = incoming.slice(0, remaining);
     const newFiles = [...photoFiles, ...toAdd];
-    setPhotoFiles(newFiles);
-    setFormData(prev => ({ ...prev, photos: [...existingPhotos, ...newFiles.map(f => f.name)] }));
+    setFormData(prev => ({ ...prev, photoFiles: newFiles }));
     e.target.value = "";
   };
 
-  const removeExistingPhoto = (name) => {
-    const updated = existingPhotos.filter(n => n !== name);
-    setFormData(prev => ({ ...prev, photos: [...updated, ...photoFiles.map(f => f.name)] }));
+  const removeExistingPhoto = (url) => {
+    setFormData(prev => ({ ...prev, photos: existingPhotos.filter(u => u !== url) }));
   };
 
   const removeNewPhoto = (index) => {
-    const newFiles = photoFiles.filter((_, i) => i !== index);
-    setPhotoFiles(newFiles);
-    setFormData(prev => ({ ...prev, photos: [...existingPhotos, ...newFiles.map(f => f.name)] }));
+    setFormData(prev => ({ ...prev, photoFiles: photoFiles.filter((_, i) => i !== index) }));
   };
 
   // Location geocoding state
@@ -705,11 +710,11 @@ function JobForm({ formData, setFormData, onSave, onCancel, toggleDay }) {
         {/* Thumbnails grid */}
         {(existingPhotos.length > 0 || photoFiles.length > 0) && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.6rem" }}>
-            {/* Existing (edit mode) — shown as name pills */}
-            {existingPhotos.map(name => (
-              <div key={name} style={{ position: "relative", backgroundColor: "#eff6ff", border: "1.5px solid #bfdbfe", borderRadius: "0.4rem", padding: "0.3rem 2rem 0.3rem 0.6rem", fontSize: "0.75rem", color: "#1d4ed8", fontWeight: "600", maxWidth: "130px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                📷 {name}
-                <button type="button" onClick={() => removeExistingPhoto(name)} style={{ position: "absolute", top: "2px", right: "4px", background: "none", border: "none", cursor: "pointer", color: "#6b7280", fontSize: "0.85rem", lineHeight: 1 }}>✕</button>
+            {/* Existing (edit mode) — show actual thumbnails */}
+            {existingPhotos.map(url => (
+              <div key={url} style={{ position: "relative", width: "72px", height: "72px", borderRadius: "0.4rem", overflow: "hidden", border: "1.5px solid #d1d5db" }}>
+                <img src={url} alt="job photo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <button type="button" onClick={() => removeExistingPhoto(url)} style={{ position: "absolute", top: "2px", right: "2px", backgroundColor: "rgba(0,0,0,0.55)", border: "none", borderRadius: "50%", color: "white", width: "18px", height: "18px", fontSize: "0.65rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>✕</button>
               </div>
             ))}
             {/* New files — show image preview */}
@@ -744,8 +749,8 @@ function JobForm({ formData, setFormData, onSave, onCancel, toggleDay }) {
         </div>
       )}
       <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.25rem" }}>
-        <button onClick={onSave} style={{ ...btnGreen, flex: 1 }}>
-          {isEdit ? "Save Changes" : "Create Posting"}
+        <button onClick={onSave} disabled={formSaving} style={{ ...btnGreen, flex: 1, opacity: formSaving ? 0.7 : 1 }}>
+          {formSaving ? "Saving…" : isEdit ? "Save Changes" : "Create Posting"}
         </button>
         <button onClick={onCancel} style={{ ...btnGray, flex: 1 }}>Cancel</button>
       </div>
