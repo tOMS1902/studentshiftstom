@@ -226,20 +226,15 @@ export default function StudentDashboard({
     return true;
   });
 
+  const locationOrder = { "5 min walk": 0, "10 min walk": 1, "On-Campus": 2, "Near Campus": 3, "City Centre": 4, "Downtown": 5 };
+  const locRank = (job) => locationOrder[job.location] ?? 99;
+
   const payNum = (p) => parseInt(p.replace(/[^0-9]/g, "")) || 0;
   const displayJobs = sortBy === "" ? filteredJobs : [...filteredJobs].sort((a, b) => {
-    if (sortBy === "payHigh") return payNum(b.pay) - payNum(a.pay);
-    if (sortBy === "payLow")  return payNum(a.pay) - payNum(b.pay);
-    if (sortBy === "distanceNear") {
-      const da = jobDistance(a) ?? Infinity;
-      const db = jobDistance(b) ?? Infinity;
-      return da - db;
-    }
-    if (sortBy === "distanceFar") {
-      const da = jobDistance(a) ?? -Infinity;
-      const db = jobDistance(b) ?? -Infinity;
-      return db - da;
-    }
+    if (sortBy === "payHigh")      return payNum(b.pay) - payNum(a.pay);
+    if (sortBy === "payLow")       return payNum(a.pay) - payNum(b.pay);
+    if (sortBy === "distanceNear") return locRank(a) - locRank(b);
+    if (sortBy === "distanceFar")  return locRank(b) - locRank(a);
     return 0;
   });
 
