@@ -81,7 +81,7 @@ export default function SignupPage({ setPage }) {
           ))}
         </div>
 
-        <input placeholder="Full Name"  value={name}     onChange={e => setName(e.target.value)}     style={inputStyle} />
+        <input placeholder={role === "company" ? "Company Name" : "Full Name"} value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
         <input placeholder="Email"      value={email}    onChange={e => setEmail(e.target.value)}    style={inputStyle} />
         <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSignup()} style={inputStyle} />
 
@@ -109,8 +109,13 @@ export default function SignupPage({ setPage }) {
         )}
 
         <button onClick={handleSignup} style={btnPrimary}>Create Account →</button>
-        <button onClick={() => setPage("login")} style={btnGhost}>Already have an account? Sign in</button>
         <button onClick={() => setPage("studentDashboard")} style={btnHome}>← Back to Home</button>
+        <p style={{ marginTop: "1.25rem", fontSize: "0.875rem", color: "#64748b", textAlign: "center" }}>
+          Already have an account?{" "}
+          <span style={{ color: "#6366f1", cursor: "pointer", fontWeight: "700" }} onClick={() => setPage("login")}>
+            Sign in
+          </span>
+        </p>
 
       </div>
     </PageWrapper>
@@ -145,5 +150,4 @@ function FileUpload({ label, hint, accept, onChange, file }) {
 const inputStyle  = { width: "100%", padding: "0.72rem 1rem", marginBottom: "0.75rem", borderRadius: "0.65rem", border: "1.5px solid #e2e8f0", fontSize: "0.95rem", boxSizing: "border-box", fontFamily: "inherit", color: "#1e293b" };
 const btnBase     = { width: "100%", padding: "0.8rem", borderRadius: "0.75rem", border: "none", color: "white", fontWeight: "700", cursor: "pointer", fontSize: "0.95rem", fontFamily: "inherit" };
 const btnPrimary  = { ...btnBase, marginTop: "1.25rem", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", boxShadow: "0 4px 18px rgba(99,102,241,0.35)" };
-const btnGhost    = { ...btnBase, marginTop: "0.6rem", backgroundColor: "#f1f5f9", color: "#64748b", boxShadow: "none" };
 const btnHome     = { ...btnBase, marginTop: "0.6rem", background: "linear-gradient(135deg, #f43f5e, #e11d48)", boxShadow: "0 4px 18px rgba(244,63,94,0.35)" };
