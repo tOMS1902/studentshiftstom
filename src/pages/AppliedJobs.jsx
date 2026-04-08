@@ -2,6 +2,18 @@ import { useState } from "react";
 import PageWrapper from "../components/PageWrapper";
 import "../StudentShiftWeb.css";
 
+const COMPANY_PHOTOS = {
+  "Galway Pub":     "https://picsum.photos/seed/galwaypub/800/140",
+  "SuperMart":      "https://picsum.photos/seed/supermart/800/140",
+  "Campus Library": "https://picsum.photos/seed/campuslibrary/800/140",
+  "Galway Bistro":  "https://picsum.photos/seed/galwaybistro/800/140",
+  "City Mall":      "https://picsum.photos/seed/citymall/800/140",
+  "Coffee Hub":     "https://picsum.photos/seed/coffeehub/800/140",
+  "City Hotel":     "https://picsum.photos/seed/cityhotel/800/140",
+  "Tech Store":     "https://picsum.photos/seed/techstore/800/140",
+  "City Bistro":    "https://picsum.photos/seed/citybistro/800/140",
+};
+
 function ChatThread({ applicantId, jobId }) {
   const key = "ss_msgs_" + applicantId + "_" + jobId;
   const [messages, setMessages] = useState(() => JSON.parse(localStorage.getItem(key) || "[]"));
@@ -64,42 +76,50 @@ function AppliedJobCard({ job, currentUser, setSelectedJob, setPage }) {
   const { bg, color } = STATUS_STYLE[status] || STATUS_STYLE.Pending;
 
   return (
-    <div className="job-card" style={{ flexDirection: "column", alignItems: "stretch" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem", marginBottom: "0.4rem" }}>
-        <div style={{ flex: 1 }}>
-          <h2 style={{ fontWeight: "800", fontSize: "1.05rem", margin: "0 0 0.15rem", color: "#1e293b" }}>{job.title}</h2>
-          <p style={{ color: "#64748b", margin: 0, fontSize: "0.875rem" }}>{job.company} · {job.location}</p>
+    <div className="job-card" style={{ flexDirection: "column", alignItems: "stretch", padding: 0, overflow: "hidden", marginBottom: 0 }}>
+      {/* Banner photo */}
+      <img
+        src={COMPANY_PHOTOS[job.company] || "https://picsum.photos/seed/default/800/140"}
+        alt={job.company}
+        style={{ width: "100%", height: "110px", objectFit: "cover", display: "block" }}
+      />
+
+      <div style={{ padding: "0.85rem 1rem" }}>
+        {/* Title + status + view */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem", marginBottom: "0.2rem" }}>
+          <h2 style={{ fontWeight: "800", fontSize: "1.05rem", margin: 0, color: "#1e293b" }}>{job.title}</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexShrink: 0 }}>
+            <span style={{ fontSize: "0.68rem", fontWeight: "700", padding: "0.2rem 0.6rem", borderRadius: "999px", backgroundColor: bg, color, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              {status}
+            </span>
+            <button onClick={() => { setSelectedJob(job); setPage("jobDetails"); }} style={btnBlue}>View</button>
+          </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexShrink: 0 }}>
-          <span style={{ fontSize: "0.7rem", fontWeight: "700", padding: "0.2rem 0.6rem", borderRadius: "999px", backgroundColor: bg, color, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-            {status}
-          </span>
-          <button onClick={() => { setSelectedJob(job); setPage("jobDetails"); }} style={btnBlue}>View</button>
+
+        <p style={{ color: "#6b7280", fontSize: "0.85rem", marginBottom: "0.15rem" }}>{job.company} · {job.location}</p>
+        <p style={{ fontWeight: "700", color: "#111827", marginBottom: "0.35rem", fontSize: "0.9rem" }}>{job.pay}</p>
+
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem", marginBottom: status === "Accepted" ? "0.5rem" : 0 }}>
+          {job.days.map(day => (
+            <span key={day} style={{ fontSize: "0.7rem", backgroundColor: "#eef2ff", color: "#4f46e5", padding: "0.15rem 0.5rem", borderRadius: "999px", fontWeight: "600" }}>
+              {day.slice(0, 3)} · {job.times[day]?.join(", ")}
+            </span>
+          ))}
         </div>
+
+        {status === "Accepted" && (
+          <button
+            onClick={() => setShowChat(p => !p)}
+            style={{ alignSelf: "flex-start", marginTop: "0.25rem", padding: "0.38rem 0.9rem", borderRadius: "2rem", border: `1.5px solid ${showChat ? "#6366f1" : "#e2e8f0"}`, backgroundColor: showChat ? "#eef2ff" : "white", color: showChat ? "#4f46e5" : "#64748b", fontWeight: "700", fontSize: "0.78rem", cursor: "pointer", fontFamily: "inherit" }}
+          >
+            💬 {showChat ? "Hide Messages" : "Messages"}
+          </button>
+        )}
+
+        {showChat && status === "Accepted" && currentUser && (
+          <ChatThread applicantId={currentUser.id} jobId={job.id} />
+        )}
       </div>
-
-      <p style={{ fontWeight: "600", color: "#111827", marginBottom: "0.4rem", fontSize: "0.9rem" }}>{job.pay}</p>
-
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem", marginBottom: status === "Accepted" ? "0.5rem" : 0 }}>
-        {job.days.map(day => (
-          <span key={day} style={{ fontSize: "0.7rem", backgroundColor: "#eef2ff", color: "#4f46e5", padding: "0.15rem 0.5rem", borderRadius: "999px", fontWeight: "600" }}>
-            {day.slice(0, 3)} · {job.times[day]?.join(", ")}
-          </span>
-        ))}
-      </div>
-
-      {status === "Accepted" && (
-        <button
-          onClick={() => setShowChat(p => !p)}
-          style={{ alignSelf: "flex-start", padding: "0.38rem 0.9rem", borderRadius: "2rem", border: `1.5px solid ${showChat ? "#6366f1" : "#e2e8f0"}`, backgroundColor: showChat ? "#eef2ff" : "white", color: showChat ? "#4f46e5" : "#64748b", fontWeight: "700", fontSize: "0.78rem", cursor: "pointer", fontFamily: "inherit" }}
-        >
-          💬 {showChat ? "Hide Messages" : "Messages"}
-        </button>
-      )}
-
-      {showChat && status === "Accepted" && currentUser && (
-        <ChatThread applicantId={currentUser.id} jobId={job.id} />
-      )}
     </div>
   );
 }
@@ -121,15 +141,17 @@ export default function AppliedJobs({ appliedJobs, setSelectedJob, setPage, curr
         </div>
       ) : (
         <>
-          {appliedJobs.map(job => (
-            <AppliedJobCard
-              key={job.id}
-              job={job}
-              currentUser={currentUser}
-              setSelectedJob={setSelectedJob}
-              setPage={setPage}
-            />
-          ))}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1rem" }}>
+            {appliedJobs.map(job => (
+              <AppliedJobCard
+                key={job.id}
+                job={job}
+                currentUser={currentUser}
+                setSelectedJob={setSelectedJob}
+                setPage={setPage}
+              />
+            ))}
+          </div>
           <div style={{ textAlign: "center", marginTop: "2rem" }}>
             <button onClick={() => setPage("studentDashboard")} style={btnGray}>Back to Jobs</button>
           </div>
