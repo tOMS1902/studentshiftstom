@@ -48,6 +48,9 @@ export default function StudentShiftsWeb() {
 
   // Restore session on page load + listen for auth changes
   useEffect(() => {
+    // Failsafe for browsers (e.g. Edge) that block Supabase localStorage access
+    const failsafe = setTimeout(() => setAuthLoading(false), 6000);
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "INITIAL_SESSION") {
         if (session?.user) {
@@ -58,6 +61,7 @@ export default function StudentShiftsWeb() {
             console.error("Failed to load profile", e);
           }
         }
+        clearTimeout(failsafe);
         setAuthLoading(false);
       }
       if (event === "SIGNED_IN" && session?.user) {
@@ -78,7 +82,7 @@ export default function StudentShiftsWeb() {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => { clearTimeout(failsafe); subscription.unsubscribe(); };
   }, []);
 
   // Sync studentLocation when user logs in/out
