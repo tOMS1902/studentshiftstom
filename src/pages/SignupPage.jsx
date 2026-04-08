@@ -125,7 +125,7 @@ function FileUpload({ label, hint, accept, onChange, file }) {
       </label>
       <p style={{ fontSize: "0.75rem", color: "#64748b", marginBottom: "0.35rem", marginTop: 0 }}>{hint}</p>
       <div style={{
-        display: "flex", alignItems: "center", gap: "0.75rem",
+        display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap",
         border: `1.5px dashed ${file ? "#10b981" : "#e2e8f0"}`,
         borderRadius: "0.6rem", padding: "0.55rem 0.75rem",
         backgroundColor: file ? "#f0fdf4" : "white",
