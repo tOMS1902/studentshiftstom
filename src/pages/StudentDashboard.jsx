@@ -140,6 +140,7 @@ export default function StudentDashboard({
   const [searchQuery,     setSearchQuery]     = useState("");
   const [sortBy,          setSortBy]          = useState("");
   const [gridCols,        setGridCols]        = useState(1);
+  const [openSubSection,  setOpenSubSection]  = useState(null);
   const filterBarRef = useRef(null);
 
   const getJobCoords = (job) => {
@@ -291,10 +292,8 @@ export default function StudentDashboard({
                   { value: "",             label: "Default" },
                   { value: "payHigh",      label: "Pay: High → Low" },
                   { value: "payLow",       label: "Pay: Low → High" },
-                  ...(studentLocation ? [
-                    { value: "distanceNear", label: "Distance: Closest → Furthest" },
-                    { value: "distanceFar",  label: "Distance: Furthest → Closest" },
-                  ] : []),
+                  { value: "distanceNear", label: "Distance: Closest → Furthest" },
+                  { value: "distanceFar",  label: "Distance: Furthest → Closest" },
                 ].map(({ value, label }) => (
                   <label key={value} style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.4rem", cursor: "pointer", fontWeight: sortBy === value ? "700" : "500", color: sortBy === value ? "#4f46e5" : "#374151", fontSize: "0.85rem" }}>
                     <input type="radio" name="sortBy" checked={sortBy === value} onChange={() => { setSortBy(value); setOpenDropdown(null); }} style={{ cursor: "pointer" }} />
@@ -311,49 +310,70 @@ export default function StudentDashboard({
               Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""} ▾
             </button>
             {openDropdown === "filters" && (
-              <div style={{ ...dropdownPanel, minWidth: "300px", maxHeight: "480px", overflowY: "auto" }}>
+              <div style={{ ...dropdownPanel, minWidth: "300px", maxHeight: "520px", overflowY: "auto" }}>
 
-                {/* Days & Times */}
-                <p style={filterSectionLabel}>Days &amp; Times</p>
-                {warning && <p style={{ color: "#ef4444", fontSize: "0.78rem", marginBottom: "0.4rem" }}>{warning}</p>}
-                {weekdays.map(day => (
-                  <div key={day} style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.45rem" }}>
-                    <input type="checkbox" id={`day-${day}`} checked={selectedDays.includes(day)} onChange={() => toggleDay(day)} style={{ cursor: "pointer", width: "15px", height: "15px" }} />
-                    <label htmlFor={`day-${day}`} style={{ fontWeight: "500", minWidth: "90px", cursor: "pointer", fontSize: "0.85rem" }}>{day}</label>
-                    <select value={dayTimes[day] || ""} onChange={e => updateTime(day, e.target.value)} disabled={!selectedDays.includes(day)}
-                      style={{ padding: "0.2rem 0.4rem", borderRadius: "0.4rem", border: "1px solid #d1d5db", fontSize: "0.78rem", color: selectedDays.includes(day) ? "#111827" : "#9ca3af", cursor: selectedDays.includes(day) ? "pointer" : "not-allowed", backgroundColor: selectedDays.includes(day) ? "white" : "#f9fafb" }}>
-                      <option value="">Any time</option>
-                      {timeSlots.map(time => <option key={time} value={time}>{time}</option>)}
-                    </select>
+                {/* Days & Times — collapsible */}
+                <button onClick={() => setOpenSubSection(openSubSection === "days" ? null : "days")} style={subSectionBtn}>
+                  <span>Days &amp; Times {selectedDays.length > 0 && <span style={activePip}>{selectedDays.length}</span>}</span>
+                  <span>{openSubSection === "days" ? "▴" : "▾"}</span>
+                </button>
+                {openSubSection === "days" && (
+                  <div style={{ paddingTop: "0.4rem", paddingBottom: "0.2rem" }}>
+                    {warning && <p style={{ color: "#ef4444", fontSize: "0.78rem", marginBottom: "0.4rem" }}>{warning}</p>}
+                    {weekdays.map(day => (
+                      <div key={day} style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.45rem" }}>
+                        <input type="checkbox" id={`day-${day}`} checked={selectedDays.includes(day)} onChange={() => toggleDay(day)} style={{ cursor: "pointer", width: "15px", height: "15px" }} />
+                        <label htmlFor={`day-${day}`} style={{ fontWeight: "500", minWidth: "90px", cursor: "pointer", fontSize: "0.85rem" }}>{day}</label>
+                        <select value={dayTimes[day] || ""} onChange={e => updateTime(day, e.target.value)} disabled={!selectedDays.includes(day)}
+                          style={{ padding: "0.2rem 0.4rem", borderRadius: "0.4rem", border: "1px solid #d1d5db", fontSize: "0.78rem", color: selectedDays.includes(day) ? "#111827" : "#9ca3af", cursor: selectedDays.includes(day) ? "pointer" : "not-allowed", backgroundColor: selectedDays.includes(day) ? "white" : "#f9fafb" }}>
+                          <option value="">Any time</option>
+                          {timeSlots.map(time => <option key={time} value={time}>{time}</option>)}
+                        </select>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
 
-                <hr style={{ border: "none", borderTop: "1px solid #e5e7eb", margin: "0.65rem 0" }} />
+                <hr style={{ border: "none", borderTop: "1px solid #e5e7eb", margin: "0.4rem 0" }} />
 
-                {/* Location */}
-                <p style={filterSectionLabel}>Location</p>
-                {allLocations.map(loc => (
-                  <label key={loc} style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.4rem", cursor: "pointer", fontWeight: "500", fontSize: "0.85rem" }}>
-                    <input type="checkbox" checked={selectedLocations.includes(loc)} onChange={() => toggleLocation(loc)} style={{ width: "15px", height: "15px", cursor: "pointer" }} />
-                    {loc}
-                  </label>
-                ))}
+                {/* Location — collapsible */}
+                <button onClick={() => setOpenSubSection(openSubSection === "location" ? null : "location")} style={subSectionBtn}>
+                  <span>Location {selectedLocations.length > 0 && <span style={activePip}>{selectedLocations.length}</span>}</span>
+                  <span>{openSubSection === "location" ? "▴" : "▾"}</span>
+                </button>
+                {openSubSection === "location" && (
+                  <div style={{ paddingTop: "0.4rem", paddingBottom: "0.2rem" }}>
+                    {allLocations.map(loc => (
+                      <label key={loc} style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.4rem", cursor: "pointer", fontWeight: "500", fontSize: "0.85rem" }}>
+                        <input type="checkbox" checked={selectedLocations.includes(loc)} onChange={() => toggleLocation(loc)} style={{ width: "15px", height: "15px", cursor: "pointer" }} />
+                        {loc}
+                      </label>
+                    ))}
+                  </div>
+                )}
 
-                <hr style={{ border: "none", borderTop: "1px solid #e5e7eb", margin: "0.65rem 0" }} />
+                <hr style={{ border: "none", borderTop: "1px solid #e5e7eb", margin: "0.4rem 0" }} />
 
-                {/* Job Type */}
-                <p style={filterSectionLabel}>Job Type</p>
-                {Object.keys(jobCategories).map(type => (
-                  <label key={type} style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.4rem", cursor: "pointer", fontWeight: "500", fontSize: "0.85rem" }}>
-                    <input type="checkbox" checked={selectedJobTypes.includes(type)} onChange={() => toggleJobType(type)} style={{ width: "15px", height: "15px", cursor: "pointer" }} />
-                    {type}
-                  </label>
-                ))}
+                {/* Job Type — collapsible */}
+                <button onClick={() => setOpenSubSection(openSubSection === "jobType" ? null : "jobType")} style={subSectionBtn}>
+                  <span>Job Type {selectedJobTypes.length > 0 && <span style={activePip}>{selectedJobTypes.length}</span>}</span>
+                  <span>{openSubSection === "jobType" ? "▴" : "▾"}</span>
+                </button>
+                {openSubSection === "jobType" && (
+                  <div style={{ paddingTop: "0.4rem", paddingBottom: "0.2rem" }}>
+                    {Object.keys(jobCategories).map(type => (
+                      <label key={type} style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.4rem", cursor: "pointer", fontWeight: "500", fontSize: "0.85rem" }}>
+                        <input type="checkbox" checked={selectedJobTypes.includes(type)} onChange={() => toggleJobType(type)} style={{ width: "15px", height: "15px", cursor: "pointer" }} />
+                        {type}
+                      </label>
+                    ))}
+                  </div>
+                )}
 
-                <hr style={{ border: "none", borderTop: "1px solid #e5e7eb", margin: "0.65rem 0" }} />
+                <hr style={{ border: "none", borderTop: "1px solid #e5e7eb", margin: "0.4rem 0" }} />
 
-                {/* Schedule toggles */}
-                <p style={filterSectionLabel}>Schedule</p>
+                {/* Schedule toggles — always visible */}
+                <p style={{ ...filterSectionLabel, marginTop: "0.4rem" }}>Schedule</p>
                 {[
                   { label: "Weekend Work", active: weekendOnly, toggle: () => setWeekendOnly(p => !p) },
                   { label: "All Week",     active: allWeekOnly, toggle: () => setAllWeekOnly(p => !p) },
@@ -495,3 +515,5 @@ const dropdownPanel = {
 const btnBase = { padding: "0.38rem 0.9rem", borderRadius: "2rem", color: "white", border: "none", cursor: "pointer", fontWeight: "700", fontSize: "0.8rem", fontFamily: "inherit" };
 const btnBlue = { ...btnBase, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", boxShadow: "0 2px 8px rgba(99,102,241,0.3)" };
 const filterSectionLabel = { fontSize: "0.72rem", fontWeight: "700", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 0.4rem" };
+const subSectionBtn = { display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", background: "none", border: "none", padding: "0.35rem 0", cursor: "pointer", fontWeight: "600", fontSize: "0.88rem", color: "#1e293b", fontFamily: "inherit", textAlign: "left" };
+const activePip = { display: "inline-flex", alignItems: "center", justifyContent: "center", backgroundColor: "#6366f1", color: "white", borderRadius: "999px", fontSize: "0.65rem", fontWeight: "700", minWidth: "16px", height: "16px", padding: "0 0.3rem", marginLeft: "0.3rem" };
