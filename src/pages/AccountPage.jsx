@@ -481,8 +481,8 @@ function FileUpload({ label, hint, accept, onChange, file, existingName, require
 }
 
 const labelStyle  = { display: "block", fontWeight: "600", fontSize: "0.875rem", color: "#374151", marginBottom: "0.3rem" };
-const inputStyle  = { width: "100%", padding: "0.6rem 0.75rem", marginBottom: "1rem", borderRadius: "0.5rem", border: "1.5px solid #d1d5db", fontSize: "0.9rem", boxSizing: "border-box" };
-const btnBase     = { width: "100%", padding: "0.75rem", borderRadius: "0.5rem", border: "none", color: "white", fontWeight: "bold", cursor: "pointer", fontSize: "0.95rem" };
-const btnPrimary  = { ...btnBase, backgroundColor: "#3b82f6" };
-const btnGray     = { ...btnBase, backgroundColor: "#6b7280" };
-const btnRed      = { ...btnBase, backgroundColor: "#ef4444" };
+const inputStyle  = { width: "100%", padding: "0.6rem 0.75rem", marginBottom: "1rem", borderRadius: "0.65rem", border: "1.5px solid #e2e8f0", fontSize: "0.9rem", boxSizing: "border-box", fontFamily: "inherit", color: "#1e293b" };
+const btnBase     = { width: "100%", padding: "0.8rem", borderRadius: "2rem", border: "none", color: "white", fontWeight: "700", cursor: "pointer", fontSize: "0.95rem", fontFamily: "inherit" };
+const btnPrimary  = { ...btnBase, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", boxShadow: "0 4px 14px rgba(99,102,241,0.35)" };
+const btnGray     = { ...btnBase, backgroundColor: "#64748b" };
+const btnRed      = { ...btnBase, background: "linear-gradient(135deg, #f43f5e, #e11d48)", boxShadow: "0 4px 14px rgba(244,63,94,0.3)" };

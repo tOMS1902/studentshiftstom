@@ -1,6 +1,18 @@
 import { useState } from "react";
 import PageWrapper from "../components/PageWrapper";
 
+const COMPANY_PHOTOS = {
+  "Galway Pub":     "https://picsum.photos/seed/galwaypub/800/140",
+  "SuperMart":      "https://picsum.photos/seed/supermart/800/140",
+  "Campus Library": "https://picsum.photos/seed/campuslibrary/800/140",
+  "Galway Bistro":  "https://picsum.photos/seed/galwaybistro/800/140",
+  "City Mall":      "https://picsum.photos/seed/citymall/800/140",
+  "Coffee Hub":     "https://picsum.photos/seed/coffeehub/800/140",
+  "City Hotel":     "https://picsum.photos/seed/cityhotel/800/140",
+  "Tech Store":     "https://picsum.photos/seed/techstore/800/140",
+  "City Bistro":    "https://picsum.photos/seed/citybistro/800/140",
+};
+
 export default function JobDetails({
   job, setPage, currentUser, likedJobs, setLikedJobs, appliedJobs, setAppliedJobs,
 }) {
@@ -39,6 +51,14 @@ export default function JobDetails({
 
   return (
     <PageWrapper>
+      {/* Banner photo */}
+      <div style={{ margin: "-2rem -2.5rem 1.5rem", overflow: "hidden", borderRadius: "1.25rem 1.25rem 0 0" }}>
+        <img
+          src={COMPANY_PHOTOS[job.company] || "https://picsum.photos/seed/default/800/140"}
+          alt={job.company}
+          style={{ width: "100%", height: "160px", objectFit: "cover", display: "block" }}
+        />
+      </div>
       <h1 style={{ fontWeight: "800", fontSize: "1.75rem", marginBottom: "0.2rem", color: "#1e293b" }}>{job.title}</h1>
       <p style={{ color: "#64748b", fontSize: "0.95rem", marginBottom: "1.5rem", fontWeight: "500" }}>{job.company}</p>
 
@@ -73,14 +93,14 @@ export default function JobDetails({
       {/* Action buttons */}
       <div className="job-details-buttons" style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
         {!isApplied && (
-          <button onClick={toggleLike} style={{ ...btn, backgroundColor: isLiked ? "#10b981" : "#f43f5e" }}>
+          <button onClick={toggleLike} style={{ ...btn, background: isLiked ? "#10b981" : "linear-gradient(135deg, #f43f5e, #e11d48)", boxShadow: "0 4px 14px rgba(244,63,94,0.3)" }}>
             {isLiked ? "✅ Liked" : "❤️ Like"}
           </button>
         )}
-        <button onClick={handleApply} style={{ ...btn, backgroundColor: isApplied ? "#10b981" : "#6366f1" }}>
+        <button onClick={handleApply} style={{ ...btn, background: isApplied ? "#10b981" : "linear-gradient(135deg, #6366f1, #8b5cf6)", boxShadow: isApplied ? "none" : "0 4px 14px rgba(99,102,241,0.35)" }}>
           {isApplied ? "✅ Applied" : "Apply Now"}
         </button>
-        <button onClick={() => setPage("studentDashboard")} style={{ ...btn, backgroundColor: "#64748b" }}>Back</button>
+        <button onClick={() => setPage("studentDashboard")} style={{ ...btn, background: "linear-gradient(135deg, #f43f5e, #e11d48)", boxShadow: "0 4px 14px rgba(244,63,94,0.3)" }}>← Back</button>
       </div>
 
       {/* Apply modal */}
@@ -126,4 +146,4 @@ function InfoRow({ label, value, highlight }) {
   );
 }
 
-const btn = { padding: "0.75rem 1.5rem", borderRadius: "2rem", color: "white", border: "none", cursor: "pointer", fontWeight: "700", fontFamily: "inherit", fontSize: "0.9rem" };
+const btn = { padding: "0.7rem 1.5rem", borderRadius: "2rem", color: "white", border: "none", cursor: "pointer", fontWeight: "700", fontFamily: "inherit", fontSize: "0.9rem", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" };
