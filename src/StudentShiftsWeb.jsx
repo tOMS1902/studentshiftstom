@@ -117,7 +117,7 @@ export default function StudentShiftsWeb() {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "#f1f5f9" }}>
         <div style={{ textAlign: "center", color: "#64748b" }}>
-          <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>❤️</div>
+          <img src="/favicon.svg" alt="StudentShifts" style={{ width: "48px", height: "54px", marginBottom: "0.5rem" }} />
           <p style={{ fontWeight: "600", fontFamily: "'Poppins', sans-serif" }}>Loading StudentShifts…</p>
         </div>
       </div>

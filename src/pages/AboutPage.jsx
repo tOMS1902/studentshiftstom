@@ -6,8 +6,8 @@ export default function AboutPage({ setPage }) {
 
       {/* Hero */}
       <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-        <div style={{ width: "72px", height: "72px", borderRadius: "1.25rem", background: "linear-gradient(135deg, #f43f5e, #e11d48)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1rem", boxShadow: "0 8px 24px rgba(244,63,94,0.35)", fontSize: "2rem" }}>
-          ❤️
+        <div style={{ width: "72px", height: "72px", borderRadius: "1.25rem", background: "linear-gradient(135deg, #f43f5e, #e11d48)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1rem", boxShadow: "0 8px 24px rgba(244,63,94,0.35)" }}>
+          <img src="/favicon.svg" alt="StudentShifts" style={{ width: "40px", height: "45px" }} />
         </div>
         <h1 style={{ fontWeight: "800", fontSize: "2rem", color: "#1e293b", marginBottom: "0.5rem" }}>About StudentShifts</h1>
         <p style={{ color: "#64748b", fontSize: "1rem", maxWidth: "520px", margin: "0 auto", lineHeight: "1.7" }}>
