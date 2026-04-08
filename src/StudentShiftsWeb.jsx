@@ -1,85 +1,86 @@
 import { useState, useEffect } from "react";
-
 import Header from "./components/Header";
-
 import StudentDashboard from "./pages/StudentDashboard";
-
 import CompanyDashboard from "./pages/CompanyDashboard";
-
 import LoginPage from "./pages/LoginPage";
-
 import SignupPage from "./pages/SignupPage";
-
 import AccountPage from "./pages/AccountPage";
-
 import JobDetails from "./pages/JobDetails";
-
 import LikedJobs from "./pages/LikedJobs";
-
-import AppliedJobs from "./pages/AppliedJobs"; // new page
+import AppliedJobs from "./pages/AppliedJobs";
 import AboutPage from "./pages/AboutPage";
+import { supabase } from "./lib/supabase";
+import { getProfile } from "./lib/auth";
 
-
-
-
-
-const mockUsers = [
-  {
-    id: 1,
-    name: "John Student",
-    email: "student@test.com",
-    password: "123456",
-    role: "student",
-    studentIdCardName: "student_id.jpg",
-    governmentIdName: "passport.jpg",
-    cvName: "john_cv.pdf",
-    linkedIn: "https://linkedin.com/in/johnstudent",
-    coverLetterName: null,
-  },
-  {
-    id: 3,
-    name: "Jane Student",
-    email: "jane@test.com",
-    password: "123456",
-    role: "student",
-    studentIdCardName: "jane_student_id.jpg",
-    governmentIdName: "jane_passport.jpg",
-    cvName: null,
-    linkedIn: "",
-    coverLetterName: null,
-  },
-  {
-    id: 2,
-    name: "Acme Corp",
-    email: "company@test.com",
-    password: "abcdef",
-    role: "company",
-    studentIdCardName: null,
-    governmentIdName: null,
-    cvName: null,
-    linkedIn: "",
-    coverLetterName: null,
-  },
-];
-
-
-
-
+// Normalise Supabase profile shape to match what the app expects
+function normaliseProfile(profile) {
+  const extra = profile.students || profile.companies || {};
+  return {
+    id:                 profile.id,
+    name:               profile.name,
+    email:              profile.email,
+    role:               profile.role,
+    cvName:             extra.cv_url             || null,
+    coverLetterName:    extra.cover_letter_url   || null,
+    linkedIn:           extra.linkedin           || "",
+    bio:                extra.bio                || "",
+    skills:             extra.skills             || [],
+    profilePhoto:       extra.profile_photo_url  || "",
+    studentIdCardName:  extra.student_id_url     || null,
+    governmentIdName:   extra.gov_id_url         || null,
+    savedLocation:      extra.location_lat ? {
+      lat:         extra.location_lat,
+      lng:         extra.location_lng,
+      displayName: extra.location_display,
+    } : null,
+  };
+}
 
 export default function StudentShiftsWeb() {
-
-  const [page, setPage] = useState("studentDashboard");
-
+  const [page, setPage]               = useState("studentDashboard");
   const [currentUser, setCurrentUser] = useState(null);
-
   const [selectedJob, setSelectedJob] = useState(null);
-
-  const [likedJobs, setLikedJobs] = useState([]);
-
+  const [likedJobs, setLikedJobs]     = useState([]);
   const [appliedJobs, setAppliedJobs] = useState([]);
-
   const [studentLocation, setStudentLocation] = useState(null);
-  const [notifCount, setNotifCount] = useState(0);
+  const [notifCount, setNotifCount]   = useState(0);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  // Restore session on page load + listen for auth changes
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        try {
+          const profile = await getProfile(session.user.id);
+          setCurrentUser(normaliseProfile(profile));
+        } catch (e) {
+          console.error("Failed to load profile", e);
+        }
+      }
+      setAuthLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" && session?.user) {
+        try {
+          const profile = await getProfile(session.user.id);
+          const user = normaliseProfile(profile);
+          setCurrentUser(user);
+          setPage(user.role === "company" ? "companyDashboard" : "studentDashboard");
+        } catch (e) {
+          console.error("Failed to load profile", e);
+        }
+      }
+      if (event === "SIGNED_OUT") {
+        setCurrentUser(null);
+        setLikedJobs([]);
+        setAppliedJobs([]);
+        setPage("studentDashboard");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Sync studentLocation when user logs in/out
   useEffect(() => {
@@ -109,175 +110,98 @@ export default function StudentShiftsWeb() {
     setNotifCount(0);
   }, [page]);
 
-
-
-
+  if (authLoading) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "#f1f5f9" }}>
+        <div style={{ textAlign: "center", color: "#64748b" }}>
+          <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>❤️</div>
+          <p style={{ fontWeight: "600", fontFamily: "'Poppins', sans-serif" }}>Loading StudentShifts…</p>
+        </div>
+      </div>
+    );
+  }
 
   const renderPage = () => {
-
     switch (page) {
-
       case "login":
-
-        return <LoginPage setPage={setPage} setCurrentUser={setCurrentUser} mockUsers={mockUsers} />;
-
+        return <LoginPage setPage={setPage} setCurrentUser={setCurrentUser} />;
       case "signup":
-
         return <SignupPage setPage={setPage} />;
-
       case "studentDashboard":
-
         return (
-
           <StudentDashboard
-
             setPage={setPage}
-
             setSelectedJob={setSelectedJob}
-
             likedJobs={likedJobs}
-
             setLikedJobs={setLikedJobs}
-
             appliedJobs={appliedJobs}
-
             currentUser={currentUser}
-
             studentLocation={studentLocation}
-
           />
-
         );
-
       case "companyDashboard":
-
         return <CompanyDashboard setPage={setPage} currentUser={currentUser} />;
-
       case "account":
-
         return currentUser ? (
-
           <AccountPage currentUser={currentUser} setCurrentUser={setCurrentUser} setPage={setPage} setLikedJobs={setLikedJobs} setAppliedJobs={setAppliedJobs} setStudentLocation={setStudentLocation} />
-
         ) : null;
-
       case "jobDetails":
-
         return selectedJob && (
-
           <JobDetails
-
             job={selectedJob}
-
             setPage={setPage}
-
             currentUser={currentUser}
-
             likedJobs={likedJobs}
-
             setLikedJobs={setLikedJobs}
-
-            appliedJobs={appliedJobs} // pass appliedJobs
-
-            setAppliedJobs={setAppliedJobs}
-
-          />
-
-        );
-
-      case "likedJobs":
-
-        return currentUser && (
-
-          <LikedJobs
-
-            likedJobs={likedJobs}
-
-            setLikedJobs={setLikedJobs}
-
-            setSelectedJob={setSelectedJob}
-
-            setPage={setPage}
-
-          />
-
-        );
-
-      case "appliedJobs": // new page
-
-        return currentUser && (
-
-          <AppliedJobs
-
             appliedJobs={appliedJobs}
-
-            setSelectedJob={setSelectedJob}
-
-            setPage={setPage}
-
-            currentUser={currentUser}
-
+            setAppliedJobs={setAppliedJobs}
           />
-
         );
-
+      case "likedJobs":
+        return currentUser && (
+          <LikedJobs
+            likedJobs={likedJobs}
+            setLikedJobs={setLikedJobs}
+            setSelectedJob={setSelectedJob}
+            setPage={setPage}
+          />
+        );
+      case "appliedJobs":
+        return currentUser && (
+          <AppliedJobs
+            appliedJobs={appliedJobs}
+            setSelectedJob={setSelectedJob}
+            setPage={setPage}
+            currentUser={currentUser}
+          />
+        );
       case "about":
         return <AboutPage setPage={setPage} />;
-
       default:
-
         return (
-
           <StudentDashboard
-
             setPage={setPage}
-
             setSelectedJob={setSelectedJob}
-
             likedJobs={likedJobs}
-
             setLikedJobs={setLikedJobs}
-
             appliedJobs={appliedJobs}
-
             currentUser={currentUser}
-
             studentLocation={studentLocation}
-
           />
-
         );
-
     }
-
   };
 
-
-
-
-
   return (
-
     <>
-
       <Header
-
         currentUser={currentUser}
-
         setPage={setPage}
-
         likedJobs={likedJobs}
-
         appliedJobs={appliedJobs}
-
         notifCount={notifCount}
-
       />
-
       {renderPage()}
-
     </>
-
   );
-
 }
