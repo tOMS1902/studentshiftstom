@@ -827,8 +827,9 @@ function JobForm({ formData, setFormData, onSave, onCancel, toggleDay, formSavin
                   draggable={false}
                   style={{
                     position: "absolute",
-                    top: "50%", left: "50%",
-                    transform: `translate(calc(-50% + ${crop.offsetX}%), calc(-50% + ${crop.offsetY}%)) scale(${crop.zoom})`,
+                    left: `calc(50% + ${crop.offsetX}%)`,
+                    top: `calc(50% + ${crop.offsetY}%)`,
+                    transform: `translate(-50%, -50%) scale(${crop.zoom})`,
                     transformOrigin: "center",
                     minWidth: "100%", minHeight: "100%",
                     maxWidth: "none",
