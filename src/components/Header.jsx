@@ -43,7 +43,7 @@ export default function Header({ currentUser, setPage, likedJobs, appliedJobs, n
       <div
         className="header-logo"
         style={{ display: "flex", alignItems: "center", gap: "0.85rem", cursor: "pointer" }}
-        onClick={() => setPage(currentUser?.role === "company" ? "companyDashboard" : "studentDashboard")}
+        onClick={() => setPage("studentDashboard")}
       >
         <div className="header-logo-icon"><LogoIcon /></div>
         <div className="header-logo-text" style={{ lineHeight: "1.15" }}>
@@ -71,7 +71,10 @@ export default function Header({ currentUser, setPage, likedJobs, appliedJobs, n
                 </div>
               </>
             ) : (
-              <button onClick={() => setPage("companyDashboard")} style={navBtnPrimary}>Dashboard</button>
+              <>
+                <button onClick={() => setPage("studentDashboard")} style={navBtnOutline}>Browse Jobs</button>
+                <button onClick={() => setPage("companyDashboard")} style={navBtnPrimary}>My Jobs</button>
+              </>
             )}
           </>
         ) : (
