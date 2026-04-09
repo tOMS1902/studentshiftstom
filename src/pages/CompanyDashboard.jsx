@@ -458,21 +458,14 @@ function JobForm({ formData, setFormData, onSave, onCancel, toggleDay, formSavin
   const getCrop = (idx) => cropSettings[idx] || { zoom: 1, offsetX: 0, offsetY: 0 };
   const setCrop = (idx, patch) => setCropSettings(prev => ({ ...prev, [idx]: { ...(prev[idx] || { zoom: 1, offsetX: 0, offsetY: 0 }), ...patch } }));
 
-  const clampOffset = (zoom, ox, oy) => {
-    if (!previewRef.current) return { offsetX: ox, offsetY: oy };
-    const { width, height } = previewRef.current.getBoundingClientRect();
-    const maxX = Math.max(0, (zoom - 1) * width  / 2);
-    const maxY = Math.max(0, (zoom - 1) * height / 2);
-    return { offsetX: Math.max(-maxX, Math.min(maxX, ox)), offsetY: Math.max(-maxY, Math.min(maxY, oy)) };
-  };
-
   const startDrag = (clientX, clientY) => {
     const crop = getCrop(previewIndex);
     dragRef.current = {
       active: true,
-      startX: clientX, startY: clientY,
-      originX: crop.offsetX, originY: crop.offsetY,
-      zoom: crop.zoom,
+      startX: clientX,
+      startY: clientY,
+      originX: crop.offsetX,
+      originY: crop.offsetY,
       idx: previewIndex,
     };
     setIsDragging(true);
@@ -484,29 +477,19 @@ function JobForm({ formData, setFormData, onSave, onCancel, toggleDay, formSavin
       if (!d.active) return;
       const cx = e.touches ? e.touches[0].clientX : e.clientX;
       const cy = e.touches ? e.touches[0].clientY : e.clientY;
-      const ox = d.originX + (cx - d.startX);
-      const oy = d.originY + (cy - d.startY);
-      // Clamp using zoom stored in ref
-      let maxX = 0, maxY = 0;
-      if (previewRef.current) {
-        const { width, height } = previewRef.current.getBoundingClientRect();
-        maxX = Math.max(0, (d.zoom - 1) * width  / 2);
-        maxY = Math.max(0, (d.zoom - 1) * height / 2);
-      }
-      const clampedX = Math.max(-maxX, Math.min(maxX, ox));
-      const clampedY = Math.max(-maxY, Math.min(maxY, oy));
       setCropSettings(prev => ({
         ...prev,
-        [d.idx]: { ...(prev[d.idx] || { zoom: d.zoom }), offsetX: clampedX, offsetY: clampedY },
+        [d.idx]: {
+          ...(prev[d.idx] || { zoom: 1 }),
+          offsetX: d.originX + (cx - d.startX),
+          offsetY: d.originY + (cy - d.startY),
+        },
       }));
     };
-    const onUp = () => {
-      dragRef.current.active = false;
-      setIsDragging(false);
-    };
+    const onUp = () => { dragRef.current.active = false; setIsDragging(false); };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup",   onUp);
-    window.addEventListener("touchmove", onMove, { passive: true });
+    window.addEventListener("touchmove", onMove, { passive: false });
     window.addEventListener("touchend",  onUp);
     return () => {
       window.removeEventListener("mousemove", onMove);
@@ -826,20 +809,23 @@ function JobForm({ formData, setFormData, onSave, onCancel, toggleDay, formSavin
               </div>
               <div
                 ref={previewRef}
-                style={{ width: "100%", aspectRatio: "16/7", backgroundColor: "#0f172a", borderRadius: "0.6rem", overflow: "hidden", border: "1.5px solid #e2e8f0", cursor: isDragging ? "grabbing" : "grab", userSelect: "none" }}
+                style={{ position: "relative", width: "100%", aspectRatio: "16/7", backgroundColor: "#0f172a", borderRadius: "0.6rem", overflow: "hidden", border: "1.5px solid #e2e8f0", cursor: isDragging ? "grabbing" : "grab", userSelect: "none" }}
                 onMouseDown={e => { e.preventDefault(); startDrag(e.clientX, e.clientY); }}
-                onTouchStart={e => { startDrag(e.touches[0].clientX, e.touches[0].clientY); }}
+                onTouchStart={e => { e.preventDefault(); startDrag(e.touches[0].clientX, e.touches[0].clientY); }}
               >
                 <img
                   src={src}
                   alt="preview"
                   draggable={false}
                   style={{
-                    width: "100%", height: "100%", display: "block",
-                    objectFit: "cover",
-                    transform: `translate(${crop.offsetX}px, ${crop.offsetY}px) scale(${crop.zoom})`,
+                    position: "absolute",
+                    top: "50%", left: "50%",
+                    transform: `translate(calc(-50% + ${crop.offsetX}px), calc(-50% + ${crop.offsetY}px)) scale(${crop.zoom})`,
                     transformOrigin: "center",
-                    transition: isDragging ? "none" : "transform 0.12s ease",
+                    minWidth: "100%", minHeight: "100%",
+                    maxWidth: "none",
+                    width: "auto", height: "auto",
+                    transition: isDragging ? "none" : "transform 0.1s ease",
                   }}
                 />
               </div>
