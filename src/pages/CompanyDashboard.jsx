@@ -468,20 +468,37 @@ function JobForm({ formData, setFormData, onSave, onCancel, toggleDay, formSavin
 
   const startDrag = (clientX, clientY) => {
     const crop = getCrop(previewIndex);
-    dragRef.current = { active: true, startX: clientX, startY: clientY, originX: crop.offsetX, originY: crop.offsetY, idx: previewIndex };
+    dragRef.current = {
+      active: true,
+      startX: clientX, startY: clientY,
+      originX: crop.offsetX, originY: crop.offsetY,
+      zoom: crop.zoom,
+      idx: previewIndex,
+    };
     setIsDragging(true);
   };
 
   useEffect(() => {
     const onMove = (e) => {
-      if (!dragRef.current.active) return;
+      const d = dragRef.current;
+      if (!d.active) return;
       const cx = e.touches ? e.touches[0].clientX : e.clientX;
       const cy = e.touches ? e.touches[0].clientY : e.clientY;
-      const { startX, startY, originX, originY, idx } = dragRef.current;
-      const crop = getCrop(idx);
-      const ox = originX + (cx - startX);
-      const oy = originY + (cy - startY);
-      setCrop(idx, clampOffset(crop.zoom, ox, oy));
+      const ox = d.originX + (cx - d.startX);
+      const oy = d.originY + (cy - d.startY);
+      // Clamp using zoom stored in ref
+      let maxX = 0, maxY = 0;
+      if (previewRef.current) {
+        const { width, height } = previewRef.current.getBoundingClientRect();
+        maxX = Math.max(0, (d.zoom - 1) * width  / 2);
+        maxY = Math.max(0, (d.zoom - 1) * height / 2);
+      }
+      const clampedX = Math.max(-maxX, Math.min(maxX, ox));
+      const clampedY = Math.max(-maxY, Math.min(maxY, oy));
+      setCropSettings(prev => ({
+        ...prev,
+        [d.idx]: { ...(prev[d.idx] || { zoom: d.zoom }), offsetX: clampedX, offsetY: clampedY },
+      }));
     };
     const onUp = () => {
       dragRef.current.active = false;
@@ -801,10 +818,10 @@ function JobForm({ formData, setFormData, onSave, onCancel, toggleDay, formSavin
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.35rem" }}>
                 <p style={{ fontSize: "0.75rem", color: "#6b7280", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.04em", margin: 0 }}>Preview · drag to reposition</p>
                 <div style={{ display: "flex", gap: "0.3rem", alignItems: "center" }}>
-                  <button type="button" onClick={() => setCrop(safeIdx, { zoom: 1, offsetX: 0, offsetY: 0 })} style={{ ...zoomBtn, color: "#6366f1", opacity: crop.zoom > 1 ? 1 : 0.35 }}>Reset</button>
-                  <button type="button" onClick={() => { const c = getCrop(safeIdx); const nz = Math.max(1, Math.min(4, c.zoom - 0.25)); const cl = clampOffset(nz, c.offsetX, c.offsetY); setCrop(safeIdx, { zoom: nz, ...cl }); }} style={zoomBtn}>−</button>
+                  <button type="button" onClick={() => { dragRef.current.zoom = 1; setCrop(safeIdx, { zoom: 1, offsetX: 0, offsetY: 0 }); }} style={{ ...zoomBtn, color: "#6366f1", opacity: crop.zoom > 1 ? 1 : 0.35 }}>Reset</button>
+                  <button type="button" onClick={() => { const c = getCrop(safeIdx); const nz = Math.max(1, Math.min(4, c.zoom - 0.25)); const cl = clampOffset(nz, c.offsetX, c.offsetY); dragRef.current.zoom = nz; setCrop(safeIdx, { zoom: nz, ...cl }); }} style={zoomBtn}>−</button>
                   <span style={{ fontSize: "0.72rem", color: "#6b7280", minWidth: "32px", textAlign: "center" }}>{Math.round(crop.zoom * 100)}%</span>
-                  <button type="button" onClick={() => { const nz = Math.max(1, Math.min(4, getCrop(safeIdx).zoom + 0.25)); setCrop(safeIdx, { zoom: nz }); }} style={zoomBtn}>+</button>
+                  <button type="button" onClick={() => { const nz = Math.max(1, Math.min(4, getCrop(safeIdx).zoom + 0.25)); dragRef.current.zoom = nz; setCrop(safeIdx, { zoom: nz }); }} style={zoomBtn}>+</button>
                 </div>
               </div>
               <div
