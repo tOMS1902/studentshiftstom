@@ -466,13 +466,6 @@ function JobForm({ formData, setFormData, onSave, onCancel, toggleDay, formSavin
     return { offsetX: Math.max(-maxX, Math.min(maxX, ox)), offsetY: Math.max(-maxY, Math.min(maxY, oy)) };
   };
 
-  const handleWheel = (e) => {
-    e.preventDefault();
-    const crop = getCrop(previewIndex);
-    const newZoom = Math.max(1, Math.min(4, crop.zoom - e.deltaY * 0.005));
-    setCrop(previewIndex, { zoom: newZoom, ...clampOffset(newZoom, crop.offsetX, crop.offsetY) });
-  };
-
   const startDrag = (clientX, clientY) => {
     const crop = getCrop(previewIndex);
     dragRef.current = { active: true, startX: clientX, startY: clientY, originX: crop.offsetX, originY: crop.offsetY, idx: previewIndex };
@@ -806,7 +799,7 @@ function JobForm({ formData, setFormData, onSave, onCancel, toggleDay, formSavin
           return src ? (
             <div style={{ marginBottom: "0.75rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.35rem" }}>
-                <p style={{ fontSize: "0.75rem", color: "#6b7280", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.04em", margin: 0 }}>Preview · drag · scroll to zoom</p>
+                <p style={{ fontSize: "0.75rem", color: "#6b7280", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.04em", margin: 0 }}>Preview · drag to reposition</p>
                 <div style={{ display: "flex", gap: "0.3rem", alignItems: "center" }}>
                   <button type="button" onClick={() => setCrop(safeIdx, { zoom: 1, offsetX: 0, offsetY: 0 })} style={{ ...zoomBtn, color: "#6366f1", opacity: crop.zoom > 1 ? 1 : 0.35 }}>Reset</button>
                   <button type="button" onClick={() => { const c = getCrop(safeIdx); const nz = Math.max(1, Math.min(4, c.zoom - 0.25)); const cl = clampOffset(nz, c.offsetX, c.offsetY); setCrop(safeIdx, { zoom: nz, ...cl }); }} style={zoomBtn}>−</button>
@@ -816,8 +809,7 @@ function JobForm({ formData, setFormData, onSave, onCancel, toggleDay, formSavin
               </div>
               <div
                 ref={previewRef}
-                style={{ width: "100%", aspectRatio: "16/7", backgroundColor: "#0f172a", borderRadius: "0.6rem", overflow: "hidden", border: "1.5px solid #e2e8f0", cursor: isDragging ? "grabbing" : crop.zoom > 1 ? "grab" : "default", userSelect: "none" }}
-                onWheel={handleWheel}
+                style={{ width: "100%", aspectRatio: "16/7", backgroundColor: "#0f172a", borderRadius: "0.6rem", overflow: "hidden", border: "1.5px solid #e2e8f0", cursor: isDragging ? "grabbing" : "grab", userSelect: "none" }}
                 onMouseDown={e => { e.preventDefault(); startDrag(e.clientX, e.clientY); }}
                 onTouchStart={e => { startDrag(e.touches[0].clientX, e.touches[0].clientY); }}
               >
