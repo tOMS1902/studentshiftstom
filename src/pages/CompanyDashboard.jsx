@@ -458,28 +458,38 @@ function JobForm({ formData, setFormData, onSave, onCancel, toggleDay, formSavin
   const getCrop = (idx) => cropSettings[idx] || { zoom: 1, offsetX: 0, offsetY: 0 };
   const setCrop = (idx, patch) => setCropSettings(prev => ({ ...prev, [idx]: { ...getCrop(idx), ...patch } }));
 
+  // Clamp offset so image never shows a gap — uses actual container size
   const clampOffset = (zoom, ox, oy) => {
-    const max = (zoom - 1) * 50;
-    return { offsetX: Math.max(-max, Math.min(max, ox)), offsetY: Math.max(-max, Math.min(max, oy)) };
+    if (!previewRef.current) return { offsetX: ox, offsetY: oy };
+    const { width, height } = previewRef.current.getBoundingClientRect();
+    const maxX = Math.max(0, (zoom - 1) * width  / 2);
+    const maxY = Math.max(0, (zoom - 1) * height / 2);
+    return {
+      offsetX: Math.max(-maxX, Math.min(maxX, ox)),
+      offsetY: Math.max(-maxY, Math.min(maxY, oy)),
+    };
   };
 
   const handleWheel = (e) => {
     e.preventDefault();
     const crop = getCrop(previewIndex);
-    const newZoom = Math.max(1, Math.min(4, crop.zoom - e.deltaY * 0.002));
+    const newZoom = Math.max(1, Math.min(4, crop.zoom - e.deltaY * 0.005));
     const clamped = clampOffset(newZoom, crop.offsetX, crop.offsetY);
     setCrop(previewIndex, { zoom: newZoom, ...clamped });
   };
 
   const startDrag = (clientX, clientY) => {
+    const crop = getCrop(previewIndex);
     setIsDragging(true);
-    setDragStart({ x: clientX - getCrop(previewIndex).offsetX, y: clientY - getCrop(previewIndex).offsetY });
+    // Store anchor = pointer position minus current offset (in screen space)
+    setDragStart({ x: clientX - crop.offsetX, y: clientY - crop.offsetY });
   };
   const onDrag = (clientX, clientY) => {
     if (!isDragging) return;
     const crop = getCrop(previewIndex);
-    const clamped = clampOffset(crop.zoom, clientX - dragStart.x, clientY - dragStart.y);
-    setCrop(previewIndex, clamped);
+    const ox = clientX - dragStart.x;
+    const oy = clientY - dragStart.y;
+    setCrop(previewIndex, clampOffset(crop.zoom, ox, oy));
   };
   const stopDrag = () => setIsDragging(false);
   const titlesForCategory = formData.category ? jobCategories[formData.category] ?? [] : [];
@@ -809,10 +819,10 @@ function JobForm({ formData, setFormData, onSave, onCancel, toggleDay, formSavin
                   draggable={false}
                   style={{
                     width: "100%", height: "100%", display: "block",
-                    objectFit: crop.zoom === 1 ? "contain" : "cover",
-                    transform: `scale(${crop.zoom}) translate(${crop.offsetX / crop.zoom}px, ${crop.offsetY / crop.zoom}px)`,
+                    objectFit: "cover",
+                    transform: `translate(${crop.offsetX}px, ${crop.offsetY}px) scale(${crop.zoom})`,
                     transformOrigin: "center",
-                    transition: isDragging ? "none" : "transform 0.15s ease",
+                    transition: isDragging ? "none" : "transform 0.12s ease",
                   }}
                 />
               </div>
