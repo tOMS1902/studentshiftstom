@@ -450,67 +450,49 @@ function JobForm({ formData, setFormData, onSave, onCancel, toggleDay, formSavin
 
   // Photo preview state
   const [previewIndex, setPreviewIndex] = useState(0);
-  const [cropSettings, setCropSettings] = useState({}); // per-photo zoom + offset
+  const [cropSettings, setCropSettings] = useState({});
   const [isDragging, setIsDragging]     = useState(false);
-  const [dragStart, setDragStart]       = useState({ x: 0, y: 0 });
-  const previewRef = useRef(null);
+  const previewRef  = useRef(null);
+  const dragRef     = useRef({ active: false, startX: 0, startY: 0, originX: 0, originY: 0, idx: 0 });
 
   const getCrop = (idx) => cropSettings[idx] || { zoom: 1, offsetX: 0, offsetY: 0 };
-  const setCrop = (idx, patch) => setCropSettings(prev => ({ ...prev, [idx]: { ...getCrop(idx), ...patch } }));
+  const setCrop = (idx, patch) => setCropSettings(prev => ({ ...prev, [idx]: { ...(prev[idx] || { zoom: 1, offsetX: 0, offsetY: 0 }), ...patch } }));
 
-  // Clamp offset so image never shows a gap — uses actual container size
   const clampOffset = (zoom, ox, oy) => {
     if (!previewRef.current) return { offsetX: ox, offsetY: oy };
     const { width, height } = previewRef.current.getBoundingClientRect();
     const maxX = Math.max(0, (zoom - 1) * width  / 2);
     const maxY = Math.max(0, (zoom - 1) * height / 2);
-    return {
-      offsetX: Math.max(-maxX, Math.min(maxX, ox)),
-      offsetY: Math.max(-maxY, Math.min(maxY, oy)),
-    };
+    return { offsetX: Math.max(-maxX, Math.min(maxX, ox)), offsetY: Math.max(-maxY, Math.min(maxY, oy)) };
   };
 
   const handleWheel = (e) => {
     e.preventDefault();
     const crop = getCrop(previewIndex);
     const newZoom = Math.max(1, Math.min(4, crop.zoom - e.deltaY * 0.005));
-    const clamped = clampOffset(newZoom, crop.offsetX, crop.offsetY);
-    setCrop(previewIndex, { zoom: newZoom, ...clamped });
+    setCrop(previewIndex, { zoom: newZoom, ...clampOffset(newZoom, crop.offsetX, crop.offsetY) });
   };
 
   const startDrag = (clientX, clientY) => {
     const crop = getCrop(previewIndex);
+    dragRef.current = { active: true, startX: clientX, startY: clientY, originX: crop.offsetX, originY: crop.offsetY, idx: previewIndex };
     setIsDragging(true);
-    const anchor = { x: clientX - crop.offsetX, y: clientY - crop.offsetY };
-    setDragStart(anchor);
-    setCropSettings(prev => ({ ...prev, [previewIndex]: { ...crop, _dragging: true, _anchor: anchor } }));
   };
 
-  // Attach move/up to window so drag works even if pointer leaves the box
   useEffect(() => {
     const onMove = (e) => {
+      if (!dragRef.current.active) return;
       const cx = e.touches ? e.touches[0].clientX : e.clientX;
       const cy = e.touches ? e.touches[0].clientY : e.clientY;
-      setCropSettings(prev => {
-        const current = prev[previewIndex] || { zoom: 1, offsetX: 0, offsetY: 0 };
-        if (!current._dragging) return prev;
-        const anchor = current._anchor;
-        const ox = cx - anchor.x;
-        const oy = cy - anchor.y;
-        if (!previewRef.current) return prev;
-        const { width, height } = previewRef.current.getBoundingClientRect();
-        const maxX = Math.max(0, (current.zoom - 1) * width  / 2);
-        const maxY = Math.max(0, (current.zoom - 1) * height / 2);
-        return { ...prev, [previewIndex]: { ...current, offsetX: Math.max(-maxX, Math.min(maxX, ox)), offsetY: Math.max(-maxY, Math.min(maxY, oy)) } };
-      });
+      const { startX, startY, originX, originY, idx } = dragRef.current;
+      const crop = getCrop(idx);
+      const ox = originX + (cx - startX);
+      const oy = originY + (cy - startY);
+      setCrop(idx, clampOffset(crop.zoom, ox, oy));
     };
     const onUp = () => {
+      dragRef.current.active = false;
       setIsDragging(false);
-      setCropSettings(prev => {
-        const current = prev[previewIndex];
-        if (!current) return prev;
-        return { ...prev, [previewIndex]: { ...current, _dragging: false, _anchor: undefined } };
-      });
     };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup",   onUp);
@@ -522,9 +504,7 @@ function JobForm({ formData, setFormData, onSave, onCancel, toggleDay, formSavin
       window.removeEventListener("touchmove", onMove);
       window.removeEventListener("touchend",  onUp);
     };
-  }, [previewIndex, dragStart]);
-
-  const stopDrag = () => {}; // handled by window listener
+  }, []);
   const titlesForCategory = formData.category ? jobCategories[formData.category] ?? [] : [];
 
   const handleCategoryChange = (e) => {
