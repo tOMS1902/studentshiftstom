@@ -481,17 +481,50 @@ function JobForm({ formData, setFormData, onSave, onCancel, toggleDay, formSavin
   const startDrag = (clientX, clientY) => {
     const crop = getCrop(previewIndex);
     setIsDragging(true);
-    // Store anchor = pointer position minus current offset (in screen space)
-    setDragStart({ x: clientX - crop.offsetX, y: clientY - crop.offsetY });
+    const anchor = { x: clientX - crop.offsetX, y: clientY - crop.offsetY };
+    setDragStart(anchor);
+    setCropSettings(prev => ({ ...prev, [previewIndex]: { ...crop, _dragging: true, _anchor: anchor } }));
   };
-  const onDrag = (clientX, clientY) => {
-    if (!isDragging) return;
-    const crop = getCrop(previewIndex);
-    const ox = clientX - dragStart.x;
-    const oy = clientY - dragStart.y;
-    setCrop(previewIndex, clampOffset(crop.zoom, ox, oy));
-  };
-  const stopDrag = () => setIsDragging(false);
+
+  // Attach move/up to window so drag works even if pointer leaves the box
+  useEffect(() => {
+    const onMove = (e) => {
+      const cx = e.touches ? e.touches[0].clientX : e.clientX;
+      const cy = e.touches ? e.touches[0].clientY : e.clientY;
+      setCropSettings(prev => {
+        const current = prev[previewIndex] || { zoom: 1, offsetX: 0, offsetY: 0 };
+        if (!current._dragging) return prev;
+        const anchor = current._anchor;
+        const ox = cx - anchor.x;
+        const oy = cy - anchor.y;
+        if (!previewRef.current) return prev;
+        const { width, height } = previewRef.current.getBoundingClientRect();
+        const maxX = Math.max(0, (current.zoom - 1) * width  / 2);
+        const maxY = Math.max(0, (current.zoom - 1) * height / 2);
+        return { ...prev, [previewIndex]: { ...current, offsetX: Math.max(-maxX, Math.min(maxX, ox)), offsetY: Math.max(-maxY, Math.min(maxY, oy)) } };
+      });
+    };
+    const onUp = () => {
+      setIsDragging(false);
+      setCropSettings(prev => {
+        const current = prev[previewIndex];
+        if (!current) return prev;
+        return { ...prev, [previewIndex]: { ...current, _dragging: false, _anchor: undefined } };
+      });
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup",   onUp);
+    window.addEventListener("touchmove", onMove, { passive: true });
+    window.addEventListener("touchend",  onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup",   onUp);
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend",  onUp);
+    };
+  }, [previewIndex, dragStart]);
+
+  const stopDrag = () => {}; // handled by window listener
   const titlesForCategory = formData.category ? jobCategories[formData.category] ?? [] : [];
 
   const handleCategoryChange = (e) => {
@@ -793,12 +826,12 @@ function JobForm({ formData, setFormData, onSave, onCancel, toggleDay, formSavin
           return src ? (
             <div style={{ marginBottom: "0.75rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.35rem" }}>
-                <p style={{ fontSize: "0.75rem", color: "#6b7280", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.04em", margin: 0 }}>Preview · drag to reposition · scroll to zoom</p>
+                <p style={{ fontSize: "0.75rem", color: "#6b7280", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.04em", margin: 0 }}>Preview · drag · scroll to zoom</p>
                 <div style={{ display: "flex", gap: "0.3rem", alignItems: "center" }}>
+                  <button type="button" onClick={() => setCrop(safeIdx, { zoom: 1, offsetX: 0, offsetY: 0 })} style={{ ...zoomBtn, color: "#6366f1", opacity: crop.zoom > 1 ? 1 : 0.35 }}>Reset</button>
                   <button type="button" onClick={() => { const c = getCrop(safeIdx); const nz = Math.max(1, Math.min(4, c.zoom - 0.25)); const cl = clampOffset(nz, c.offsetX, c.offsetY); setCrop(safeIdx, { zoom: nz, ...cl }); }} style={zoomBtn}>−</button>
                   <span style={{ fontSize: "0.72rem", color: "#6b7280", minWidth: "32px", textAlign: "center" }}>{Math.round(crop.zoom * 100)}%</span>
-                  <button type="button" onClick={() => { const c = getCrop(safeIdx); const nz = Math.max(1, Math.min(4, c.zoom + 0.25)); setCrop(safeIdx, { zoom: nz }); }} style={zoomBtn}>+</button>
-                  {crop.zoom > 1 && <button type="button" onClick={() => setCrop(safeIdx, { zoom: 1, offsetX: 0, offsetY: 0 })} style={{ ...zoomBtn, color: "#6366f1" }}>Reset</button>}
+                  <button type="button" onClick={() => { const nz = Math.max(1, Math.min(4, getCrop(safeIdx).zoom + 0.25)); setCrop(safeIdx, { zoom: nz }); }} style={zoomBtn}>+</button>
                 </div>
               </div>
               <div
@@ -806,12 +839,7 @@ function JobForm({ formData, setFormData, onSave, onCancel, toggleDay, formSavin
                 style={{ width: "100%", aspectRatio: "16/7", backgroundColor: "#0f172a", borderRadius: "0.6rem", overflow: "hidden", border: "1.5px solid #e2e8f0", cursor: isDragging ? "grabbing" : crop.zoom > 1 ? "grab" : "default", userSelect: "none" }}
                 onWheel={handleWheel}
                 onMouseDown={e => { e.preventDefault(); startDrag(e.clientX, e.clientY); }}
-                onMouseMove={e => onDrag(e.clientX, e.clientY)}
-                onMouseUp={stopDrag}
-                onMouseLeave={stopDrag}
-                onTouchStart={e => startDrag(e.touches[0].clientX, e.touches[0].clientY)}
-                onTouchMove={e => { e.preventDefault(); onDrag(e.touches[0].clientX, e.touches[0].clientY); }}
-                onTouchEnd={stopDrag}
+                onTouchStart={e => { startDrag(e.touches[0].clientX, e.touches[0].clientY); }}
               >
                 <img
                   src={src}
