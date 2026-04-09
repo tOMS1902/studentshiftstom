@@ -736,17 +736,28 @@ function JobForm({ formData, setFormData, onSave, onCancel, toggleDay, formSavin
           </span>
         </label>
 
+        {/* Banner preview — shows how the first photo looks on the job card */}
+        {(existingPhotos.length > 0 || photoFiles.length > 0) && (() => {
+          const previewSrc = existingPhotos[0] || (photoFiles[0] ? URL.createObjectURL(photoFiles[0]) : null);
+          return previewSrc ? (
+            <div style={{ marginBottom: "0.75rem" }}>
+              <p style={{ fontSize: "0.75rem", color: "#6b7280", fontWeight: "600", marginBottom: "0.35rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>Preview</p>
+              <div style={{ width: "100%", aspectRatio: "16/7", backgroundColor: "#0f172a", borderRadius: "0.6rem", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: "1.5px solid #e2e8f0" }}>
+                <img src={previewSrc} alt="preview" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
+              </div>
+            </div>
+          ) : null;
+        })()}
+
         {/* Thumbnails grid */}
         {(existingPhotos.length > 0 || photoFiles.length > 0) && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.6rem" }}>
-            {/* Existing (edit mode) — show actual thumbnails */}
             {existingPhotos.map(url => (
               <div key={url} style={{ position: "relative", width: "72px", height: "72px", borderRadius: "0.4rem", overflow: "hidden", border: "1.5px solid #d1d5db" }}>
                 <img src={url} alt="job photo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 <button type="button" onClick={() => removeExistingPhoto(url)} style={{ position: "absolute", top: "2px", right: "2px", backgroundColor: "rgba(0,0,0,0.55)", border: "none", borderRadius: "50%", color: "white", width: "18px", height: "18px", fontSize: "0.65rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>✕</button>
               </div>
             ))}
-            {/* New files — show image preview */}
             {photoFiles.map((file, i) => (
               <div key={i} style={{ position: "relative", width: "72px", height: "72px", borderRadius: "0.4rem", overflow: "hidden", border: "1.5px solid #d1d5db" }}>
                 <img src={URL.createObjectURL(file)} alt={file.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
