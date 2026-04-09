@@ -118,6 +118,7 @@ export default function StudentDashboard({
   const [searchQuery,     setSearchQuery]     = useState("");
   const [sortBy,          setSortBy]          = useState("");
   const [gridCols,        setGridCols]        = useState(1);
+  const [photoIndexes,    setPhotoIndexes]    = useState({});
   const [openSubSection,  setOpenSubSection]  = useState(null);
   const filterBarRef = useRef(null);
 
@@ -410,14 +411,33 @@ export default function StudentDashboard({
 
           return (
             <div key={job.id} className="job-card" style={{ flexDirection: "column", alignItems: "stretch", padding: 0, overflow: "hidden", marginBottom: 0 }}>
-              {/* Company banner photo */}
-              <div style={{ width: "100%", aspectRatio: "16/7", backgroundColor: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                <img
-                  src={job.photos?.[0] || COMPANY_PHOTOS[job.company] || "https://picsum.photos/seed/default/800/140"}
-                  alt={job.company}
-                  style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
-                />
-              </div>
+              {/* Company banner photo carousel */}
+              {(() => {
+                const photos = job.photos?.length > 0 ? job.photos : [COMPANY_PHOTOS[job.company] || "https://picsum.photos/seed/default/800/140"];
+                const idx = photoIndexes[job.id] || 0;
+                const prev = (e) => { e.stopPropagation(); setPhotoIndexes(p => ({ ...p, [job.id]: (idx - 1 + photos.length) % photos.length })); };
+                const next = (e) => { e.stopPropagation(); setPhotoIndexes(p => ({ ...p, [job.id]: (idx + 1) % photos.length })); };
+                return (
+                  <div style={{ position: "relative", width: "100%", aspectRatio: "16/7", backgroundColor: "#0f172a", overflow: "hidden" }}>
+                    <img
+                      src={photos[idx]}
+                      alt={job.company}
+                      style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+                    />
+                    {photos.length > 1 && (
+                      <>
+                        <button onClick={prev} style={arrowBtn("left")}>‹</button>
+                        <button onClick={next} style={arrowBtn("right")}>›</button>
+                        <div style={{ position: "absolute", bottom: "6px", left: "50%", transform: "translateX(-50%)", display: "flex", gap: "4px" }}>
+                          {photos.map((_, i) => (
+                            <div key={i} style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: i === idx ? "white" : "rgba(255,255,255,0.4)" }} />
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Content */}
               <div style={{ padding: "0.85rem 1rem" }}>
@@ -494,6 +514,16 @@ const dropdownPanel = {
 
 const btnBase = { padding: "0.38rem 0.9rem", borderRadius: "2rem", color: "white", border: "none", cursor: "pointer", fontWeight: "700", fontSize: "0.8rem", fontFamily: "inherit" };
 const btnBlue = { ...btnBase, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", boxShadow: "0 2px 8px rgba(99,102,241,0.3)" };
+
+const arrowBtn = (side) => ({
+  position: "absolute", top: "50%", [side]: "8px",
+  transform: "translateY(-50%)",
+  background: "rgba(0,0,0,0.45)", border: "none", color: "white",
+  borderRadius: "50%", width: "28px", height: "28px",
+  fontSize: "1.2rem", lineHeight: "1", cursor: "pointer",
+  display: "flex", alignItems: "center", justifyContent: "center",
+  zIndex: 2,
+});
 const filterSectionLabel = { fontSize: "0.72rem", fontWeight: "700", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 0.4rem" };
 const subSectionBtn = { display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", background: "none", border: "none", padding: "0.35rem 0", cursor: "pointer", fontWeight: "600", fontSize: "0.88rem", color: "#1e293b", fontFamily: "inherit", textAlign: "left" };
 const activePip = { display: "inline-flex", alignItems: "center", justifyContent: "center", backgroundColor: "#6366f1", color: "white", borderRadius: "999px", fontSize: "0.65rem", fontWeight: "700", minWidth: "16px", height: "16px", padding: "0 0.3rem", marginLeft: "0.3rem" };
