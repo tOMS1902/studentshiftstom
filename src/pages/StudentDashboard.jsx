@@ -91,7 +91,7 @@ export default function StudentDashboard({
         description:     j.description || DESC[j.title] || "",
         deadline:        j.deadline || null,
         days:            j.days || [],
-        times:           j.times || {},
+        times:           Object.fromEntries(Object.entries(j.times || {}).map(([k, v]) => [k, Array.isArray(v) ? v : [v]])),
         weekendRequired: j.weekend_required || false,
         photos:          j.photos || [],
         status:          j.status,
