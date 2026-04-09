@@ -828,7 +828,7 @@ function JobForm({ formData, setFormData, onSave, onCancel, toggleDay, formSavin
                   transition: isDragging ? "none" : "transform 0.1s ease",
                 }}>
                   <img src={src} alt="preview" draggable={false}
-                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                    style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
                   />
                 </div>
               </div>

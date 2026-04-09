@@ -427,7 +427,7 @@ export default function StudentDashboard({
                       transformOrigin: "center",
                     }}>
                       <img src={photos[idx]} alt={job.company}
-                        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                        style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
                       />
                     </div>
                     {photos.length > 1 && (
