@@ -118,16 +118,21 @@ export default function CompanyDashboard({ setPage, currentUser }) {
     }
     setFormSaving(true);
     try {
-      // Upload any new photo files to Storage
+      // Upload photos with a 8s timeout per file — skip silently if storage hangs
       const photoUrls = [...existingPhotoUrls];
       for (const file of (formData.photoFiles || [])) {
         const path = `${currentUser.id}/${Date.now()}_${file.name}`;
-        const { error: upErr } = await supabase.storage.from("job-photos").upload(path, file, { upsert: true });
+        const timeout = new Promise(res => setTimeout(() => res({ error: "timeout" }), 8000));
+        const upload  = supabase.storage.from("job-photos").upload(path, file, { upsert: true });
+        const { error: upErr } = await Promise.race([upload, timeout]);
         if (!upErr) {
           const { data: { publicUrl } } = supabase.storage.from("job-photos").getPublicUrl(path);
           photoUrls.push(publicUrl);
+        } else {
+          console.warn("Photo upload skipped:", upErr);
         }
       }
+      console.log("[saveForm] photos done, inserting job…");
 
       const jobData = {
         company_id:      currentUser.id,
@@ -146,15 +151,23 @@ export default function CompanyDashboard({ setPage, currentUser }) {
         photos:          photoUrls,
       };
 
+      const dbTimeout = new Promise((_, rej) => setTimeout(() => rej(new Error("Database timeout — please try again.")), 10000));
+
       if (formData.id) {
-        const { error } = await supabase.from("jobs").update(jobData).eq("id", formData.id);
+        const { error } = await Promise.race([
+          supabase.from("jobs").update(jobData).eq("id", formData.id),
+          dbTimeout,
+        ]);
         if (error) throw error;
         setPostings(prev => prev.map(p => p.id === formData.id
           ? { ...normaliseJob({ ...jobData, id: formData.id }), applicants: p.applicants, applicantCount: p.applicantCount }
           : p
         ));
       } else {
-        const { data, error } = await supabase.from("jobs").insert(jobData).select().single();
+        const { data, error } = await Promise.race([
+          supabase.from("jobs").insert(jobData).select().single(),
+          dbTimeout,
+        ]);
         if (error) throw error;
         setPostings(prev => [{ ...normaliseJob(data), applicants: [], applicantCount: 0 }, ...prev]);
       }
