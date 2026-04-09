@@ -67,6 +67,7 @@ export default function StudentDashboard({
         .order("created_at", { ascending: false }),
       10000, "Loading jobs timed out."
     ).then(({ data, error }) => {
+      console.log("[StudentDashboard] jobs fetch:", { data, error });
       if (!error && data && data.length > 0) {
         setJobs(data.map(j => ({
           id:              j.id,
@@ -86,7 +87,7 @@ export default function StudentDashboard({
         })));
       }
       setJobsLoading(false);
-    }).catch(() => setJobsLoading(false));
+    }).catch(e => { console.error("[StudentDashboard] jobs error:", e); setJobsLoading(false); });
   }, []);
 
   const weekdays    = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
