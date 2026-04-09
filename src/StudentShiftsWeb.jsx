@@ -56,7 +56,7 @@ export default function StudentShiftsWeb() {
         if (session?.user) {
           try {
             const profile = await getProfile(session.user.id);
-            const user = normaliseProfile(profile);
+            const user = normaliseProfile({ ...profile, email: profile.email || session.user.email });
             setCurrentUser(user);
             if (user.role === "company") setPage("companyDashboard");
           } catch (e) {
@@ -69,7 +69,7 @@ export default function StudentShiftsWeb() {
       if (event === "SIGNED_IN" && session?.user) {
         try {
           const profile = await getProfile(session.user.id);
-          const user = normaliseProfile(profile);
+          const user = normaliseProfile({ ...profile, email: profile.email || session.user.email });
           setCurrentUser(user);
           setPage(user.role === "company" ? "companyDashboard" : "studentDashboard");
         } catch (e) {
