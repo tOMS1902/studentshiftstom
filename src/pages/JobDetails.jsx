@@ -16,7 +16,8 @@ const COMPANY_PHOTOS = {
 export default function JobDetails({
   job, setPage, currentUser, likedJobs, setLikedJobs, appliedJobs, setAppliedJobs,
 }) {
-  const [applyModal, setApplyModal] = useState(null); // "confirm" | "success"
+  const [applyModal, setApplyModal] = useState(null);
+  const [photoIdx, setPhotoIdx]     = useState(0);
 
   if (!job) return null;
 
@@ -51,14 +52,25 @@ export default function JobDetails({
 
   return (
     <PageWrapper>
-      {/* Banner photo */}
-      <div style={{ margin: "-2rem -2.5rem 1.5rem", borderRadius: "1.25rem 1.25rem 0 0", aspectRatio: "16/7", backgroundColor: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-        <img
-          src={job.photos?.[0] || COMPANY_PHOTOS[job.company] || "https://picsum.photos/seed/default/800/140"}
-          alt={job.company}
-          style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
-        />
-      </div>
+      {/* Banner photo carousel */}
+      {(() => {
+        const photos = job.photos?.length > 0 ? job.photos : [COMPANY_PHOTOS[job.company] || "https://picsum.photos/seed/default/800/140"];
+        const idx = Math.min(photoIdx, photos.length - 1);
+        return (
+          <div style={{ position: "relative", margin: "-2rem -2.5rem 1.5rem", borderRadius: "1.25rem 1.25rem 0 0", aspectRatio: "16/7", backgroundColor: "#0f172a", overflow: "hidden" }}>
+            <img src={photos[idx]} alt={job.company} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
+            {photos.length > 1 && (
+              <>
+                <button onClick={() => setPhotoIdx((idx - 1 + photos.length) % photos.length)} style={arrowBtn("left")}>‹</button>
+                <button onClick={() => setPhotoIdx((idx + 1) % photos.length)} style={arrowBtn("right")}>›</button>
+                <div style={{ position: "absolute", bottom: "8px", left: "50%", transform: "translateX(-50%)", display: "flex", gap: "5px" }}>
+                  {photos.map((_, i) => <div key={i} style={{ width: "7px", height: "7px", borderRadius: "50%", backgroundColor: i === idx ? "white" : "rgba(255,255,255,0.4)" }} />)}
+                </div>
+              </>
+            )}
+          </div>
+        );
+      })()}
       <h1 style={{ fontWeight: "800", fontSize: "1.75rem", marginBottom: "0.2rem", color: "#1e293b" }}>{job.title}</h1>
       <p style={{ color: "#64748b", fontSize: "0.95rem", marginBottom: "1.5rem", fontWeight: "500" }}>{job.company}</p>
 
@@ -147,3 +159,13 @@ function InfoRow({ label, value, highlight }) {
 }
 
 const btn = { padding: "0.7rem 1.5rem", borderRadius: "2rem", color: "white", border: "none", cursor: "pointer", fontWeight: "700", fontFamily: "inherit", fontSize: "0.9rem", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" };
+
+const arrowBtn = (side) => ({
+  position: "absolute", top: "50%", [side]: "10px",
+  transform: "translateY(-50%)",
+  background: "rgba(0,0,0,0.45)", border: "none", color: "white",
+  borderRadius: "50%", width: "32px", height: "32px",
+  fontSize: "1.3rem", cursor: "pointer",
+  display: "flex", alignItems: "center", justifyContent: "center",
+  zIndex: 2,
+});
