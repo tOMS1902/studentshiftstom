@@ -62,30 +62,40 @@ export default function StudentDashboard({
     withTimeout(
       supabase
         .from("jobs")
-        .select("*, profiles:company_id(name)")
+        .select("*")
         .eq("status", "Active")
         .order("created_at", { ascending: false }),
       10000, "Loading jobs timed out."
-    ).then(({ data, error }) => {
-      console.log("[StudentDashboard] jobs fetch:", { data, error });
-      if (!error && data && data.length > 0) {
-        setJobs(data.map(j => ({
-          id:              j.id,
-          title:           j.title,
-          company:         j.profiles?.name || "Unknown Company",
-          location:        j.location,
-          lat:             j.lat,
-          lng:             j.lng,
-          pay:             j.pay,
-          description:     j.description || DESC[j.title] || "",
-          deadline:        j.deadline || null,
-          days:            j.days || [],
-          times:           j.times || {},
-          weekendRequired: j.weekend_required || false,
-          photos:          j.photos || [],
-          status:          j.status,
-        })));
-      }
+    ).then(async ({ data, error }) => {
+      if (error || !data || data.length === 0) { setJobsLoading(false); return; }
+
+      // Fetch company names from profiles using the unique company_ids
+      const companyIds = [...new Set(data.map(j => j.company_id))];
+      let nameMap = {};
+      try {
+        const { data: profiles } = await withTimeout(
+          supabase.from("profiles").select("id, name").in("id", companyIds),
+          8000
+        );
+        if (profiles) profiles.forEach(p => { nameMap[p.id] = p.name; });
+      } catch (_) {}
+
+      setJobs(data.map(j => ({
+        id:              j.id,
+        title:           j.title,
+        company:         nameMap[j.company_id] || "Unknown Company",
+        location:        j.location,
+        lat:             j.lat,
+        lng:             j.lng,
+        pay:             j.pay,
+        description:     j.description || DESC[j.title] || "",
+        deadline:        j.deadline || null,
+        days:            j.days || [],
+        times:           j.times || {},
+        weekendRequired: j.weekend_required || false,
+        photos:          j.photos || [],
+        status:          j.status,
+      })));
       setJobsLoading(false);
     }).catch(e => { console.error("[StudentDashboard] jobs error:", e); setJobsLoading(false); });
   }, []);
