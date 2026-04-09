@@ -59,7 +59,8 @@ export default function JobDetails({
         return (
           <div style={{ position: "relative", margin: "-2rem -2.5rem 1.5rem", borderRadius: "1.25rem 1.25rem 0 0", aspectRatio: "16/7", backgroundColor: "#0f172a", overflow: "hidden", display: "block" }}>
             {(() => {
-              const crop = job.photoCrops?.[idx] || { zoom: 1, offsetX: 0, offsetY: 0 };
+              const rawCrop = job.photoCrops?.[idx] || { zoom: 1, offsetX: 0, offsetY: 0 };
+              const crop = { ...rawCrop, zoom: Math.max(1, rawCrop.zoom) };
               return crop.zoom === 1 && crop.offsetX === 0 && crop.offsetY === 0 ? (
                 <img src={photos[idx]} alt={job.company} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
               ) : (
