@@ -806,7 +806,7 @@ function JobForm({ formData, setFormData, onSave, onCancel, toggleDay, formSavin
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.35rem" }}>
                 <p style={{ fontSize: "0.75rem", color: "#6b7280", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.04em", margin: 0 }}>Preview · drag to reposition</p>
                 <div style={{ display: "flex", gap: "0.3rem", alignItems: "center" }}>
-                  <button type="button" onClick={() => { dragRef.current.zoom = 1; setCrop(safeIdx, { zoom: 1, offsetX: 0, offsetY: 0 }); }} style={{ ...zoomBtn, color: "#6366f1", opacity: crop.zoom > 1 ? 1 : 0.35 }}>Reset</button>
+                  <button type="button" onClick={() => { dragRef.current.zoom = 1; setCrop(safeIdx, { zoom: 1, offsetX: 0, offsetY: 0 }); }} style={{ ...zoomBtn, color: "#6366f1" }}>Reset</button>
                   <button type="button" onClick={() => { const nz = Math.max(0.25, getCrop(safeIdx).zoom - 0.25); dragRef.current.zoom = nz; setCrop(safeIdx, { zoom: nz }); }} style={zoomBtn}>−</button>
                   <span style={{ fontSize: "0.72rem", color: "#6b7280", minWidth: "32px", textAlign: "center" }}>{Math.round(crop.zoom * 100)}%</span>
                   <button type="button" onClick={() => { const nz = Math.min(4, getCrop(safeIdx).zoom + 0.25); dragRef.current.zoom = nz; setCrop(safeIdx, { zoom: nz }); }} style={zoomBtn}>+</button>
