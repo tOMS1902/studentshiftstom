@@ -72,6 +72,9 @@ export default function JobDetails({
                 </div>
               );
             })()}
+            <div style={{ position: "absolute", top: "7px", left: "9px", backgroundColor: "rgba(0,0,0,0.5)", color: "white", fontSize: "0.7rem", fontWeight: "700", padding: "2px 7px", borderRadius: "999px", lineHeight: 1.5 }}>
+              {idx + 1}/{photos.length}
+            </div>
             {photos.length > 1 && (
               <>
                 <button onClick={() => setPhotoIdx((idx - 1 + photos.length) % photos.length)} style={arrowBtn("left")}>‹</button>
