@@ -57,6 +57,7 @@ export default function StudentDashboard({
 
   const [jobs, setJobs] = useState([]);
   const [jobsLoading, setJobsLoading] = useState(true);
+  const [jobsError, setJobsError] = useState(false);
 
   useEffect(() => {
     withTimeout(
@@ -67,7 +68,8 @@ export default function StudentDashboard({
         .order("created_at", { ascending: false }),
       10000, "Loading jobs timed out."
     ).then(async ({ data, error }) => {
-      if (error || !data || data.length === 0) { setJobsLoading(false); return; }
+      if (error) { setJobsError(true); setJobsLoading(false); return; }
+      if (!data || data.length === 0) { setJobsLoading(false); return; }
 
       // Fetch company names from profiles using the unique company_ids
       const companyIds = [...new Set(data.map(j => j.company_id))];
@@ -98,7 +100,7 @@ export default function StudentDashboard({
         status:          j.status,
       })));
       setJobsLoading(false);
-    }).catch(e => { console.error("[StudentDashboard] jobs error:", e); setJobsLoading(false); });
+    }).catch(e => { console.error("[StudentDashboard] jobs error:", e); setJobsError(true); setJobsLoading(false); });
   }, []);
 
   const weekdays    = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
@@ -209,7 +211,7 @@ export default function StudentDashboard({
   const locationOrder = { "5 min walk": 0, "10 min walk": 1, "On-Campus": 2, "Near Campus": 3, "City Centre": 4, "Downtown": 5 };
   const locRank = (job) => locationOrder[job.location] ?? 99;
 
-  const payNum = (p) => parseInt(p.replace(/[^0-9]/g, "")) || 0;
+  const payNum = (p) => parseFloat(p.replace(/[^0-9.]/g, "")) || 0;
   const displayJobs = sortBy === "" ? filteredJobs : [...filteredJobs].sort((a, b) => {
     if (sortBy === "payHigh")      return payNum(b.pay) - payNum(a.pay);
     if (sortBy === "payLow")       return payNum(a.pay) - payNum(b.pay);
@@ -382,13 +384,21 @@ export default function StudentDashboard({
         </div>
       </div>
 
+      {/* Error State */}
+      {jobsError && !jobsLoading && (
+        <div style={{ textAlign: "center", padding: "3rem 1rem", color: "#6b7280" }}>
+          <p style={{ fontSize: "1.1rem", fontWeight: "600", marginBottom: "0.4rem", color: "#ef4444" }}>Couldn't load jobs</p>
+          <p style={{ fontSize: "0.875rem" }}>There was a problem connecting to the server. Please check your connection and try refreshing the page.</p>
+        </div>
+      )}
+
       {/* Empty State */}
       {jobsLoading && (
         <div style={{ textAlign: "center", padding: "3rem 1rem", color: "#6b7280" }}>
           <p style={{ fontSize: "1rem", fontWeight: "600" }}>Loading jobs…</p>
         </div>
       )}
-      {!jobsLoading && displayJobs.length === 0 && (
+      {!jobsLoading && !jobsError && displayJobs.length === 0 && (
         <div style={{ textAlign: "center", padding: "3rem 1rem", color: "#6b7280" }}>
           <p style={{ fontSize: "1.1rem", fontWeight: "600", marginBottom: "0.4rem" }}>No jobs match your search</p>
           <p style={{ fontSize: "0.875rem", marginBottom: "1.25rem" }}>
