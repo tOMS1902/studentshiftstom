@@ -60,18 +60,29 @@ export default function CompanyDashboard({ setPage, currentUser }) {
   const openApplicants = async (posting) => {
     setActivePosting({ ...posting, applicants: [], applicantsLoading: true, applicantsError: null });
     setModal("applicants");
-    const { data, error } = await withTimeout(
-      supabase.from("applications").select("id, status, created_at, student_id, profiles:student_id(name, students(cv_url))").eq("job_id", posting.id).order("created_at", { ascending: true }),
+    const { data: appData, error: appError } = await withTimeout(
+      supabase.from("applications").select("id, status, student_id").eq("job_id", posting.id).order("created_at", { ascending: true }),
       10000, "Loading applicants timed out."
     );
-    if (error) {
-      setActivePosting(prev => ({ ...prev, applicantsLoading: false, applicantsError: error.message }));
+    if (appError) {
+      setActivePosting(prev => ({ ...prev, applicantsLoading: false, applicantsError: appError.message }));
       return;
     }
-    const applicants = (data || []).map(a => ({
+    const studentIds = (appData || []).map(a => a.student_id);
+    let profileMap = {};
+    let cvMap = {};
+    if (studentIds.length) {
+      const [{ data: profiles }, { data: students }] = await Promise.all([
+        supabase.from("profiles").select("id, name").in("id", studentIds),
+        supabase.from("students").select("id, cv_url").in("id", studentIds),
+      ]);
+      (profiles || []).forEach(p => { profileMap[p.id] = p.name; });
+      (students || []).forEach(s => { cvMap[s.id] = s.cv_url; });
+    }
+    const applicants = (appData || []).map(a => ({
       id:     a.id,
-      name:   a.profiles?.name                   || "Unknown",
-      cvName: a.profiles?.students?.cv_url       || null,
+      name:   profileMap[a.student_id] || "Unknown",
+      cvName: cvMap[a.student_id]      || null,
       status: a.status,
     }));
     setActivePosting(prev => ({ ...prev, applicants, applicantsLoading: false }));
