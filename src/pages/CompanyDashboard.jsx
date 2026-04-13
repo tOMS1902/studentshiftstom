@@ -61,7 +61,7 @@ export default function CompanyDashboard({ setPage, currentUser }) {
     setActivePosting({ ...posting, applicants: [], applicantsLoading: true, applicantsError: null });
     setModal("applicants");
     const { data, error } = await withTimeout(
-      supabase.from("applications").select("id, status, created_at, profiles:student_id(id, name), students:student_id(cv_url)").eq("job_id", posting.id).order("created_at", { ascending: true }),
+      supabase.from("applications").select("id, status, created_at, student_id, profiles:student_id(name, students(cv_url))").eq("job_id", posting.id).order("created_at", { ascending: true }),
       10000, "Loading applicants timed out."
     );
     if (error) {
@@ -70,8 +70,8 @@ export default function CompanyDashboard({ setPage, currentUser }) {
     }
     const applicants = (data || []).map(a => ({
       id:     a.id,
-      name:   a.profiles?.name   || "Unknown",
-      cvName: a.students?.cv_url || null,
+      name:   a.profiles?.name                   || "Unknown",
+      cvName: a.profiles?.students?.cv_url       || null,
       status: a.status,
     }));
     setActivePosting(prev => ({ ...prev, applicants, applicantsLoading: false }));
