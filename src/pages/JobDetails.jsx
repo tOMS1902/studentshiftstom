@@ -1,5 +1,6 @@
 import { useState } from "react";
 import PageWrapper from "../components/PageWrapper";
+import { likeJob, unlikeJob, createApplication } from "../lib/auth";
 
 const COMPANY_PHOTOS = {
   "Galway Pub":     "https://picsum.photos/seed/galwaypub/800/140",
@@ -28,6 +29,8 @@ export default function JobDetails({
     if (!currentUser) { setPage("login"); return; }
     if (isApplied) return;
     setLikedJobs(isLiked ? likedJobs.filter(j => j.id !== job.id) : [...likedJobs, job]);
+    if (isLiked) unlikeJob(currentUser.id, job.id).catch(console.error);
+    else likeJob(currentUser.id, job.id).catch(console.error);
   };
 
   const handleApply = () => {
@@ -43,6 +46,8 @@ export default function JobDetails({
   const confirmApply = () => {
     setAppliedJobs([...appliedJobs, job]);
     if (isLiked) setLikedJobs(likedJobs.filter(j => j.id !== job.id));
+    createApplication(currentUser.id, job.id).catch(console.error);
+    if (isLiked) unlikeJob(currentUser.id, job.id).catch(console.error);
     setApplyModal("success");
   };
 

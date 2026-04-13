@@ -10,7 +10,7 @@ import LikedJobs from "./pages/LikedJobs";
 import AppliedJobs from "./pages/AppliedJobs";
 import AboutPage from "./pages/AboutPage";
 import { supabase } from "./lib/supabase";
-import { getProfile } from "./lib/auth";
+import { getProfile, fetchLikedJobIds, fetchAppliedJobIds } from "./lib/auth";
 
 // Normalise Supabase profile shape to match what the app expects
 function normaliseProfile(profile) {
@@ -40,8 +40,10 @@ export default function StudentShiftsWeb() {
   const [page, setPage]               = useState("studentDashboard");
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedJob, setSelectedJob] = useState(null);
-  const [likedJobs, setLikedJobs]     = useState([]);
-  const [appliedJobs, setAppliedJobs] = useState([]);
+  const [likedJobs, setLikedJobs]         = useState([]);
+  const [appliedJobs, setAppliedJobs]     = useState([]);
+  const [savedLikedJobIds, setSavedLikedJobIds]   = useState([]);
+  const [savedAppliedJobIds, setSavedAppliedJobIds] = useState([]);
   const [studentLocation, setStudentLocation] = useState(null);
   const [notifCount, setNotifCount]   = useState(0);
   const [authLoading, setAuthLoading] = useState(true);
@@ -59,6 +61,14 @@ export default function StudentShiftsWeb() {
             const user = normaliseProfile({ ...profile, email: profile.email || session.user.email });
             setCurrentUser(user);
             if (user.role === "company") setPage("companyDashboard");
+            if (user.role === "student") {
+              const [likedIds, appliedIds] = await Promise.all([
+                fetchLikedJobIds(user.id).catch(() => []),
+                fetchAppliedJobIds(user.id).catch(() => []),
+              ]);
+              setSavedLikedJobIds(likedIds);
+              setSavedAppliedJobIds(appliedIds);
+            }
           } catch (e) {
             console.error("Failed to load profile", e);
           }
@@ -72,6 +82,14 @@ export default function StudentShiftsWeb() {
           const user = normaliseProfile({ ...profile, email: profile.email || session.user.email });
           setCurrentUser(user);
           setPage(user.role === "company" ? "companyDashboard" : "studentDashboard");
+          if (user.role === "student") {
+            const [likedIds, appliedIds] = await Promise.all([
+              fetchLikedJobIds(user.id).catch(() => []),
+              fetchAppliedJobIds(user.id).catch(() => []),
+            ]);
+            setSavedLikedJobIds(likedIds);
+            setSavedAppliedJobIds(appliedIds);
+          }
         } catch (e) {
           console.error("Failed to load profile", e);
         }
@@ -80,6 +98,8 @@ export default function StudentShiftsWeb() {
         setCurrentUser(null);
         setLikedJobs([]);
         setAppliedJobs([]);
+        setSavedLikedJobIds([]);
+        setSavedAppliedJobIds([]);
         setPage("studentDashboard");
       }
     });
@@ -140,8 +160,11 @@ export default function StudentShiftsWeb() {
             likedJobs={likedJobs}
             setLikedJobs={setLikedJobs}
             appliedJobs={appliedJobs}
+            setAppliedJobs={setAppliedJobs}
             currentUser={currentUser}
             studentLocation={studentLocation}
+            savedLikedJobIds={savedLikedJobIds}
+            savedAppliedJobIds={savedAppliedJobIds}
           />
         );
       case "companyDashboard":
@@ -190,8 +213,11 @@ export default function StudentShiftsWeb() {
             likedJobs={likedJobs}
             setLikedJobs={setLikedJobs}
             appliedJobs={appliedJobs}
+            setAppliedJobs={setAppliedJobs}
             currentUser={currentUser}
             studentLocation={studentLocation}
+            savedLikedJobIds={savedLikedJobIds}
+            savedAppliedJobIds={savedAppliedJobIds}
           />
         );
     }

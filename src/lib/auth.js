@@ -43,6 +43,54 @@ export async function updateStudentProfile(userId, updates) {
   if (error) throw error;
 }
 
+// Requires these tables:
+//   create table liked_jobs (
+//     student_id uuid references profiles(id) on delete cascade not null,
+//     job_id     uuid references jobs(id)     on delete cascade not null,
+//     primary key (student_id, job_id)
+//   );
+//   create table applications (
+//     id         uuid primary key default gen_random_uuid(),
+//     student_id uuid references profiles(id) on delete cascade not null,
+//     job_id     uuid references jobs(id)     on delete cascade not null,
+//     status     text not null default 'Pending',
+//     created_at timestamptz not null default now(),
+//     unique(student_id, job_id)
+//   );
+
+export async function fetchLikedJobIds(userId) {
+  const { data, error } = await withTimeout(
+    supabase.from("liked_jobs").select("job_id").eq("student_id", userId),
+    10000
+  );
+  if (error) throw error;
+  return (data || []).map(r => r.job_id);
+}
+
+export async function likeJob(userId, jobId) {
+  const { error } = await supabase.from("liked_jobs").insert({ student_id: userId, job_id: jobId });
+  if (error && error.code !== "23505") throw error;
+}
+
+export async function unlikeJob(userId, jobId) {
+  const { error } = await supabase.from("liked_jobs").delete().eq("student_id", userId).eq("job_id", jobId);
+  if (error) throw error;
+}
+
+export async function fetchAppliedJobIds(userId) {
+  const { data, error } = await withTimeout(
+    supabase.from("applications").select("job_id").eq("student_id", userId),
+    10000
+  );
+  if (error) throw error;
+  return (data || []).map(r => r.job_id);
+}
+
+export async function createApplication(userId, jobId) {
+  const { error } = await supabase.from("applications").insert({ student_id: userId, job_id: jobId });
+  if (error && error.code !== "23505") throw error;
+}
+
 // Requires a Supabase SQL function:
 //   create or replace function delete_account()
 //   returns void language plpgsql security definer as $$

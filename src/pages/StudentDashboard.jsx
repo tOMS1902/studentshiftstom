@@ -4,6 +4,7 @@ import "../StudentShiftWeb.css";
 import { jobCategories, getCategoryForTitle } from "../data/jobCategories";
 import { haversineDistance, formatDistance, mockLocationCoords } from "../utils/geo";
 import { supabase, withTimeout } from "../lib/supabase";
+import { likeJob, unlikeJob } from "../lib/auth";
 
 const DESC = {
   "Bar Staff":           "Join our bar team serving drinks and looking after customers. Some experience preferred — full training provided.",
@@ -52,7 +53,7 @@ function daysUntil(dateStr) {
 }
 
 export default function StudentDashboard({
-  setPage, setSelectedJob, likedJobs, setLikedJobs, appliedJobs, currentUser, studentLocation,
+  setPage, setSelectedJob, likedJobs, setLikedJobs, appliedJobs, setAppliedJobs, currentUser, studentLocation, savedLikedJobIds, savedAppliedJobIds,
 }) {
 
   const [jobs, setJobs] = useState([]);
@@ -102,6 +103,13 @@ export default function StudentDashboard({
       setJobsLoading(false);
     }).catch(e => { console.error("[StudentDashboard] jobs error:", e); setJobsError(true); setJobsLoading(false); });
   }, []);
+
+  // Once jobs + saved IDs are both loaded, hydrate liked/applied state
+  useEffect(() => {
+    if (!jobs.length || !currentUser) return;
+    if (savedLikedJobIds?.length)   setLikedJobs(jobs.filter(j => savedLikedJobIds.includes(j.id)));
+    if (savedAppliedJobIds?.length) setAppliedJobs(jobs.filter(j => savedAppliedJobIds.includes(j.id)));
+  }, [jobs, currentUser?.id]);
 
   const weekdays    = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
   const workweek    = ["Monday","Tuesday","Wednesday","Thursday","Friday"];
@@ -225,6 +233,8 @@ export default function StudentDashboard({
     if (appliedJobs.some(j => j.id === job.id)) return;
     const isLiked = likedJobs.some(j => j.id === job.id);
     setLikedJobs(isLiked ? likedJobs.filter(j => j.id !== job.id) : [...likedJobs, job]);
+    if (isLiked) unlikeJob(currentUser.id, job.id).catch(console.error);
+    else likeJob(currentUser.id, job.id).catch(console.error);
   };
 
 
