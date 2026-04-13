@@ -91,6 +91,21 @@ export async function createApplication(userId, jobId) {
   if (error && error.code !== "23505") throw error;
 }
 
+export async function fetchApplicationStatuses(userId) {
+  const { data, error } = await withTimeout(
+    supabase.from("applications").select("job_id, status").eq("student_id", userId),
+    10000
+  );
+  if (error) throw error;
+  // Returns { [jobId]: status }
+  return Object.fromEntries((data || []).map(r => [r.job_id, r.status]));
+}
+
+export async function removeApplication(userId, jobId) {
+  const { error } = await supabase.from("applications").delete().eq("student_id", userId).eq("job_id", jobId);
+  if (error) throw error;
+}
+
 // Requires a Supabase SQL function:
 //   create or replace function delete_account()
 //   returns void language plpgsql security definer as $$

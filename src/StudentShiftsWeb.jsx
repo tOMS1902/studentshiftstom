@@ -198,6 +198,7 @@ export default function StudentShiftsWeb() {
         return currentUser && (
           <AppliedJobs
             appliedJobs={appliedJobs}
+            setAppliedJobs={setAppliedJobs}
             setSelectedJob={setSelectedJob}
             setPage={setPage}
             currentUser={currentUser}
