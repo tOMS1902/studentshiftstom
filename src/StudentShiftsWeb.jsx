@@ -199,6 +199,7 @@ export default function StudentShiftsWeb() {
           <AppliedJobs
             appliedJobs={appliedJobs}
             setAppliedJobs={setAppliedJobs}
+            setSavedAppliedJobIds={setSavedAppliedJobIds}
             setSelectedJob={setSelectedJob}
             setPage={setPage}
             currentUser={currentUser}

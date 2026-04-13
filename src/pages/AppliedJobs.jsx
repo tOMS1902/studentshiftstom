@@ -50,7 +50,7 @@ function AppliedJobCard({ job, status, onRemove, setSelectedJob, setPage }) {
   );
 }
 
-export default function AppliedJobs({ appliedJobs, setAppliedJobs, setSelectedJob, setPage, currentUser }) {
+export default function AppliedJobs({ appliedJobs, setAppliedJobs, setSavedAppliedJobIds, setSelectedJob, setPage, currentUser }) {
   const [statuses, setStatuses] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -65,6 +65,7 @@ export default function AppliedJobs({ appliedJobs, setAppliedJobs, setSelectedJo
     try {
       await removeApplication(currentUser.id, jobId);
       setAppliedJobs(prev => prev.filter(j => j.id !== jobId));
+      setSavedAppliedJobIds(prev => prev.filter(id => id !== jobId));
       setStatuses(prev => { const s = { ...prev }; delete s[jobId]; return s; });
     } catch (e) {
       console.error("Failed to remove application:", e);
