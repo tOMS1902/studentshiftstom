@@ -3,6 +3,10 @@ import PageWrapper from "../components/PageWrapper";
 import { jobCategories } from "../data/jobCategories";
 import { geocodeAddress } from "../utils/geo";
 import { supabase, withTimeout } from "../lib/supabase";
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
+pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
 
 const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const timeSlots = ["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00"];
@@ -412,7 +416,9 @@ function ApplicantCard({ applicant, postingId, onUpdateStatus }) {
   const [showChat, setShowChat] = useState(false);
   const [cvUrl, setCvUrl]       = useState(null);
   const [cvLoading, setCvLoading] = useState(false);
-  const iframeRef = useRef(null);
+  const modalRef = useRef(null);
+  const [numPages, setNumPages] = useState(null);
+  const [pageNum, setPageNum]   = useState(1);
 
   const openCv = async () => {
     if (cvUrl) return;
@@ -421,6 +427,8 @@ function ApplicantCard({ applicant, postingId, onUpdateStatus }) {
       const { getSignedDocumentUrl } = await import("../lib/auth");
       const url = await getSignedDocumentUrl("documents", applicant.cvName);
       setCvUrl(url);
+      setPageNum(1);
+      setNumPages(null);
     } catch (e) {
       alert("Could not load CV: " + e.message);
     } finally {
@@ -429,7 +437,7 @@ function ApplicantCard({ applicant, postingId, onUpdateStatus }) {
   };
 
   const goFullScreen = () => {
-    const el = iframeRef.current;
+    const el = modalRef.current;
     if (!el) return;
     if (el.requestFullscreen) el.requestFullscreen();
     else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
@@ -439,15 +447,33 @@ function ApplicantCard({ applicant, postingId, onUpdateStatus }) {
     <>
     {cvUrl && (
       <div onClick={() => setCvUrl(null)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(15,23,42,0.7)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "1rem", backdropFilter: "blur(2px)" }}>
-        <div onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: "720px", height: "85vh", display: "flex", flexDirection: "column", borderRadius: "1rem", overflow: "hidden", boxShadow: "0 24px 64px rgba(0,0,0,0.4)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#1e293b", padding: "0.75rem 1rem", flexShrink: 0 }}>
+        <div ref={modalRef} onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: "720px", height: "85vh", display: "flex", flexDirection: "column", borderRadius: "1rem", overflow: "hidden", boxShadow: "0 24px 64px rgba(0,0,0,0.4)" }}>
+          {/* Header */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#1e293b", padding: "0.65rem 1rem", flexShrink: 0 }}>
             <span style={{ color: "white", fontWeight: "700", fontSize: "0.9rem" }}>📄 {applicant.name}'s CV</span>
             <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+              {numPages > 1 && (
+                <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                  <button onClick={() => setPageNum(p => Math.max(1, p - 1))} disabled={pageNum <= 1} style={navBtn}>‹</button>
+                  <span style={{ color: "white", fontSize: "0.75rem" }}>{pageNum}/{numPages}</span>
+                  <button onClick={() => setPageNum(p => Math.min(numPages, p + 1))} disabled={pageNum >= numPages} style={navBtn}>›</button>
+                </div>
+              )}
               <button onClick={goFullScreen} style={{ background: "none", border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: "0.4rem", color: "white", fontSize: "0.75rem", fontWeight: "600", padding: "0.25rem 0.6rem", cursor: "pointer", fontFamily: "inherit" }}>⛶ Full Screen</button>
               <button onClick={() => setCvUrl(null)} style={{ background: "none", border: "none", color: "white", fontSize: "1.25rem", cursor: "pointer", lineHeight: 1 }}>✕</button>
             </div>
           </div>
-          <iframe ref={iframeRef} src={cvUrl + "#toolbar=0&navpanes=0"} style={{ flex: 1, border: "none", backgroundColor: "white" }} title="CV" />
+          {/* PDF canvas */}
+          <div style={{ flex: 1, overflowY: "auto", backgroundColor: "#525659", display: "flex", justifyContent: "center", alignItems: "flex-start", padding: "1rem" }}>
+            <Document
+              file={cvUrl}
+              onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+              loading={<p style={{ color: "white", marginTop: "2rem" }}>Loading PDF…</p>}
+              error={<p style={{ color: "#fca5a5", marginTop: "2rem" }}>Failed to load PDF.</p>}
+            >
+              <Page pageNumber={pageNum} width={Math.min(window.innerWidth - 64, 680)} renderTextLayer={false} />
+            </Document>
+          </div>
         </div>
       </div>
     )}
@@ -1047,6 +1073,7 @@ const btnGray      = { ...btnBase, background: "linear-gradient(135deg, #f43f5e,
 
 const zoomBtn      = { padding: "0.2rem 0.55rem", borderRadius: "0.4rem", border: "1.5px solid #e2e8f0", backgroundColor: "white", color: "#374151", fontWeight: "700", fontSize: "0.8rem", cursor: "pointer", fontFamily: "inherit" };
 
+const navBtn        = { background: "none", border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: "0.4rem", color: "white", fontSize: "0.85rem", fontWeight: "700", padding: "0.1rem 0.5rem", cursor: "pointer", fontFamily: "inherit" };
 const btnSmallBase  = { padding: "0.32rem 0.75rem", borderRadius: "2rem", border: "none", color: "white", fontWeight: "700", cursor: "pointer", fontSize: "0.75rem", fontFamily: "inherit" };
 const btnSmallGreen = { ...btnSmallBase, background: "linear-gradient(135deg, #10b981, #059669)", boxShadow: "0 2px 6px rgba(16,185,129,0.3)" };
 const btnSmallBlue  = { ...btnSmallBase, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", boxShadow: "0 2px 6px rgba(99,102,241,0.3)" };
