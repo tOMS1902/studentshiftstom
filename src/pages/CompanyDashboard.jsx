@@ -416,9 +416,25 @@ function ApplicantCard({ applicant, postingId, onUpdateStatus }) {
   const [showChat, setShowChat] = useState(false);
   const [cvUrl, setCvUrl]       = useState(null);
   const [cvLoading, setCvLoading] = useState(false);
-  const modalRef = useRef(null);
-  const [numPages, setNumPages] = useState(null);
-  const [pageNum, setPageNum]   = useState(1);
+  const modalRef    = useRef(null);
+  const scrollRef   = useRef(null);
+  const [numPages, setNumPages]   = useState(null);
+  const [pageNum, setPageNum]     = useState(1);
+
+  useEffect(() => {
+    if (!numPages || !scrollRef.current) return;
+    const pages = scrollRef.current.querySelectorAll(".react-pdf__Page");
+    if (!pages.length) return;
+    const observer = new IntersectionObserver(entries => {
+      const visible = entries.filter(e => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+      if (visible.length) {
+        const idx = Array.from(pages).indexOf(visible[0].target);
+        if (idx !== -1) setPageNum(idx + 1);
+      }
+    }, { root: scrollRef.current, threshold: 0.5 });
+    pages.forEach(p => observer.observe(p));
+    return () => observer.disconnect();
+  }, [numPages]);
 
   const openCv = async () => {
     if (cvUrl) return;
@@ -483,7 +499,7 @@ function ApplicantCard({ applicant, postingId, onUpdateStatus }) {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#1e293b", padding: "0.65rem 1rem", flexShrink: 0 }}>
             <span style={{ color: "white", fontWeight: "700", fontSize: "0.9rem" }}>📄 {applicant.name}'s CV</span>
             <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
-              {numPages && <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.75rem", marginRight: "0.25rem" }}>{numPages} {numPages === 1 ? "page" : "pages"}</span>}
+              {numPages && <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.75rem", marginRight: "0.25rem" }}>Page {pageNum} of {numPages}</span>}
               <button onClick={() => window.print()} style={cvHeaderBtn} title="Print">🖨</button>
               <button onClick={saveCv} style={cvHeaderBtn} title="Save">⬇</button>
               <button onClick={openWithCv} style={cvHeaderBtn} title="Open With">↗</button>
@@ -492,7 +508,7 @@ function ApplicantCard({ applicant, postingId, onUpdateStatus }) {
             </div>
           </div>
           {/* PDF canvas — all pages */}
-          <div style={{ flex: 1, overflowY: "auto", backgroundColor: "#525659", display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", padding: "1rem" }}>
+          <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", backgroundColor: "#525659", display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", padding: "1rem" }}>
             <Document
               file={cvUrl}
               onLoadSuccess={({ numPages }) => setNumPages(numPages)}
