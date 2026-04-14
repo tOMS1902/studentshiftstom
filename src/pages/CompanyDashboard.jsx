@@ -41,14 +41,20 @@ export default function CompanyDashboard({ setPage, currentUser }) {
   const [activePosting, setActivePosting] = useState(null);
   const [formData, setFormData]   = useState(null);
 
-  // Load this company's jobs on mount
+  // Load this company's jobs on mount, auto-expire any past their deadline
   useEffect(() => {
     if (!currentUser) return;
     withTimeout(
       supabase.from("jobs").select("*, applications(id, status)").eq("company_id", currentUser.id).order("created_at", { ascending: false }),
       10000, "Loading jobs timed out."
-    ).then(({ data, error }) => {
+    ).then(async ({ data, error }) => {
       if (!error && data) {
+        const today = new Date().toISOString().split("T")[0];
+        const expired = data.filter(j => j.status === "Active" && j.deadline && j.deadline < today);
+        if (expired.length) {
+          await supabase.from("jobs").update({ status: "Closed" }).in("id", expired.map(j => j.id));
+          expired.forEach(j => { j.status = "Closed"; });
+        }
         setPostings(data.map(j => ({
           ...normaliseJob(j),
           applicantCount: j.applications?.length || 0,
@@ -319,10 +325,12 @@ function StatCard({ label, value, color }) {
 
 function JobPostingCard({ posting, onViewApplicants, onEdit, onDelete, onToggleStatus }) {
   const isActive = posting.status === "Active";
+  const today = new Date().toISOString().split("T")[0];
+  const isExpired = posting.status === "Closed" && posting.deadline && posting.deadline < today;
   return (
     <div style={{
       padding: "1rem 1.25rem", borderRadius: "0.75rem",
-      backgroundColor: "#f9fafb", border: "1.5px solid #e5e7eb",
+      backgroundColor: "#f9fafb", border: `1.5px solid ${isExpired ? "#fca5a5" : "#e5e7eb"}`,
       display: "flex", justifyContent: "space-between", alignItems: "flex-start",
       gap: "1rem", opacity: isActive ? 1 : 0.75,
     }}>
@@ -332,10 +340,10 @@ function JobPostingCard({ posting, onViewApplicants, onEdit, onDelete, onToggleS
           <span style={{
             fontSize: "0.65rem", fontWeight: "700", padding: "0.15rem 0.55rem",
             borderRadius: "999px", textTransform: "uppercase", letterSpacing: "0.05em",
-            backgroundColor: isActive ? "#dcfce7" : "#f3f4f6",
-            color: isActive ? "#16a34a" : "#6b7280",
+            backgroundColor: isActive ? "#dcfce7" : isExpired ? "#fee2e2" : "#f3f4f6",
+            color: isActive ? "#16a34a" : isExpired ? "#dc2626" : "#6b7280",
           }}>
-            {posting.status}
+            {isExpired ? "Expired" : posting.status}
           </span>
         </div>
         <p style={{ fontSize: "0.875rem", color: "#6b7280", marginBottom: "0.4rem" }}>
