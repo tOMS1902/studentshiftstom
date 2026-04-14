@@ -143,7 +143,7 @@ export async function getSignedDocumentUrl(bucket, path) {
 
 export async function fetchMessages(jobId, studentId) {
   const { data, error } = await withTimeout(
-    supabase.from("messages")
+    supabase.from("chat_messages")
       .select("id, sender_id, text, created_at")
       .eq("job_id", jobId)
       .eq("student_id", studentId)
@@ -155,7 +155,7 @@ export async function fetchMessages(jobId, studentId) {
 }
 
 export async function sendMessage(jobId, studentId, companyId, senderId, text) {
-  const { error } = await supabase.from("messages").insert({
+  const { error } = await supabase.from("chat_messages").insert({
     job_id: jobId, student_id: studentId, company_id: companyId, sender_id: senderId, text,
   });
   if (error) throw error;
