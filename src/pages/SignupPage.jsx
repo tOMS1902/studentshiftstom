@@ -11,10 +11,11 @@ export default function SignupPage({ setPage }) {
   const [governmentId, setGovernmentId]   = useState(null);
   const [error, setError]       = useState("");
   const [loading, setLoading]   = useState(false);
+  const [done, setDone]         = useState(false);
 
   const handleSignup = async () => {
     if (!name || !email || !password) { setError("Please fill in your name, email and password."); return; }
-    if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
+    if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
     if (role === "student") {
       if (!studentIdCard) { setError("Please upload your Student ID card."); return; }
       if (!governmentId)  { setError("Please upload a Government ID."); return; }
@@ -23,13 +24,33 @@ export default function SignupPage({ setPage }) {
     setError("");
     try {
       await signUp({ email, password, name, role });
-      // onAuthStateChange in StudentShiftsWeb handles the redirect
+      setDone(true);
     } catch (e) {
       setError(e.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
+
+  if (done) {
+    return (
+      <PageWrapper>
+        <div style={{ maxWidth: "440px", margin: "0 auto", textAlign: "center" }}>
+          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>📬</div>
+          <h2 style={{ margin: "0 0 0.5rem", fontWeight: "800", fontSize: "1.8rem", color: "#1e293b" }}>Check your email</h2>
+          <p style={{ color: "#64748b", fontSize: "0.95rem", lineHeight: 1.6, marginBottom: "1.5rem" }}>
+            We sent a confirmation link to <strong style={{ color: "#1e293b" }}>{email}</strong>.<br />
+            Click it to activate your account.
+          </p>
+          <div style={{ backgroundColor: "#f0fdf4", border: "1px solid #86efac", borderRadius: "0.75rem", padding: "0.85rem 1rem", marginBottom: "1.5rem", color: "#16a34a", fontSize: "0.85rem", fontWeight: "500" }}>
+            ✅ Once confirmed you'll be able to log in.
+          </div>
+          <p style={{ fontSize: "0.82rem", color: "#94a3b8" }}>Didn't get it? Check your spam folder.</p>
+          <button onClick={() => setPage("login")} style={btnPrimary}>Go to Login →</button>
+        </div>
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper>
