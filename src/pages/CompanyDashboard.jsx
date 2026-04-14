@@ -417,7 +417,13 @@ function ApplicantCard({ applicant, postingId, onUpdateStatus }) {
     try {
       const { getSignedDocumentUrl } = await import("../lib/auth");
       const url = await getSignedDocumentUrl("documents", applicant.cvName);
-      window.open(url, "_blank", "noreferrer");
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     } catch (e) {
       alert("Could not open CV: " + e.message);
     } finally {
