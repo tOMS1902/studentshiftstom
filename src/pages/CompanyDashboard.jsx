@@ -452,12 +452,23 @@ function ApplicantCard({ applicant, postingId, onUpdateStatus }) {
     }
   };
 
-  const goFullScreen = () => {
-    const el = modalRef.current;
-    if (!el) return;
-    if (el.requestFullscreen) el.requestFullscreen();
-    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  const toggleFullScreen = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      const el = modalRef.current;
+      if (!el) return;
+      if (el.requestFullscreen) el.requestFullscreen();
+      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    }
   };
+
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  useEffect(() => {
+    const handler = () => setIsFullScreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", handler);
+    return () => document.removeEventListener("fullscreenchange", handler);
+  }, []);
 
   const saveCv = async () => {
     try {
@@ -503,7 +514,7 @@ function ApplicantCard({ applicant, postingId, onUpdateStatus }) {
               <button onClick={() => window.print()} style={cvHeaderBtn} title="Print">🖨</button>
               <button onClick={saveCv} style={cvHeaderBtn} title="Save">⬇</button>
               <button onClick={openWithCv} style={cvHeaderBtn} title="Open With">↗</button>
-              <button onClick={goFullScreen} style={cvHeaderBtn} title="Full Screen">⛶</button>
+              <button onClick={toggleFullScreen} style={cvHeaderBtn} title={isFullScreen ? "Exit Full Screen" : "Full Screen"}>{isFullScreen ? "⊠" : "⛶"}</button>
               <button onClick={() => setCvUrl(null)} style={{ ...cvHeaderBtn, fontSize: "1rem" }} title="Close">✕</button>
             </div>
           </div>
