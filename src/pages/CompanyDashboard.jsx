@@ -418,58 +418,17 @@ function ApplicantsView({ posting, onUpdateStatus }) {
   );
 }
 
-function ApplicantCard({ applicant, postingId, onUpdateStatus }) {
-  const [showChat, setShowChat] = useState(false);
-  const [cvUrl, setCvUrl]       = useState(null);
-  const [cvLoading, setCvLoading] = useState(false);
-  const modalRef    = useRef(null);
-  const scrollRef   = useRef(null);
-  const [numPages, setNumPages]   = useState(null);
-  const [pageNum, setPageNum]     = useState(1);
-  const [clLoading, setClLoading] = useState(false);
-  const [clUrl, setClUrl]         = useState(null);
-
-  useEffect(() => {
-    if (!numPages || !scrollRef.current) return;
-    const container = scrollRef.current;
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          setPageNum(Number(entry.target.dataset.page));
-        }
-      });
-    }, { root: container, threshold: 0.5 });
-    const divs = container.querySelectorAll("[data-page]");
-    divs.forEach(d => observer.observe(d));
-    return () => observer.disconnect();
-  }, [numPages]);
-
-  const openCv = async () => {
-    if (cvUrl) return;
-    setCvLoading(true);
-    try {
-      const { getSignedDocumentUrl } = await import("../lib/auth");
-      const url = await getSignedDocumentUrl("documents", applicant.cvName);
-      setCvUrl(url);
-      setPageNum(1);
-      setNumPages(null);
-    } catch (e) {
-      alert("Could not load CV: " + e.message);
-    } finally {
-      setCvLoading(false);
-    }
-  };
-
+function PdfModal({ url, label, fileName, onClose }) {
+  const modalRef  = useRef(null);
+  const scrollRef = useRef(null);
+  const [numPages, setNumPages] = useState(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
 
   useEffect(() => {
     const handler = () => setIsFullScreen(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", handler);
     document.addEventListener("webkitfullscreenchange", handler);
-    return () => {
-      document.removeEventListener("fullscreenchange", handler);
-      document.removeEventListener("webkitfullscreenchange", handler);
-    };
+    return () => { document.removeEventListener("fullscreenchange", handler); document.removeEventListener("webkitfullscreenchange", handler); };
   }, []);
 
   const toggleFullScreen = () => {
@@ -478,108 +437,108 @@ function ApplicantCard({ applicant, postingId, onUpdateStatus }) {
       else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
     } else {
       const el = modalRef.current;
-      if (!el) return;
-      if (el.requestFullscreen) el.requestFullscreen();
-      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+      if (el?.requestFullscreen) el.requestFullscreen();
+      else if (el?.webkitRequestFullscreen) el.webkitRequestFullscreen();
     }
+  };
+
+  const save = async () => {
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = fileName;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
+    } catch (e) { alert("Could not save: " + e.message); }
+  };
+
+  const openWith = async () => {
+    if (navigator.share) {
+      try {
+        const res = await fetch(url);
+        const blob = await res.blob();
+        const file = new File([blob], fileName, { type: "application/pdf" });
+        await navigator.share({ files: [file], title: label });
+      } catch (e) { if (e.name !== "AbortError") alert("Could not share: " + e.message); }
+    } else {
+      window.open(url, "_blank", "noreferrer");
+    }
+  };
+
+  const buttons = [
+    { icon: "🖨", label: "Print",       onClick: () => window.print() },
+    { icon: "⬇", label: "Save",         onClick: save },
+    { icon: "↗", label: "Open With",    onClick: openWith },
+    { icon: isFullScreen ? "⊠" : "⛶", label: isFullScreen ? "Exit Full Screen" : "Full Screen", onClick: toggleFullScreen },
+    { icon: "✕", label: "Close",        onClick: onClose },
+  ];
+
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(15,23,42,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "1rem", backdropFilter: "blur(2px)" }}>
+      <div ref={modalRef} onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: "720px", height: "85vh", display: "flex", flexDirection: "column", borderRadius: "1rem", overflow: "hidden", boxShadow: "0 24px 64px rgba(0,0,0,0.4)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#1e293b", padding: "0.65rem 1rem", flexShrink: 0 }}>
+          <span style={{ color: "white", fontWeight: "700", fontSize: "0.9rem" }}>📄 {label}</span>
+          <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
+            {buttons.map(({ icon, label: tip, onClick }) => (
+              <div key={tip} style={{ position: "relative", display: "inline-block" }} className="cv-tooltip-wrap">
+                <button onClick={onClick} style={cvHeaderBtn}>{icon}</button>
+                <span className="cv-tooltip" style={{ position: "absolute", top: "calc(100% + 6px)", left: "50%", transform: "translateX(-50%)", backgroundColor: "#0f172a", color: "white", fontSize: "0.7rem", fontWeight: "600", padding: "0.2rem 0.5rem", borderRadius: "0.35rem", whiteSpace: "nowrap", pointerEvents: "none", opacity: 0, transition: "opacity 0.15s", zIndex: 10 }}>{tip}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", backgroundColor: "#525659", display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", padding: "1rem" }}>
+          <Document file={url} onLoadSuccess={({ numPages }) => setNumPages(numPages)} loading={<p style={{ color: "white", marginTop: "2rem" }}>Loading PDF…</p>} error={<p style={{ color: "#fca5a5", marginTop: "2rem" }}>Failed to load PDF.</p>}>
+            {Array.from({ length: numPages || 0 }, (_, i) => (
+              <div key={i + 1} data-page={i + 1}>
+                <Page pageNumber={i + 1} width={Math.min(window.innerWidth - 64, 680)} renderTextLayer={false} />
+              </div>
+            ))}
+          </Document>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ApplicantCard({ applicant, postingId, onUpdateStatus }) {
+  const [cvOpen, setCvOpen]   = useState(false);
+  const [clOpen, setClOpen]   = useState(false);
+  const [cvUrl, setCvUrl]     = useState(null);
+  const [clUrl, setClUrl]     = useState(null);
+  const [cvLoading, setCvLoading] = useState(false);
+  const [clLoading, setClLoading] = useState(false);
+
+  const openCv = async () => {
+    if (!cvUrl) {
+      setCvLoading(true);
+      try {
+        const { getSignedDocumentUrl } = await import("../lib/auth");
+        setCvUrl(await getSignedDocumentUrl("documents", applicant.cvName));
+      } catch (e) { alert("Could not load CV: " + e.message); setCvLoading(false); return; }
+      setCvLoading(false);
+    }
+    setCvOpen(true);
   };
 
   const openCoverLetter = async () => {
-    if (clUrl) return;
-    setClLoading(true);
-    try {
-      const { getSignedDocumentUrl } = await import("../lib/auth");
-      const url = await getSignedDocumentUrl("documents", applicant.coverLetterName);
-      setClUrl(url);
-      setPageNum(1);
-      setNumPages(null);
-    } catch (e) {
-      alert("Could not load cover letter: " + e.message);
-    } finally {
+    if (!clUrl) {
+      setClLoading(true);
+      try {
+        const { getSignedDocumentUrl } = await import("../lib/auth");
+        setClUrl(await getSignedDocumentUrl("documents", applicant.coverLetterName));
+      } catch (e) { alert("Could not load cover letter: " + e.message); setClLoading(false); return; }
       setClLoading(false);
     }
-  };
-
-  const activePdfUrl = cvUrl || clUrl;
-  const activePdfLabel = cvUrl ? `${applicant.name}'s CV` : `${applicant.name}'s Cover Letter`;
-  const closeDoc = () => { setCvUrl(null); setClUrl(null); };
-
-  const saveCv = async () => {
-    try {
-      const res = await fetch(activePdfUrl);
-      const blob = await res.blob();
-      const label = cvUrl ? "CV" : "Cover_Letter";
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `${applicant.name.replace(/\s+/g, "_")}_${label}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(a.href);
-    } catch (e) {
-      alert("Could not save: " + e.message);
-    }
-  };
-
-  const openWithCv = async () => {
-    const label = cvUrl ? "CV" : "Cover_Letter";
-    if (navigator.share) {
-      try {
-        const res = await fetch(activePdfUrl);
-        const blob = await res.blob();
-        const file = new File([blob], `${applicant.name.replace(/\s+/g, "_")}_${label}.pdf`, { type: "application/pdf" });
-        await navigator.share({ files: [file], title: `${applicant.name}'s ${label}` });
-      } catch (e) {
-        if (e.name !== "AbortError") alert("Could not share: " + e.message);
-      }
-    } else {
-      window.open(activePdfUrl, "_blank", "noreferrer");
-    }
+    setClOpen(true);
   };
 
   return (
     <>
-    {activePdfUrl && (
-      <div onClick={closeDoc} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(15,23,42,0.7)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "1rem", backdropFilter: "blur(2px)" }}>
-        <div ref={modalRef} onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: "720px", height: "85vh", display: "flex", flexDirection: "column", borderRadius: "1rem", overflow: "hidden", boxShadow: "0 24px 64px rgba(0,0,0,0.4)" }}>
-          {/* Header */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#1e293b", padding: "0.65rem 1rem", flexShrink: 0 }}>
-            <span style={{ color: "white", fontWeight: "700", fontSize: "0.9rem" }}>📄 {activePdfLabel}</span>
-            <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
-              {[
-                { icon: "🖨", label: "Print",       onClick: () => window.print() },
-                { icon: "⬇", label: "Save",         onClick: saveCv },
-                { icon: "↗", label: "Open With",    onClick: openWithCv },
-                { icon: isFullScreen ? "⊠" : "⛶", label: isFullScreen ? "Exit Full Screen" : "Full Screen", onClick: toggleFullScreen },
-                { icon: "✕", label: "Close",        onClick: closeDoc },
-              ].map(({ icon, label, onClick }) => (
-                <div key={label} style={{ position: "relative", display: "inline-block" }} className="cv-tooltip-wrap">
-                  <button onClick={onClick} style={cvHeaderBtn}>{icon}</button>
-                  <span className="cv-tooltip" style={{ position: "absolute", top: "calc(100% + 6px)", left: "50%", transform: "translateX(-50%)", backgroundColor: "#0f172a", color: "white", fontSize: "0.7rem", fontWeight: "600", padding: "0.2rem 0.5rem", borderRadius: "0.35rem", whiteSpace: "nowrap", pointerEvents: "none", opacity: 0, transition: "opacity 0.15s", zIndex: 10 }}>
-                    {label}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-          {/* PDF canvas — all pages */}
-          <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", backgroundColor: "#525659", display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", padding: "1rem" }}>
-            <Document
-              file={activePdfUrl}
-              onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-              loading={<p style={{ color: "white", marginTop: "2rem" }}>Loading PDF…</p>}
-              error={<p style={{ color: "#fca5a5", marginTop: "2rem" }}>Failed to load PDF.</p>}
-            >
-              {Array.from({ length: numPages || 0 }, (_, i) => (
-                <div key={i + 1} data-page={i + 1}>
-                  <Page pageNumber={i + 1} width={Math.min(window.innerWidth - 64, 680)} renderTextLayer={false} />
-                </div>
-              ))}
-            </Document>
-          </div>
-        </div>
-      </div>
-    )}
+    {cvOpen && cvUrl && <PdfModal url={cvUrl} label={`${applicant.name}'s CV`} fileName={`${applicant.name.replace(/\s+/g, "_")}_CV.pdf`} onClose={() => setCvOpen(false)} />}
+    {clOpen && clUrl && <PdfModal url={clUrl} label={`${applicant.name}'s Cover Letter`} fileName={`${applicant.name.replace(/\s+/g, "_")}_Cover_Letter.pdf`} onClose={() => setClOpen(false)} />}
     <div style={{ backgroundColor: "#f9fafb", borderRadius: "0.5rem", border: "1px solid #e5e7eb", padding: "0.75rem 1rem" }}>
       {/* Top row: photo + name/details + status/actions */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.75rem" }}>
@@ -609,9 +568,10 @@ function ApplicantCard({ applicant, postingId, onUpdateStatus }) {
                 ? <button onClick={openCv} disabled={cvLoading} style={{ background: "none", border: "none", padding: 0, fontSize: "0.75rem", color: "#16a34a", fontWeight: "600", textDecoration: "underline", cursor: cvLoading ? "not-allowed" : "pointer", fontFamily: "inherit" }}>{cvLoading ? "Loading…" : "📄 View CV"}</button>
                 : <span style={{ fontSize: "0.75rem", color: "#ef4444" }}>No CV</span>
               }
-              {applicant.coverLetterName && (
-                <button onClick={openCoverLetter} disabled={clLoading} style={{ background: "none", border: "none", padding: 0, fontSize: "0.75rem", color: "#6366f1", fontWeight: "600", textDecoration: "underline", cursor: clLoading ? "not-allowed" : "pointer", fontFamily: "inherit" }}>{clLoading ? "Loading…" : "📝 Cover Letter"}</button>
-              )}
+              {applicant.coverLetterName
+                ? <button onClick={openCoverLetter} disabled={clLoading} style={{ background: "none", border: "none", padding: 0, fontSize: "0.75rem", color: "#6366f1", fontWeight: "600", textDecoration: "underline", cursor: clLoading ? "not-allowed" : "pointer", fontFamily: "inherit" }}>{clLoading ? "Loading…" : "📝 Cover Letter"}</button>
+                : <span style={{ fontSize: "0.75rem", color: "#9ca3af" }}>No Cover Letter</span>
+              }
               {applicant.linkedin && (
                 <a href={applicant.linkedin} target="_blank" rel="noreferrer" style={{ fontSize: "0.75rem", color: "#0a66c2", fontWeight: "600", textDecoration: "underline" }}>🔗 LinkedIn</a>
               )}
