@@ -554,34 +554,55 @@ function ApplicantCard({ applicant, postingId, onUpdateStatus }) {
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ fontWeight: "700", fontSize: "0.95rem", margin: "0 0 0.1rem" }}>{applicant.name}</p>
             {/* Bio */}
-            {applicant.bio
-              ? <p style={{ fontSize: "0.78rem", color: "#374151", margin: "0 0 0.35rem", lineHeight: 1.4 }}>{applicant.bio}</p>
-              : <p style={{ fontSize: "0.78rem", color: "#9ca3af", fontStyle: "italic", margin: "0 0 0.35rem" }}>No bio provided</p>
-            }
+            <div style={{ marginBottom: "0.3rem" }}>
+              <span style={{ fontSize: "0.68rem", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>Bio</span>
+              {applicant.bio
+                ? <p style={{ fontSize: "0.78rem", color: "#374151", margin: "0.1rem 0 0", lineHeight: 1.4 }}>{applicant.bio}</p>
+                : <p style={{ fontSize: "0.78rem", color: "#9ca3af", fontStyle: "italic", margin: "0.1rem 0 0" }}>Not provided</p>
+              }
+            </div>
+            {/* Cover Letter */}
+            <div style={{ marginBottom: "0.3rem" }}>
+              <span style={{ fontSize: "0.68rem", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>Cover Letter</span>
+              <div style={{ marginTop: "0.1rem" }}>
+                {applicant.coverLetterName
+                  ? <button onClick={openCoverLetter} disabled={clLoading} style={{ background: "none", border: "none", padding: 0, fontSize: "0.78rem", color: "#6366f1", fontWeight: "600", textDecoration: "underline", cursor: clLoading ? "not-allowed" : "pointer", fontFamily: "inherit" }}>{clLoading ? "Loading…" : "📝 View Cover Letter"}</button>
+                  : <span style={{ fontSize: "0.78rem", color: "#9ca3af", fontStyle: "italic" }}>Not uploaded</span>
+                }
+              </div>
+            </div>
+            {/* CV */}
+            <div style={{ marginBottom: "0.3rem" }}>
+              <span style={{ fontSize: "0.68rem", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>CV</span>
+              <div style={{ marginTop: "0.1rem" }}>
+                {applicant.cvName
+                  ? <button onClick={openCv} disabled={cvLoading} style={{ background: "none", border: "none", padding: 0, fontSize: "0.78rem", color: "#16a34a", fontWeight: "600", textDecoration: "underline", cursor: cvLoading ? "not-allowed" : "pointer", fontFamily: "inherit" }}>{cvLoading ? "Loading…" : "📄 View CV"}</button>
+                  : <span style={{ fontSize: "0.78rem", color: "#9ca3af", fontStyle: "italic" }}>Not uploaded</span>
+                }
+              </div>
+            </div>
+            {/* LinkedIn */}
+            <div style={{ marginBottom: "0.3rem" }}>
+              <span style={{ fontSize: "0.68rem", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>LinkedIn</span>
+              <div style={{ marginTop: "0.1rem" }}>
+                {applicant.linkedin
+                  ? <a href={applicant.linkedin} target="_blank" rel="noreferrer" style={{ fontSize: "0.78rem", color: "#0a66c2", fontWeight: "600", textDecoration: "underline" }}>🔗 View Profile</a>
+                  : <span style={{ fontSize: "0.78rem", color: "#9ca3af", fontStyle: "italic" }}>Not provided</span>
+                }
+              </div>
+            </div>
             {/* Skills */}
-            {applicant.skills?.length > 0
-              ? (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem", marginBottom: "0.35rem" }}>
-                  {applicant.skills.map(s => (
-                    <span key={s} style={{ fontSize: "0.65rem", backgroundColor: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe", borderRadius: "999px", padding: "0.1rem 0.45rem", fontWeight: "600" }}>{s}</span>
-                  ))}
-                </div>
-              )
-              : <p style={{ fontSize: "0.78rem", color: "#9ca3af", fontStyle: "italic", margin: "0 0 0.35rem" }}>No skills listed</p>
-            }
-            {/* Documents */}
-            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-              {applicant.cvName
-                ? <button onClick={openCv} disabled={cvLoading} style={{ background: "none", border: "none", padding: 0, fontSize: "0.75rem", color: "#16a34a", fontWeight: "600", textDecoration: "underline", cursor: cvLoading ? "not-allowed" : "pointer", fontFamily: "inherit" }}>{cvLoading ? "Loading…" : "📄 View CV"}</button>
-                : <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontStyle: "italic" }}>No CV uploaded</span>
-              }
-              {applicant.coverLetterName
-                ? <button onClick={openCoverLetter} disabled={clLoading} style={{ background: "none", border: "none", padding: 0, fontSize: "0.75rem", color: "#6366f1", fontWeight: "600", textDecoration: "underline", cursor: clLoading ? "not-allowed" : "pointer", fontFamily: "inherit" }}>{clLoading ? "Loading…" : "📝 Cover Letter"}</button>
-                : <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontStyle: "italic" }}>No cover letter uploaded</span>
-              }
-              {applicant.linkedin
-                ? <a href={applicant.linkedin} target="_blank" rel="noreferrer" style={{ fontSize: "0.75rem", color: "#0a66c2", fontWeight: "600", textDecoration: "underline" }}>🔗 LinkedIn</a>
-                : <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontStyle: "italic" }}>No LinkedIn provided</span>
+            <div style={{ marginBottom: "0.1rem" }}>
+              <span style={{ fontSize: "0.68rem", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>Skills</span>
+              {applicant.skills?.length > 0
+                ? (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem", marginTop: "0.1rem" }}>
+                    {applicant.skills.map(s => (
+                      <span key={s} style={{ fontSize: "0.65rem", backgroundColor: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe", borderRadius: "999px", padding: "0.1rem 0.45rem", fontWeight: "600" }}>{s}</span>
+                    ))}
+                  </div>
+                )
+                : <p style={{ fontSize: "0.78rem", color: "#9ca3af", fontStyle: "italic", margin: "0.1rem 0 0" }}>Not listed</p>
               }
             </div>
           </div>
