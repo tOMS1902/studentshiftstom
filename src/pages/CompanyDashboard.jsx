@@ -423,16 +423,16 @@ function ApplicantCard({ applicant, postingId, onUpdateStatus }) {
 
   useEffect(() => {
     if (!numPages || !scrollRef.current) return;
-    const pages = scrollRef.current.querySelectorAll(".react-pdf__Page");
-    if (!pages.length) return;
+    const container = scrollRef.current;
     const observer = new IntersectionObserver(entries => {
-      const visible = entries.filter(e => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-      if (visible.length) {
-        const idx = Array.from(pages).indexOf(visible[0].target);
-        if (idx !== -1) setPageNum(idx + 1);
-      }
-    }, { root: scrollRef.current, threshold: 0.5 });
-    pages.forEach(p => observer.observe(p));
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          setPageNum(Number(entry.target.dataset.page));
+        }
+      });
+    }, { root: container, threshold: 0.5 });
+    const divs = container.querySelectorAll("[data-page]");
+    divs.forEach(d => observer.observe(d));
     return () => observer.disconnect();
   }, [numPages]);
 
@@ -516,7 +516,9 @@ function ApplicantCard({ applicant, postingId, onUpdateStatus }) {
               error={<p style={{ color: "#fca5a5", marginTop: "2rem" }}>Failed to load PDF.</p>}
             >
               {Array.from({ length: numPages || 0 }, (_, i) => (
-                <Page key={i + 1} pageNumber={i + 1} width={Math.min(window.innerWidth - 64, 680)} renderTextLayer={false} />
+                <div key={i + 1} data-page={i + 1}>
+                  <Page pageNumber={i + 1} width={Math.min(window.innerWidth - 64, 680)} renderTextLayer={false} />
+                </div>
               ))}
             </Document>
           </div>
