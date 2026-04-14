@@ -459,6 +459,7 @@ function ApplicantCard({ applicant, postingId, onUpdateStatus }) {
                   <button onClick={() => setPageNum(p => Math.min(numPages, p + 1))} disabled={pageNum >= numPages} style={navBtn}>›</button>
                 </div>
               )}
+              <button onClick={() => window.print()} style={{ background: "none", border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: "0.4rem", color: "white", fontSize: "0.75rem", fontWeight: "600", padding: "0.25rem 0.6rem", cursor: "pointer", fontFamily: "inherit" }}>🖨 Print</button>
               <button onClick={goFullScreen} style={{ background: "none", border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: "0.4rem", color: "white", fontSize: "0.75rem", fontWeight: "600", padding: "0.25rem 0.6rem", cursor: "pointer", fontFamily: "inherit" }}>⛶ Full Screen</button>
               <button onClick={() => setCvUrl(null)} style={{ background: "none", border: "none", color: "white", fontSize: "1.25rem", cursor: "pointer", lineHeight: 1 }}>✕</button>
             </div>
