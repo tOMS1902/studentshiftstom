@@ -216,15 +216,12 @@ export default function StudentDashboard({
     return true;
   });
 
-  const locationOrder = { "5 min walk": 0, "10 min walk": 1, "On-Campus": 2, "Near Campus": 3, "City Centre": 4, "Downtown": 5 };
-  const locRank = (job) => locationOrder[job.location] ?? 99;
-
   const payNum = (p) => parseFloat(p.replace(/[^0-9.]/g, "")) || 0;
   const displayJobs = sortBy === "" ? filteredJobs : [...filteredJobs].sort((a, b) => {
     if (sortBy === "payHigh")      return payNum(b.pay) - payNum(a.pay);
     if (sortBy === "payLow")       return payNum(a.pay) - payNum(b.pay);
-    if (sortBy === "distanceNear") return locRank(a) - locRank(b);
-    if (sortBy === "distanceFar")  return locRank(b) - locRank(a);
+    if (sortBy === "distanceNear") { const da = jobDistance(a) ?? Infinity;  const db = jobDistance(b) ?? Infinity;  return da - db; }
+    if (sortBy === "distanceFar")  { const da = jobDistance(a) ?? -Infinity; const db = jobDistance(b) ?? -Infinity; return db - da; }
     return 0;
   });
 
@@ -271,7 +268,7 @@ export default function StudentDashboard({
           {/* Relevance dropdown */}
           <div style={{ position: "relative" }}>
             <button onClick={() => setOpenDropdown(openDropdown === "relevance" ? null : "relevance")} style={dropdownBtnStyle(sortBy !== "")}>
-              {sortBy === "" ? "Relevance" : sortBy === "payHigh" ? "Pay: High → Low" : sortBy === "payLow" ? "Pay: Low → High" : sortBy === "distanceNear" ? "Closest First" : "Furthest First"} ▾
+              {sortBy === "" ? "Relevance" : sortBy === "payHigh" ? "Pay: High → Low" : sortBy === "payLow" ? "Pay: Low → High" : sortBy === "distanceNear" ? "Closest First" : sortBy === "distanceFar" ? "Furthest First" : "Relevance"} ▾
             </button>
             {openDropdown === "relevance" && (
               <div style={dropdownPanel}>
@@ -279,8 +276,10 @@ export default function StudentDashboard({
                   { value: "",             label: "Default" },
                   { value: "payHigh",      label: "Pay: High → Low" },
                   { value: "payLow",       label: "Pay: Low → High" },
-                  { value: "distanceNear", label: "Distance: Closest → Furthest" },
-                  { value: "distanceFar",  label: "Distance: Furthest → Closest" },
+                  ...(studentLocation ? [
+                    { value: "distanceNear", label: "Distance: Closest → Furthest" },
+                    { value: "distanceFar",  label: "Distance: Furthest → Closest" },
+                  ] : []),
                 ].map(({ value, label }) => (
                   <label key={value} style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.4rem", cursor: "pointer", fontWeight: sortBy === value ? "700" : "500", color: sortBy === value ? "#4f46e5" : "#374151", fontSize: "0.85rem" }}>
                     <input type="radio" name="sortBy" checked={sortBy === value} onChange={() => { setSortBy(value); setOpenDropdown(null); }} style={{ cursor: "pointer" }} />
@@ -371,6 +370,36 @@ export default function StudentDashboard({
                     {label}
                   </label>
                 ))}
+
+                <hr style={{ border: "none", borderTop: "1px solid #e5e7eb", margin: "0.4rem 0" }} />
+
+                {/* Distance filter */}
+                <p style={{ ...filterSectionLabel, marginTop: "0.4rem" }}>Distance</p>
+                {studentLocation ? (
+                  <div style={{ paddingBottom: "0.4rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.35rem" }}>
+                      <span style={{ fontSize: "0.82rem", color: "#374151", fontWeight: "500" }}>
+                        {distanceKm === 0 ? "Any distance" : `Within ${distanceKm} km`}
+                      </span>
+                      {distanceKm > 0 && (
+                        <button onClick={() => setDistanceKm(0)} style={{ fontSize: "0.72rem", color: "#6366f1", background: "none", border: "none", cursor: "pointer", fontWeight: "700", padding: 0, fontFamily: "inherit" }}>Reset</button>
+                      )}
+                    </div>
+                    <input
+                      type="range" min="0" max="50" step="1"
+                      value={distanceKm}
+                      onChange={e => setDistanceKm(Number(e.target.value))}
+                      style={{ width: "100%", accentColor: "#6366f1", cursor: "pointer" }}
+                    />
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.68rem", color: "#9ca3af", marginTop: "0.1rem" }}>
+                      <span>0 km</span><span>25 km</span><span>50 km</span>
+                    </div>
+                  </div>
+                ) : (
+                  <p style={{ fontSize: "0.78rem", color: "#9ca3af", fontStyle: "italic", margin: "0.2rem 0 0.4rem" }}>
+                    Save your location in Account to filter by distance.
+                  </p>
+                )}
 
               </div>
             )}
