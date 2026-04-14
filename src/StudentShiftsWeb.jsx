@@ -11,6 +11,7 @@ import AppliedJobs from "./pages/AppliedJobs";
 import AboutPage from "./pages/AboutPage";
 import Messages from "./pages/Messages";
 import CompanyMessages from "./pages/CompanyMessages";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import { supabase } from "./lib/supabase";
 import { getProfile, fetchLikedJobIds, fetchAppliedJobIds } from "./lib/auth";
 
@@ -95,6 +96,12 @@ export default function StudentShiftsWeb() {
         } catch (e) {
           console.error("Failed to load profile", e);
         }
+      }
+      if (event === "PASSWORD_RECOVERY") {
+        setPage("resetPassword");
+        clearTimeout(failsafe);
+        setAuthLoading(false);
+        return;
       }
       if (event === "SIGNED_OUT") {
         setCurrentUser(null);
@@ -209,6 +216,8 @@ export default function StudentShiftsWeb() {
             currentUser={currentUser}
           />
         );
+      case "resetPassword":
+        return <ResetPasswordPage setPage={setPage} />;
       case "messages":
         return currentUser && <Messages currentUser={currentUser} setPage={setPage} />;
       case "companyMessages":

@@ -1,12 +1,17 @@
 import { useState } from "react";
 import PageWrapper from "../components/PageWrapper";
-import { signIn } from "../lib/auth";
+import { signIn, sendPasswordReset } from "../lib/auth";
 
 export default function LoginPage({ setPage }) {
-  const [email, setEmail]     = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError]     = useState("");
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail]         = useState("");
+  const [password, setPassword]   = useState("");
+  const [error, setError]         = useState("");
+  const [loading, setLoading]     = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [resetSent, setResetSent]   = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError]     = useState("");
 
   const handleLogin = async () => {
     if (!email || !password) { setError("Please enter your email and password."); return; }
@@ -14,13 +19,74 @@ export default function LoginPage({ setPage }) {
     setError("");
     try {
       await signIn({ email, password });
-      // onAuthStateChange in StudentShiftsWeb handles the redirect
     } catch (e) {
       setError(e.message || "Invalid email or password.");
     } finally {
       setLoading(false);
     }
   };
+
+  const handleReset = async () => {
+    if (!resetEmail) { setResetError("Please enter your email address."); return; }
+    setResetLoading(true);
+    setResetError("");
+    try {
+      await sendPasswordReset(resetEmail);
+      setResetSent(true);
+    } catch (e) {
+      setResetError(e.message || "Failed to send reset email — please try again.");
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  if (forgotMode) {
+    return (
+      <PageWrapper>
+        <div style={{ textAlign: "center", maxWidth: "420px", margin: "0 auto" }}>
+          <div style={{ marginBottom: "1.75rem" }}>
+            <h2 style={{ margin: 0, fontWeight: "800", fontSize: "1.8rem", color: "#1e293b" }}>Reset password</h2>
+            <p style={{ margin: "0.35rem 0 0", color: "#64748b", fontSize: "0.9rem" }}>
+              {resetSent ? "Check your email for a reset link." : "Enter your email and we'll send you a reset link."}
+            </p>
+          </div>
+
+          {resetSent ? (
+            <>
+              <div style={{ backgroundColor: "#f0fdf4", border: "1px solid #86efac", borderRadius: "0.6rem", padding: "0.9rem 1rem", marginBottom: "1.25rem", color: "#16a34a", fontSize: "0.875rem", fontWeight: "500" }}>
+                ✅ Reset link sent to <strong>{resetEmail}</strong>. Check your inbox (and spam folder).
+              </div>
+              <button onClick={() => { setForgotMode(false); setResetSent(false); setResetEmail(""); }} style={btnPrimary}>
+                Back to Login
+              </button>
+            </>
+          ) : (
+            <>
+              {resetError && (
+                <div style={{ backgroundColor: "#fff1f2", border: "1px solid #fecdd3", borderRadius: "0.6rem", padding: "0.65rem 1rem", marginBottom: "1rem", color: "#e11d48", fontSize: "0.875rem", fontWeight: "500", textAlign: "left" }}>
+                  {resetError}
+                </div>
+              )}
+              <input
+                placeholder="Email address"
+                type="email"
+                value={resetEmail}
+                onChange={e => setResetEmail(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleReset()}
+                style={fieldStyle}
+              />
+              <button onClick={handleReset} disabled={resetLoading} style={{ ...btnPrimary, opacity: resetLoading ? 0.7 : 1 }}>
+                {resetLoading ? "Sending…" : "Send Reset Link →"}
+              </button>
+              <button onClick={() => { setForgotMode(false); setResetError(""); }} style={btnGhost}>
+                Back to Login
+              </button>
+            </>
+          )}
+        </div>
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper>
@@ -51,6 +117,15 @@ export default function LoginPage({ setPage }) {
           onKeyDown={e => e.key === "Enter" && handleLogin()}
           style={fieldStyle}
         />
+
+        <div style={{ textAlign: "right", marginTop: "0.25rem", marginBottom: "0.25rem" }}>
+          <span
+            onClick={() => { setForgotMode(true); setResetEmail(email); }}
+            style={{ fontSize: "0.82rem", color: "#6366f1", cursor: "pointer", fontWeight: "600" }}
+          >
+            Forgot password?
+          </span>
+        </div>
 
         <button onClick={handleLogin} disabled={loading} style={{ ...btnPrimary, opacity: loading ? 0.7 : 1 }}>
           {loading ? "Signing in…" : "Login →"}

@@ -113,6 +113,24 @@ export async function removeApplication(userId, jobId) {
 //     delete from auth.users where id = auth.uid();
 //   end;
 //   $$;
+export async function sendPasswordReset(email) {
+  const { error } = await withTimeout(
+    supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin,
+    }),
+    15000, "Password reset timed out — please try again."
+  );
+  if (error) throw error;
+}
+
+export async function updatePassword(newPassword) {
+  const { error } = await withTimeout(
+    supabase.auth.updateUser({ password: newPassword }),
+    15000, "Password update timed out — please try again."
+  );
+  if (error) throw error;
+}
+
 export async function deleteAccount() {
   const { error } = await withTimeout(
     supabase.rpc("delete_account"),
