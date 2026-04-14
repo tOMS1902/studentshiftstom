@@ -510,16 +510,20 @@ function ApplicantCard({ applicant, postingId, onUpdateStatus }) {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#1e293b", padding: "0.65rem 1rem", flexShrink: 0 }}>
             <span style={{ color: "white", fontWeight: "700", fontSize: "0.9rem" }}>📄 {applicant.name}'s CV</span>
             <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
-              <button onClick={() => window.print()} style={cvHeaderBtn} title="Print">🖨</button>
-              <button onClick={saveCv} style={cvHeaderBtn} title="Save">⬇</button>
-              <button onClick={openWithCv} style={cvHeaderBtn} title="Open With">↗</button>
-              <div style={{ position: "relative", display: "inline-block" }} className="cv-tooltip-wrap">
-                <button onClick={toggleFullScreen} style={cvHeaderBtn}>{isFullScreen ? "⊠" : "⛶"}</button>
-                <span style={{ position: "absolute", bottom: "calc(100% + 6px)", left: "50%", transform: "translateX(-50%)", backgroundColor: "#1e293b", color: "white", fontSize: "0.7rem", fontWeight: "600", padding: "0.2rem 0.5rem", borderRadius: "0.35rem", whiteSpace: "nowrap", pointerEvents: "none", opacity: 0, transition: "opacity 0.15s" }} className="cv-tooltip">
-                  {isFullScreen ? "Exit Full Screen" : "Full Screen"}
-                </span>
-              </div>
-              <button onClick={() => setCvUrl(null)} style={{ ...cvHeaderBtn, fontSize: "1rem" }} title="Close">✕</button>
+              {[
+                { icon: "🖨", label: "Print",       onClick: () => window.print() },
+                { icon: "⬇", label: "Save",         onClick: saveCv },
+                { icon: "↗", label: "Open With",    onClick: openWithCv },
+                { icon: isFullScreen ? "⊠" : "⛶", label: isFullScreen ? "Exit Full Screen" : "Full Screen", onClick: toggleFullScreen },
+                { icon: "✕", label: "Close",        onClick: () => setCvUrl(null) },
+              ].map(({ icon, label, onClick }) => (
+                <div key={label} style={{ position: "relative", display: "inline-block" }} className="cv-tooltip-wrap">
+                  <button onClick={onClick} style={cvHeaderBtn}>{icon}</button>
+                  <span className="cv-tooltip" style={{ position: "absolute", bottom: "calc(100% + 6px)", left: "50%", transform: "translateX(-50%)", backgroundColor: "#0f172a", color: "white", fontSize: "0.7rem", fontWeight: "600", padding: "0.2rem 0.5rem", borderRadius: "0.35rem", whiteSpace: "nowrap", pointerEvents: "none", opacity: 0, transition: "opacity 0.15s" }}>
+                    {label}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
           {/* PDF canvas — all pages */}
