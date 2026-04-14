@@ -131,8 +131,14 @@ export async function uploadDocument(userId, file, bucket, fileName) {
     15000, `${fileName} upload timed out — please try again.`
   );
   if (error) throw error;
-  const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(path);
-  return publicUrl + "?t=" + Date.now();
+  // Store the storage path, not a public URL — we generate signed URLs on demand
+  return path;
+}
+
+export async function getSignedDocumentUrl(bucket, path) {
+  const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 60);
+  if (error) throw error;
+  return data.signedUrl;
 }
 
 export async function uploadAvatar(userId, file) {

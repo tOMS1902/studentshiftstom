@@ -410,13 +410,28 @@ function ApplicantsView({ posting, onUpdateStatus }) {
 
 function ApplicantCard({ applicant, postingId, onUpdateStatus }) {
   const [showChat, setShowChat] = useState(false);
+  const [cvLoading, setCvLoading] = useState(false);
+
+  const openCv = async () => {
+    setCvLoading(true);
+    try {
+      const { getSignedDocumentUrl } = await import("../lib/auth");
+      const url = await getSignedDocumentUrl("documents", applicant.cvName);
+      window.open(url, "_blank", "noreferrer");
+    } catch (e) {
+      alert("Could not open CV: " + e.message);
+    } finally {
+      setCvLoading(false);
+    }
+  };
+
   return (
     <div style={{ backgroundColor: "#f9fafb", borderRadius: "0.5rem", border: "1px solid #e5e7eb", padding: "0.75rem 1rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem" }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ fontWeight: "600", fontSize: "0.9rem", margin: 0 }}>{applicant.name}</p>
           {applicant.cvName
-            ? <a href={applicant.cvName} target="_blank" rel="noreferrer" style={{ fontSize: "0.75rem", color: "#16a34a", fontWeight: "600", textDecoration: "underline" }}>✓ Open CV</a>
+            ? <button onClick={openCv} disabled={cvLoading} style={{ background: "none", border: "none", padding: 0, fontSize: "0.75rem", color: "#16a34a", fontWeight: "600", textDecoration: "underline", cursor: cvLoading ? "not-allowed" : "pointer", fontFamily: "inherit" }}>{cvLoading ? "Opening…" : "✓ Open CV"}</button>
             : <p style={{ fontSize: "0.75rem", margin: 0, color: "#ef4444" }}>No CV uploaded</p>
           }
         </div>
