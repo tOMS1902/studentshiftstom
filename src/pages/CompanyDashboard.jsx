@@ -412,9 +412,10 @@ function ApplicantCard({ applicant, postingId, onUpdateStatus }) {
   const [showChat, setShowChat] = useState(false);
   const [cvUrl, setCvUrl]       = useState(null);
   const [cvLoading, setCvLoading] = useState(false);
+  const iframeRef = useRef(null);
 
   const openCv = async () => {
-    if (cvUrl) { setCvUrl(cvUrl); return; } // already loaded, just reopen
+    if (cvUrl) return;
     setCvLoading(true);
     try {
       const { getSignedDocumentUrl } = await import("../lib/auth");
@@ -427,6 +428,13 @@ function ApplicantCard({ applicant, postingId, onUpdateStatus }) {
     }
   };
 
+  const goFullScreen = () => {
+    const el = iframeRef.current;
+    if (!el) return;
+    if (el.requestFullscreen) el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  };
+
   return (
     <>
     {cvUrl && (
@@ -435,11 +443,11 @@ function ApplicantCard({ applicant, postingId, onUpdateStatus }) {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#1e293b", padding: "0.75rem 1rem", flexShrink: 0 }}>
             <span style={{ color: "white", fontWeight: "700", fontSize: "0.9rem" }}>📄 {applicant.name}'s CV</span>
             <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-              <a href={cvUrl} target="_blank" rel="noreferrer" style={{ background: "none", border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: "0.4rem", color: "white", fontSize: "0.75rem", fontWeight: "600", padding: "0.25rem 0.6rem", cursor: "pointer", textDecoration: "none" }}>⛶ Full Screen</a>
+              <button onClick={goFullScreen} style={{ background: "none", border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: "0.4rem", color: "white", fontSize: "0.75rem", fontWeight: "600", padding: "0.25rem 0.6rem", cursor: "pointer", fontFamily: "inherit" }}>⛶ Full Screen</button>
               <button onClick={() => setCvUrl(null)} style={{ background: "none", border: "none", color: "white", fontSize: "1.25rem", cursor: "pointer", lineHeight: 1 }}>✕</button>
             </div>
           </div>
-          <iframe src={cvUrl} style={{ flex: 1, border: "none", backgroundColor: "white" }} title="CV" />
+          <iframe ref={iframeRef} src={cvUrl + "#toolbar=0&navpanes=0"} style={{ flex: 1, border: "none", backgroundColor: "white" }} title="CV" />
         </div>
       </div>
     )}
