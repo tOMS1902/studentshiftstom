@@ -157,6 +157,18 @@ export async function uploadDocument(userId, file, bucket, fileName) {
   return path;
 }
 
+export async function uploadVerificationDocs(userId, studentIdFile, governmentIdFile) {
+  const [studentIdPath, govIdPath] = await Promise.all([
+    uploadDocument(userId, studentIdFile, "verification-docs", "student_id"),
+    uploadDocument(userId, governmentIdFile, "verification-docs", "government_id"),
+  ]);
+  const { error } = await withTimeout(
+    supabase.from("students").update({ student_id_url: studentIdPath, gov_id_url: govIdPath }).eq("id", userId),
+    10000, "Failed to save document details — please try again."
+  );
+  if (error) throw error;
+}
+
 export async function getSignedDocumentUrl(bucket, path) {
   const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 60);
   if (error) throw error;

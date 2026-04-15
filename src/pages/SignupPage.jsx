@@ -2,6 +2,7 @@ import { useState } from "react";
 import PageWrapper from "../components/PageWrapper";
 import { signUp } from "../lib/auth";
 
+
 function getPasswordStrength(pw) {
   if (!pw) return null;
   let score = 0;
@@ -21,8 +22,6 @@ export default function SignupPage({ setPage }) {
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole]         = useState("student");
-  const [studentIdCard, setStudentIdCard] = useState(null);
-  const [governmentId, setGovernmentId]   = useState(null);
   const [error, setError]       = useState("");
   const [loading, setLoading]   = useState(false);
   const [done, setDone]         = useState(false);
@@ -30,10 +29,6 @@ export default function SignupPage({ setPage }) {
   const handleSignup = async () => {
     if (!name || !email || !password) { setError("Please fill in your name, email and password."); return; }
     if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
-    if (role === "student") {
-      if (!studentIdCard) { setError("Please upload your Student ID card."); return; }
-      if (!governmentId)  { setError("Please upload a Government ID."); return; }
-    }
     setLoading(true);
     setError("");
     try {
@@ -120,13 +115,11 @@ export default function SignupPage({ setPage }) {
         })()}
 
         {role === "student" && (
-          <div style={{ marginTop: "1.25rem", backgroundColor: "#f8fafc", borderRadius: "0.85rem", padding: "1rem 1.25rem", border: "1px solid #e2e8f0" }}>
-            <p style={{ fontWeight: "700", marginBottom: "0.2rem", color: "#1e293b", fontSize: "0.95rem" }}>Verification Documents</p>
-            <p style={{ fontSize: "0.78rem", color: "#64748b", marginBottom: "1rem", marginTop: 0 }}>
-              Required to verify your student status. Reviewed securely.
+          <div style={{ marginTop: "1.25rem", backgroundColor: "#f0f9ff", borderRadius: "0.85rem", padding: "0.9rem 1.1rem", border: "1px solid #bae6fd" }}>
+            <p style={{ margin: "0 0 0.25rem", fontWeight: "700", color: "#0369a1", fontSize: "0.875rem" }}>🪪 Verification required</p>
+            <p style={{ margin: 0, fontSize: "0.78rem", color: "#0369a1", lineHeight: 1.5 }}>
+              After confirming your email you'll be asked to upload your Student ID and Government ID. You can apply for jobs once verified.
             </p>
-            <FileUpload label="Student ID Card" hint="Photo of your student ID card" accept="image/*,.pdf" onChange={setStudentIdCard} file={studentIdCard} />
-            <FileUpload label="Government ID" hint="Age Card, Passport or Driver's Licence" accept="image/*,.pdf" onChange={setGovernmentId} file={governmentId} />
           </div>
         )}
 
@@ -146,25 +139,6 @@ export default function SignupPage({ setPage }) {
   );
 }
 
-function FileUpload({ label, hint, accept, onChange, file }) {
-  return (
-    <div style={{ marginBottom: "0.9rem" }}>
-      <label style={{ display: "block", fontWeight: "600", fontSize: "0.875rem", marginBottom: "0.2rem", color: "#374151" }}>
-        {label} <span style={{ color: "#f43f5e" }}>*</span>
-      </label>
-      <p style={{ fontSize: "0.75rem", color: "#64748b", marginBottom: "0.35rem", marginTop: 0 }}>{hint}</p>
-      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap", border: `1.5px dashed ${file ? "#10b981" : "#e2e8f0"}`, borderRadius: "0.6rem", padding: "0.55rem 0.75rem", backgroundColor: file ? "#f0fdf4" : "white" }}>
-        <label style={{ cursor: "pointer", fontSize: "0.8rem", fontWeight: "600", color: "#6366f1", whiteSpace: "nowrap" }}>
-          {file ? "Change" : "Choose file"}
-          <input type="file" accept={accept} style={{ display: "none" }} onChange={e => onChange(e.target.files[0] || null)} />
-        </label>
-        <span style={{ fontSize: "0.8rem", color: file ? "#10b981" : "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {file ? `✓ ${file.name}` : "No file chosen"}
-        </span>
-      </div>
-    </div>
-  );
-}
 
 const inputStyle = { width: "100%", padding: "0.72rem 1rem", marginBottom: "0.75rem", borderRadius: "0.65rem", border: "1.5px solid #e2e8f0", fontSize: "0.95rem", boxSizing: "border-box", fontFamily: "inherit", color: "#1e293b" };
 const btnBase    = { width: "100%", padding: "0.8rem", borderRadius: "2rem", border: "none", color: "white", fontWeight: "700", cursor: "pointer", fontSize: "0.95rem", fontFamily: "inherit" };
