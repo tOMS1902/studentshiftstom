@@ -163,8 +163,47 @@ export async function uploadVerificationDocs(userId, studentIdFile, governmentId
     uploadDocument(userId, governmentIdFile, "verification-docs", "government_id"),
   ]);
   const { error } = await withTimeout(
-    supabase.from("students").update({ student_id_url: studentIdPath, gov_id_url: govIdPath }).eq("id", userId),
+    supabase.from("students").update({
+      student_id_url: studentIdPath,
+      gov_id_url: govIdPath,
+      status: "pending_review",
+    }).eq("id", userId),
     10000, "Failed to save document details — please try again."
+  );
+  if (error) throw error;
+}
+
+export async function fetchPendingStudents() {
+  const { data, error } = await withTimeout(
+    supabase
+      .from("students")
+      .select("id, student_id_url, gov_id_url, status, profiles(name, email)")
+      .eq("status", "pending_review"),
+    10000
+  );
+  if (error) throw error;
+  return (data || []).map(s => ({
+    id:           s.id,
+    name:         s.profiles?.name  || "Unknown",
+    email:        s.profiles?.email || "",
+    studentIdUrl: s.student_id_url,
+    govIdUrl:     s.gov_id_url,
+    status:       s.status,
+  }));
+}
+
+export async function approveStudent(studentId) {
+  const { error } = await withTimeout(
+    supabase.from("students").update({ status: "verified" }).eq("id", studentId),
+    10000
+  );
+  if (error) throw error;
+}
+
+export async function rejectStudent(studentId) {
+  const { error } = await withTimeout(
+    supabase.from("students").update({ status: "rejected" }).eq("id", studentId),
+    10000
   );
   if (error) throw error;
 }

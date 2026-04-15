@@ -13,6 +13,7 @@ import Messages from "./pages/Messages";
 import CompanyMessages from "./pages/CompanyMessages";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import VerifyDocsPage from "./pages/VerifyDocsPage";
+import AdminPage from "./pages/AdminPage";
 import { supabase } from "./lib/supabase";
 import { getProfile, fetchLikedJobIds, fetchAppliedJobIds } from "./lib/auth";
 
@@ -30,9 +31,10 @@ function normaliseProfile(profile) {
     bio:                extra.bio                || "",
     skills:             extra.skills             || [],
     profilePhoto:       extra.profile_photo_url  || "",
-    studentIdCardName:  extra.student_id_url     || null,
-    governmentIdName:   extra.gov_id_url         || null,
-    studentIdPath:      extra.student_id_url     || null,
+    studentIdCardName:    extra.student_id_url     || null,
+    governmentIdName:     extra.gov_id_url         || null,
+    studentIdPath:        extra.student_id_url     || null,
+    verificationStatus:   extra.status             || null,
     savedLocation:      extra.location_lat ? {
       lat:         extra.location_lat,
       lng:         extra.location_lng,
@@ -65,8 +67,9 @@ export default function StudentShiftsWeb() {
             const profile = await getProfile(session.user.id);
             const user = normaliseProfile({ ...profile, email: profile.email || session.user.email });
             setCurrentUser(user);
-            if (user.role === "company") { setPage("companyDashboard"); }
-            else if (user.role === "student" && !user.studentIdPath) { setPage("verifyDocs"); }
+            if (user.role === "admin")   { setPage("admin"); }
+            else if (user.role === "company") { setPage("companyDashboard"); }
+            else if (user.role === "student" && (!user.studentIdPath || user.verificationStatus === "rejected")) { setPage("verifyDocs"); }
             if (user.role === "student") {
               const [likedIds, appliedIds] = await Promise.all([
                 fetchLikedJobIds(user.id).catch(() => []),
@@ -90,8 +93,9 @@ export default function StudentShiftsWeb() {
           // Show verified screen if this is a fresh email confirmation
           const justVerified = window.location.hash.includes("type=signup") || window.location.hash.includes("type=email");
           if (justVerified) { setPage("emailVerified"); return; }
-          if (user.role === "company") { setPage("companyDashboard"); }
-          else if (user.role === "student" && !user.studentIdPath) { setPage("verifyDocs"); }
+          if (user.role === "admin")   { setPage("admin"); }
+          else if (user.role === "company") { setPage("companyDashboard"); }
+          else if (user.role === "student" && (!user.studentIdPath || user.verificationStatus === "rejected")) { setPage("verifyDocs"); }
           else { setPage("studentDashboard"); }
           if (user.role === "student") {
             const [likedIds, appliedIds] = await Promise.all([
@@ -224,6 +228,8 @@ export default function StudentShiftsWeb() {
             currentUser={currentUser}
           />
         );
+      case "admin":
+        return currentUser?.role === "admin" && <AdminPage currentUser={currentUser} setPage={setPage} />;
       case "verifyDocs":
         return currentUser && (
           <VerifyDocsPage currentUser={currentUser} setCurrentUser={setCurrentUser} setPage={setPage} />
@@ -273,8 +279,9 @@ export default function StudentShiftsWeb() {
 function EmailVerifiedPage({ setPage, currentUser }) {
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (currentUser?.role === "company") setPage("companyDashboard");
-      else if (currentUser?.role === "student" && !currentUser?.studentIdPath) setPage("verifyDocs");
+      if (currentUser?.role === "admin") setPage("admin");
+      else if (currentUser?.role === "company") setPage("companyDashboard");
+      else if (currentUser?.role === "student" && (!currentUser?.studentIdPath || currentUser?.verificationStatus === "rejected")) setPage("verifyDocs");
       else setPage("studentDashboard");
     }, 3000);
     return () => clearTimeout(timer);

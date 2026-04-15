@@ -36,6 +36,10 @@ export default function JobDetails({
   const handleApply = () => {
     if (!currentUser) { setPage("login"); return; }
     if (isApplied) return;
+    if (currentUser.verificationStatus !== "verified") {
+      setApplyModal("notVerified");
+      return;
+    }
     if (!currentUser.cvName) {
       if (window.confirm("You need to upload a CV before applying. Go to your Account page?")) setPage("account");
       return;
@@ -140,7 +144,18 @@ export default function JobDetails({
       {applyModal && (
         <div onClick={() => setApplyModal(null)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(15,23,42,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "1rem", backdropFilter: "blur(2px)" }}>
           <div onClick={e => e.stopPropagation()} style={{ backgroundColor: "white", borderRadius: "1.25rem", padding: "2rem 1.75rem", maxWidth: "360px", width: "100%", textAlign: "center", boxShadow: "0 24px 64px rgba(0,0,0,0.2)" }}>
-            {applyModal === "confirm" ? (
+            {applyModal === "notVerified" ? (
+        <>
+          <div style={{ width: "56px", height: "56px", borderRadius: "1rem", backgroundColor: "#fff7ed", border: "2px solid #fed7aa", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1rem", fontSize: "1.5rem" }}>🔒</div>
+          <h3 style={{ fontWeight: "800", fontSize: "1.1rem", marginBottom: "0.4rem", color: "#1e293b" }}>Account not yet verified</h3>
+          <p style={{ fontSize: "0.875rem", color: "#64748b", marginBottom: "1.5rem", lineHeight: 1.5 }}>
+            {currentUser?.verificationStatus === "pending_review"
+              ? "Your documents are under review. You'll be able to apply once your account is verified."
+              : "You need to upload your verification documents before applying for jobs."}
+          </p>
+          <button onClick={() => setApplyModal(null)} style={{ width: "100%", padding: "0.7rem", borderRadius: "0.75rem", border: "none", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "white", fontWeight: "700", cursor: "pointer", fontFamily: "inherit" }}>Got it</button>
+        </>
+      ) : applyModal === "confirm" ? (
               <>
                 <div style={{ width: "56px", height: "56px", borderRadius: "1rem", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1rem", fontSize: "1.5rem", boxShadow: "0 8px 20px rgba(99,102,241,0.35)" }}>📋</div>
                 <h3 style={{ fontWeight: "800", fontSize: "1.1rem", marginBottom: "0.4rem", color: "#1e293b" }}>Apply for {job.title}?</h3>

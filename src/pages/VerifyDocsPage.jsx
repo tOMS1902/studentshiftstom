@@ -8,6 +8,8 @@ export default function VerifyDocsPage({ currentUser, setCurrentUser, setPage })
   const [error, setError]   = useState("");
   const [loading, setLoading] = useState(false);
 
+  const isRejected = currentUser?.verificationStatus === "rejected";
+
   const handleSubmit = async () => {
     if (!studentIdCard) { setError("Please upload your Student ID card."); return; }
     if (!governmentId)  { setError("Please upload a Government ID."); return; }
@@ -15,7 +17,7 @@ export default function VerifyDocsPage({ currentUser, setCurrentUser, setPage })
     setError("");
     try {
       await uploadVerificationDocs(currentUser.id, studentIdCard, governmentId);
-      setCurrentUser(prev => ({ ...prev, studentIdPath: "uploaded" }));
+      setCurrentUser(prev => ({ ...prev, studentIdPath: "uploaded", verificationStatus: "pending_review" }));
       setPage("studentDashboard");
     } catch (e) {
       setError(e.message || "Upload failed — please try again.");
@@ -29,14 +31,24 @@ export default function VerifyDocsPage({ currentUser, setCurrentUser, setPage })
       <div style={{ maxWidth: "440px", margin: "0 auto" }}>
 
         <div style={{ textAlign: "center", marginBottom: "1.75rem" }}>
-          <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>🪪</div>
-          <h2 style={{ margin: 0, fontWeight: "800", fontSize: "1.8rem", color: "#1e293b" }}>Verify your identity</h2>
-          <p style={{ margin: "0.35rem 0 0", color: "#64748b", fontSize: "0.9rem" }}>One last step before you can apply for jobs</p>
+          <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>{isRejected ? "❌" : "🪪"}</div>
+          <h2 style={{ margin: 0, fontWeight: "800", fontSize: "1.8rem", color: "#1e293b" }}>
+            {isRejected ? "Verification not approved" : "Verify your identity"}
+          </h2>
+          <p style={{ margin: "0.35rem 0 0", color: "#64748b", fontSize: "0.9rem" }}>
+            {isRejected ? "Please re-submit clearer photos of your documents" : "One last step before you can apply for jobs"}
+          </p>
         </div>
 
-        <div style={{ backgroundColor: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "0.75rem", padding: "0.85rem 1rem", marginBottom: "1.25rem", color: "#0369a1", fontSize: "0.85rem", lineHeight: 1.5 }}>
-          Your documents are reviewed securely by our team. We'll notify you once your account is verified.
-        </div>
+        {isRejected ? (
+          <div style={{ backgroundColor: "#fff1f2", border: "1px solid #fecdd3", borderRadius: "0.75rem", padding: "0.85rem 1rem", marginBottom: "1.25rem", color: "#e11d48", fontSize: "0.85rem", lineHeight: 1.5 }}>
+            Your previous documents could not be verified. Please upload new, clear photos and resubmit.
+          </div>
+        ) : (
+          <div style={{ backgroundColor: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "0.75rem", padding: "0.85rem 1rem", marginBottom: "1.25rem", color: "#0369a1", fontSize: "0.85rem", lineHeight: 1.5 }}>
+            Your documents are reviewed securely by our team. We'll notify you once your account is verified.
+          </div>
+        )}
 
         {error && (
           <div style={{ backgroundColor: "#fff1f2", border: "1px solid #fecdd3", borderRadius: "0.6rem", padding: "0.65rem 1rem", marginBottom: "1rem", color: "#e11d48", fontSize: "0.875rem", fontWeight: "500" }}>

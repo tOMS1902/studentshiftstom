@@ -58,7 +58,9 @@ export default function Header({ currentUser, setPage, likedJobs, appliedJobs, n
       <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", justifyContent: "flex-end" }}>
         {currentUser ? (
           <>
-            {currentUser.role === "student" ? (
+            {currentUser.role === "admin" ? (
+              <button onClick={() => setPage("admin")} style={navBtnPrimary}>Admin Dashboard</button>
+            ) : currentUser.role === "student" ? (
               <>
                 <button onClick={() => setPage("likedJobs")} style={{ ...navBtnOutline, display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
                   ❤️ <span className="nav-label">Liked</span> <CountBadge n={likedJobs.length} />
