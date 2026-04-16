@@ -1,0 +1,29 @@
+-- ================================================================
+-- StudentShifts — Job Auto-Expiry
+-- Automatically sets jobs to 'Expired' once their deadline passes.
+--
+-- Prerequisites:
+--   1. Enable pg_cron in Supabase Dashboard:
+--      Database → Extensions → search "pg_cron" → Enable
+--   2. Run this script in SQL Editor
+-- ================================================================
+
+-- Function: sets status = 'Expired' on any Active job past its deadline
+CREATE OR REPLACE FUNCTION expire_past_deadline_jobs()
+RETURNS void LANGUAGE sql SECURITY DEFINER AS $$
+  UPDATE jobs
+  SET status = 'Expired'
+  WHERE status = 'Active'
+    AND deadline IS NOT NULL
+    AND deadline < now();
+$$;
+
+-- Remove existing schedule if re-running this script
+SELECT cron.unschedule('expire-past-deadline-jobs');
+
+-- Schedule: runs at the top of every hour
+SELECT cron.schedule(
+  'expire-past-deadline-jobs',
+  '0 * * * *',
+  $$SELECT expire_past_deadline_jobs()$$
+);
