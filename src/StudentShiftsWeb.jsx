@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Header from "./components/Header";
 import StudentDashboard from "./pages/StudentDashboard";
 import CompanyDashboard from "./pages/CompanyDashboard";
@@ -47,7 +47,20 @@ function normaliseProfile(profile) {
 }
 
 export default function StudentShiftsWeb() {
-  const [page, setPage]               = useState("studentDashboard");
+  const [page, _setPage]              = useState("studentDashboard");
+  const pageRef                       = useRef("studentDashboard");
+  const prevPageRef                   = useRef(null);
+  const dashboardScrollY              = useRef(0);
+
+  const setPage = useCallback((newPage) => {
+    const current = pageRef.current;
+    if (current === "studentDashboard") dashboardScrollY.current = window.scrollY;
+    prevPageRef.current = current;
+    pageRef.current = newPage;
+    if (!(newPage === "studentDashboard" && current === "jobDetails")) window.scrollTo(0, 0);
+    _setPage(newPage);
+  }, []);
+
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedJob, setSelectedJob] = useState(null);
   const [likedJobs, setLikedJobs]         = useState([]);
@@ -210,6 +223,7 @@ export default function StudentShiftsWeb() {
             studentLocation={studentLocation}
             savedLikedJobIds={savedLikedJobIds}
             savedAppliedJobIds={savedAppliedJobIds}
+            restoreScrollY={prevPageRef.current === "jobDetails" ? dashboardScrollY.current : 0}
           />
         );
       case "companyDashboard":
@@ -285,6 +299,7 @@ export default function StudentShiftsWeb() {
             studentLocation={studentLocation}
             savedLikedJobIds={savedLikedJobIds}
             savedAppliedJobIds={savedAppliedJobIds}
+            restoreScrollY={0}
           />
         );
     }

@@ -1,8 +1,8 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import PageWrapper from "../components/PageWrapper";
 import "../StudentShiftWeb.css";
 import { jobCategories, getCategoryForTitle } from "../data/jobCategories";
-import { haversineDistance, formatDistance, mockLocationCoords } from "../utils/geo";
+import { haversineDistance, formatDistance, mockLocationCoords, geocodeAddress } from "../utils/geo";
 import { supabase, withTimeout } from "../lib/supabase";
 import { likeJob, unlikeJob } from "../lib/auth";
 
@@ -52,13 +52,17 @@ function daysUntil(dateStr) {
   return Math.ceil((new Date(dateStr) - new Date()) / 86400000);
 }
 
+// Module-level geocode cache — persists across remounts within the same session
+const _geocodeCache = {};
+
 export default function StudentDashboard({
-  setPage, setSelectedJob, likedJobs, setLikedJobs, appliedJobs, setAppliedJobs, currentUser, studentLocation, savedLikedJobIds, savedAppliedJobIds,
+  setPage, setSelectedJob, likedJobs, setLikedJobs, appliedJobs, setAppliedJobs, currentUser, studentLocation, savedLikedJobIds, savedAppliedJobIds, restoreScrollY,
 }) {
 
   const [jobs, setJobs] = useState([]);
   const [jobsLoading, setJobsLoading] = useState(true);
   const [jobsError, setJobsError] = useState(false);
+  const [extraCoords, setExtraCoords] = useState(_geocodeCache);
 
   useEffect(() => {
     withTimeout(
@@ -133,9 +137,39 @@ export default function StudentDashboard({
   const [openSubSection,  setOpenSubSection]  = useState(null);
   const filterBarRef = useRef(null);
 
+  // Restore scroll position when returning from job details
+  useEffect(() => {
+    if (restoreScrollY > 0) requestAnimationFrame(() => window.scrollTo(0, restoreScrollY));
+  }, []);
+
+  // Geocode job locations that have no stored lat/lng and aren't in the mock map
+  useEffect(() => {
+    if (!jobs.length) return;
+    const unknown = [...new Set(
+      jobs.filter(j => !j.lat || !j.lng).map(j => j.location)
+        .filter(loc => loc && !mockLocationCoords[loc] && !_geocodeCache[loc])
+    )];
+    if (!unknown.length) return;
+    let cancelled = false;
+    (async () => {
+      for (const loc of unknown) {
+        if (cancelled) break;
+        try {
+          const result = await geocodeAddress(loc);
+          if (result && !cancelled) {
+            _geocodeCache[loc] = { lat: result.lat, lng: result.lng };
+            setExtraCoords(prev => ({ ...prev, [loc]: { lat: result.lat, lng: result.lng } }));
+          }
+        } catch (_) {}
+        if (!cancelled) await new Promise(r => setTimeout(r, 1200));
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [jobs]);
+
   const getJobCoords = (job) => {
     if (job.lat && job.lng) return { lat: job.lat, lng: job.lng };
-    return mockLocationCoords[job.location] || null;
+    return mockLocationCoords[job.location] || extraCoords[job.location] || null;
   };
 
   const jobDistance = (job) => {
