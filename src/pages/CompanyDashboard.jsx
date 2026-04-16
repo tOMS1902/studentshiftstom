@@ -40,6 +40,7 @@ export default function CompanyDashboard({ setPage, currentUser }) {
   const [modal, setModal]         = useState(null);
   const [activePosting, setActivePosting] = useState(null);
   const [formData, setFormData]   = useState(null);
+  const [extendData, setExtendData] = useState(null);
 
   // Load this company's jobs on mount, auto-expire any past their deadline
   useEffect(() => {
@@ -118,6 +119,31 @@ export default function CompanyDashboard({ setPage, currentUser }) {
     setModal(null);
     setActivePosting(null);
     setFormData(null);
+    setExtendData(null);
+  };
+
+  const openExtend = (posting) => {
+    setExtendData({ id: posting.id, deadline: posting.deadline || "", days: [...posting.days], times: { ...posting.times }, status: posting.status });
+    setModal("extend");
+  };
+
+  const saveExtend = async () => {
+    if (!extendData.days.length) { alert("Select at least one day."); return; }
+    const today = new Date().toISOString().split("T")[0];
+    const wasExpired = extendData.status !== "Active" && extendData.deadline && extendData.deadline < today;
+    const updates = {
+      deadline: extendData.deadline || null,
+      days:     extendData.days,
+      times:    extendData.times,
+      ...(wasExpired && extendData.deadline >= today ? { status: "Active" } : {}),
+    };
+    const { error } = await withTimeout(
+      supabase.from("jobs").update(updates).eq("id", extendData.id),
+      10000, "Update timed out."
+    );
+    if (error) { alert("Failed to save: " + error.message); return; }
+    setPostings(prev => prev.map(p => p.id === extendData.id ? { ...p, ...updates } : p));
+    closeModal();
   };
 
   const toggleStatus = async (id) => {
@@ -274,6 +300,7 @@ export default function CompanyDashboard({ setPage, currentUser }) {
               onEdit={() => openEdit(posting)}
               onDelete={() => deletePosting(posting.id)}
               onToggleStatus={() => toggleStatus(posting.id)}
+              onExtend={() => openExtend(posting)}
             />
           ))}
         </div>
@@ -304,6 +331,13 @@ export default function CompanyDashboard({ setPage, currentUser }) {
           />
         </Modal>
       )}
+
+      {/* Extend Modal */}
+      {modal === "extend" && extendData && (
+        <Modal onClose={closeModal} title="Extend Job">
+          <ExtendForm data={extendData} setData={setExtendData} onSave={saveExtend} onCancel={closeModal} />
+        </Modal>
+      )}
     </PageWrapper>
   );
 }
@@ -323,7 +357,7 @@ function StatCard({ label, value, color }) {
   );
 }
 
-function JobPostingCard({ posting, onViewApplicants, onEdit, onDelete, onToggleStatus }) {
+function JobPostingCard({ posting, onViewApplicants, onEdit, onDelete, onToggleStatus, onExtend }) {
   const isActive = posting.status === "Active";
   const today = new Date().toISOString().split("T")[0];
   const isExpired = posting.status === "Closed" && posting.deadline && posting.deadline < today;
@@ -372,10 +406,95 @@ function JobPostingCard({ posting, onViewApplicants, onEdit, onDelete, onToggleS
       <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", flexShrink: 0 }}>
         <button onClick={onViewApplicants} style={btnSmallGreen}>View Applicants</button>
         <button onClick={onEdit} style={btnSmallBlue}>Edit</button>
+        <button onClick={onExtend} style={btnSmallPurple}>Extend</button>
         <button onClick={onToggleStatus} style={btnSmallGray}>
           {isActive ? "Close Job" : "Reopen Job"}
         </button>
         <button onClick={onDelete} style={btnSmallRed}>Delete</button>
+      </div>
+    </div>
+  );
+}
+
+function ExtendForm({ data, setData, onSave, onCancel }) {
+  const today = new Date().toISOString().split("T")[0];
+
+  const toggleDay = (day) => {
+    setData(prev => {
+      const removing = prev.days.includes(day);
+      const days  = removing ? prev.days.filter(d => d !== day) : [...prev.days, day];
+      const times = { ...prev.times };
+      if (removing) delete times[day];
+      return { ...prev, days, times };
+    });
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <div>
+        <label style={labelStyle}>New Deadline <span style={{ fontWeight: "400", color: "#9ca3af", fontSize: "0.8rem" }}>(optional)</span></label>
+        <input
+          type="date"
+          value={data.deadline || ""}
+          min={today}
+          onChange={e => setData(prev => ({ ...prev, deadline: e.target.value }))}
+          style={inputStyle}
+        />
+        {data.deadline && data.deadline < today && (
+          <p style={{ fontSize: "0.78rem", color: "#ef4444", margin: "-0.5rem 0 0" }}>
+            This date is in the past — the job will remain closed.
+          </p>
+        )}
+      </div>
+
+      <div>
+        <label style={labelStyle}>Days Available *</label>
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.35rem" }}>
+          {weekdays.map(day => {
+            const active = data.days.includes(day);
+            const isWeekend = day === "Saturday" || day === "Sunday";
+            return (
+              <button key={day} type="button" onClick={() => toggleDay(day)} style={{
+                padding: "0.3rem 0.75rem", borderRadius: "0.4rem", cursor: "pointer",
+                border: `1.5px solid ${active ? (isWeekend ? "#f59e0b" : "#3b82f6") : "#d1d5db"}`,
+                backgroundColor: active ? (isWeekend ? "#fef3c7" : "#eff6ff") : "white",
+                color: active ? (isWeekend ? "#d97706" : "#1d4ed8") : "#374151",
+                fontWeight: "600", fontSize: "0.8rem",
+              }}>
+                {day.slice(0, 3)}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {data.days.length > 0 && (
+        <div>
+          <label style={labelStyle}>Shift Start Times</label>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginTop: "0.25rem" }}>
+            {data.days.map(day => {
+              const isWeekend = day === "Saturday" || day === "Sunday";
+              return (
+                <div key={day} style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                  <span style={{ minWidth: "88px", fontSize: "0.875rem", fontWeight: "600", color: isWeekend ? "#d97706" : "#374151" }}>{day}</span>
+                  <select
+                    value={data.times?.[day] || ""}
+                    onChange={e => setData(prev => ({ ...prev, times: { ...prev.times, [day]: e.target.value } }))}
+                    style={{ ...inputStyle, marginBottom: 0, flex: 1 }}
+                  >
+                    <option value="">Any time</option>
+                    {timeSlots.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: "flex", gap: "0.75rem", paddingTop: "0.5rem" }}>
+        <button onClick={onCancel} style={{ flex: 1, padding: "0.7rem", borderRadius: "0.75rem", border: "1.5px solid #e2e8f0", backgroundColor: "white", color: "#374151", fontWeight: "600", cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
+        <button onClick={onSave} style={{ flex: 1, padding: "0.7rem", borderRadius: "0.75rem", border: "none", background: "linear-gradient(135deg, #a855f7, #7c3aed)", color: "white", fontWeight: "700", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 4px 14px rgba(168,85,247,0.35)" }}>Save Changes</button>
       </div>
     </div>
   );
@@ -1240,5 +1359,6 @@ const cvHeaderBtn   = { background: "none", border: "1.5px solid rgba(255,255,25
 const btnSmallBase  = { padding: "0.32rem 0.75rem", borderRadius: "2rem", border: "none", color: "white", fontWeight: "700", cursor: "pointer", fontSize: "0.75rem", fontFamily: "inherit" };
 const btnSmallGreen = { ...btnSmallBase, background: "linear-gradient(135deg, #10b981, #059669)", boxShadow: "0 2px 6px rgba(16,185,129,0.3)" };
 const btnSmallBlue  = { ...btnSmallBase, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", boxShadow: "0 2px 6px rgba(99,102,241,0.3)" };
-const btnSmallGray  = { ...btnSmallBase, backgroundColor: "#64748b" };
-const btnSmallRed   = { ...btnSmallBase, background: "linear-gradient(135deg, #f43f5e, #e11d48)", boxShadow: "0 2px 6px rgba(244,63,94,0.3)" };
+const btnSmallGray   = { ...btnSmallBase, backgroundColor: "#64748b" };
+const btnSmallPurple = { ...btnSmallBase, background: "linear-gradient(135deg, #a855f7, #7c3aed)", boxShadow: "0 2px 6px rgba(168,85,247,0.3)" };
+const btnSmallRed    = { ...btnSmallBase, background: "linear-gradient(135deg, #f43f5e, #e11d48)", boxShadow: "0 2px 6px rgba(244,63,94,0.3)" };
