@@ -76,8 +76,13 @@ export default function StudentDashboard({
       if (error) { setJobsError(true); setJobsLoading(false); return; }
       if (!data || data.length === 0) { setJobsLoading(false); return; }
 
+      // Filter out jobs whose deadline has already passed
+      const today = new Date().toISOString().split("T")[0];
+      const liveJobs = data.filter(j => !j.deadline || j.deadline >= today);
+      if (liveJobs.length === 0) { setJobsLoading(false); return; }
+
       // Fetch company names from profiles using the unique company_ids
-      const companyIds = [...new Set(data.map(j => j.company_id))];
+      const companyIds = [...new Set(liveJobs.map(j => j.company_id))];
       let nameMap = {};
       try {
         const { data: profiles } = await withTimeout(
@@ -87,7 +92,7 @@ export default function StudentDashboard({
         if (profiles) profiles.forEach(p => { nameMap[p.id] = p.name; });
       } catch (_) {}
 
-      setJobs(data.map(j => ({
+      setJobs(liveJobs.map(j => ({
         id:              j.id,
         title:           j.title,
         company:         nameMap[j.company_id] || "Unknown Company",
