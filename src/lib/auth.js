@@ -207,17 +207,14 @@ export async function uploadVerificationDocs(userId, studentIdFile, governmentId
 
 export async function fetchPendingStudents() {
   const { data, error } = await withTimeout(
-    supabase
-      .from("students")
-      .select("id, student_id_url, gov_id_url, status, profiles(name, email)")
-      .eq("status", "pending_review"),
+    supabase.rpc("get_pending_students"),
     10000
   );
   if (error) throw error;
   return (data || []).map(s => ({
     id:           s.id,
-    name:         s.profiles?.name  || "Unknown",
-    email:        s.profiles?.email || null,
+    name:         s.name          || "Unknown",
+    email:        s.email         || null,
     studentIdUrl: s.student_id_url,
     govIdUrl:     s.gov_id_url,
     status:       s.status,
@@ -226,18 +223,15 @@ export async function fetchPendingStudents() {
 
 export async function fetchPendingCompanies() {
   const { data, error } = await withTimeout(
-    supabase
-      .from("companies")
-      .select("id, status, cro_number, profiles(name, email)")
-      .eq("status", "pending_review"),
+    supabase.rpc("get_pending_companies"),
     10000
   );
   if (error) throw error;
   return (data || []).map(c => ({
     id:        c.id,
-    name:      c.profiles?.name  || "Unknown",
-    email:     c.profiles?.email || null,
-    croNumber: c.cro_number      || null,
+    name:      c.name      || "Unknown",
+    email:     c.email     || null,
+    croNumber: c.cro_number || null,
     status:    c.status,
   }));
 }
