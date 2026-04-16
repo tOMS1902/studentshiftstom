@@ -1,11 +1,32 @@
 -- ================================================================
 -- StudentShifts — Admin Pending RPCs
--- Fetches pending students/companies with emails from auth.users.
--- Regular PostgREST can't join auth.users, so we use SECURITY DEFINER.
---
+-- Self-contained: adds required columns then creates the RPCs.
 -- Run this in the Supabase SQL Editor.
 -- ================================================================
 
+-- Ensure companies has status + cro_number columns
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'pending_review';
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS cro_number text;
+
+-- Backfill: any company that existed before this migration is already verified
+UPDATE companies SET status = 'verified' WHERE status = 'pending_review';
+
+-- Approve / reject RPCs
+CREATE OR REPLACE FUNCTION approve_company(company_id uuid)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  UPDATE companies SET status = 'verified' WHERE id = company_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION reject_company(company_id uuid)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  UPDATE companies SET status = 'rejected' WHERE id = company_id;
+END;
+$$;
+
+-- Fetch pending students (joins auth.users for email)
 CREATE OR REPLACE FUNCTION get_pending_students()
 RETURNS TABLE(id uuid, name text, email text, student_id_url text, gov_id_url text, status text)
 LANGUAGE sql SECURITY DEFINER AS $$
@@ -16,6 +37,7 @@ LANGUAGE sql SECURITY DEFINER AS $$
   WHERE s.status = 'pending_review';
 $$;
 
+-- Fetch pending companies (joins auth.users for email)
 CREATE OR REPLACE FUNCTION get_pending_companies()
 RETURNS TABLE(id uuid, name text, email text, cro_number text, status text)
 LANGUAGE sql SECURITY DEFINER AS $$
