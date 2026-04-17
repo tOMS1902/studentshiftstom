@@ -252,21 +252,12 @@ export async function rejectCompany(companyId) {
   if (error) throw error;
 }
 
-// Sends a transactional email via the Render email server.
-// Set VITE_EMAIL_API_URL and VITE_EMAIL_API_KEY in .env
+// Sends a transactional email via the Supabase Edge Function.
 export async function sendEmail({ to, subject, html }) {
-  const apiUrl = import.meta.env.VITE_EMAIL_API_URL;
-  const apiKey = import.meta.env.VITE_EMAIL_API_KEY;
-  if (!apiUrl) { console.warn("VITE_EMAIL_API_URL not set"); return; }
-  const res = await fetch(`${apiUrl}/send-email`, {
-    method:  "POST",
-    headers: { "Content-Type": "application/json", "x-api-key": apiKey || "" },
-    body:    JSON.stringify({ to, subject, html }),
+  const { error } = await supabase.functions.invoke("send-email", {
+    body: { to, subject, html },
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || `Email API returned ${res.status}`);
-  }
+  if (error) throw new Error(error.message || "Email send failed");
 }
 
 // ── Email HTML templates ──────────────────────────────────────────────────
