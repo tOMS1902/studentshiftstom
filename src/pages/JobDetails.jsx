@@ -19,6 +19,8 @@ export default function JobDetails({
 }) {
   const [applyModal, setApplyModal] = useState(null);
   const [photoIdx, setPhotoIdx]     = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [applyError, setApplyError] = useState(null);
 
   if (!job) return null;
 
@@ -47,12 +49,23 @@ export default function JobDetails({
     setApplyModal("confirm");
   };
 
-  const confirmApply = () => {
-    setAppliedJobs([...appliedJobs, job]);
-    if (isLiked) setLikedJobs(likedJobs.filter(j => j.id !== job.id));
-    createApplication(currentUser.id, job.id).catch(console.error);
-    if (isLiked) unlikeJob(currentUser.id, job.id).catch(console.error);
-    setApplyModal("success");
+  const confirmApply = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    setApplyError(null);
+    try {
+      await createApplication(currentUser.id, job.id);
+      setAppliedJobs([...appliedJobs, job]);
+      if (isLiked) {
+        setLikedJobs(likedJobs.filter(j => j.id !== job.id));
+        unlikeJob(currentUser.id, job.id).catch(console.error);
+      }
+      setApplyModal("success");
+    } catch (e) {
+      setApplyError("Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const deadlineStr = job.deadline
@@ -172,9 +185,12 @@ export default function JobDetails({
                 <div style={{ width: "56px", height: "56px", borderRadius: "1rem", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1rem", fontSize: "1.5rem", boxShadow: "0 8px 20px rgba(99,102,241,0.35)" }}>📋</div>
                 <h3 style={{ fontWeight: "800", fontSize: "1.1rem", marginBottom: "0.4rem", color: "#1e293b" }}>Apply for {job.title}?</h3>
                 <p style={{ fontSize: "0.875rem", color: "#64748b", marginBottom: "1.5rem" }}>{job.company} — your CV will be shared with the employer.</p>
+                {applyError && (
+                  <p style={{ fontSize: "0.8rem", color: "#ef4444", marginBottom: "0.75rem" }}>{applyError}</p>
+                )}
                 <div style={{ display: "flex", gap: "0.75rem" }}>
-                  <button onClick={() => setApplyModal(null)} style={{ flex: 1, padding: "0.7rem", borderRadius: "0.75rem", border: "1.5px solid #e2e8f0", backgroundColor: "white", color: "#374151", fontWeight: "600", cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
-                  <button onClick={confirmApply} style={{ flex: 1, padding: "0.7rem", borderRadius: "0.75rem", border: "none", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "white", fontWeight: "700", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 4px 14px rgba(99,102,241,0.35)" }}>Apply Now</button>
+                  <button onClick={() => setApplyModal(null)} disabled={submitting} style={{ flex: 1, padding: "0.7rem", borderRadius: "0.75rem", border: "1.5px solid #e2e8f0", backgroundColor: "white", color: "#374151", fontWeight: "600", cursor: submitting ? "not-allowed" : "pointer", fontFamily: "inherit" }}>Cancel</button>
+                  <button onClick={confirmApply} disabled={submitting} style={{ flex: 1, padding: "0.7rem", borderRadius: "0.75rem", border: "none", background: submitting ? "#a5b4fc" : "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "white", fontWeight: "700", cursor: submitting ? "not-allowed" : "pointer", fontFamily: "inherit", boxShadow: submitting ? "none" : "0 4px 14px rgba(99,102,241,0.35)" }}>{submitting ? "Applying…" : "Apply Now"}</button>
                 </div>
               </>
             ) : (

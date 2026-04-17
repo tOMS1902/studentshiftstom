@@ -6,7 +6,9 @@
       "Bash(npm run:*)",
       "Bash(npx netlify-cli:*)",
       "Bash(timeout /t 15 /nobreak)",
-      "Bash(npx vite:*)"
+      "Bash(npx vite:*)",
+      "Bash(npm install *)",
+      "Bash(npm uninstall *)"
     ]
   }
 }
