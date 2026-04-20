@@ -657,12 +657,13 @@ function BrowseStudents({ students, loading, fetched, companyIndustries, company
               </div>
             )}
             {s.job_preferences?.length > 0 && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem", marginBottom: "0.5rem" }}>
                 {s.job_preferences.map(p => (
                   <span key={p} style={{ fontSize: "0.7rem", backgroundColor: "#f0fdf4", color: "#16a34a", border: "1.5px solid #86efac", borderRadius: "999px", padding: "0.1rem 0.5rem", fontWeight: "600" }}>{p}</span>
                 ))}
               </div>
             )}
+            <StudentAvailabilityRow availability={s.availability} />
           </div>
           <button
             onClick={() => { setChatStudent({ id: s.id, name: s.name }); setChatMessages([]); }}
@@ -672,6 +673,49 @@ function BrowseStudents({ students, loading, fetched, companyIndustries, company
           </button>
         </div>
       ))}
+    </div>
+  );
+}
+
+const DAY_ABBR = { Monday: "Mon", Tuesday: "Tue", Wednesday: "Wed", Thursday: "Thu", Friday: "Fri", Saturday: "Sat", Sunday: "Sun" };
+
+function StudentAvailabilityRow({ availability }) {
+  if (!availability || Object.keys(availability).length === 0) return null;
+  const hasAny = weekdays.some(d => availability[d]?.length > 0);
+  if (!hasAny) return null;
+
+  return (
+    <div>
+      <p style={{ fontSize: "0.7rem", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 0.3rem" }}>Availability</p>
+      <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap" }}>
+        {weekdays.map(day => {
+          const slots = availability[day] || [];
+          const isWeekend = day === "Saturday" || day === "Sunday";
+          const hasSlots = slots.length > 0;
+          if (!hasSlots) return null;
+          const earliest = slots.reduce((a, b) => a < b ? a : b);
+          const latest   = slots.reduce((a, b) => a > b ? a : b);
+          // Convert "09:00" → "9am" style
+          const fmt = (t) => { const [h] = t.split(":"); const n = parseInt(h); return n < 12 ? `${n}am` : n === 12 ? "12pm" : `${n - 12}pm`; };
+          return (
+            <div
+              key={day}
+              title={`${day}: ${slots.join(", ")}`}
+              style={{
+                display: "flex", flexDirection: "column", alignItems: "center",
+                backgroundColor: isWeekend ? "#fef3c7" : "#eef2ff",
+                border: `1.5px solid ${isWeekend ? "#fcd34d" : "#c7d2fe"}`,
+                borderRadius: "0.45rem", padding: "0.2rem 0.4rem", minWidth: "34px",
+              }}
+            >
+              <span style={{ fontSize: "0.65rem", fontWeight: "800", color: isWeekend ? "#d97706" : "#4f46e5" }}>{DAY_ABBR[day]}</span>
+              <span style={{ fontSize: "0.6rem", color: isWeekend ? "#b45309" : "#6366f1", fontWeight: "600", whiteSpace: "nowrap" }}>
+                {earliest === latest ? fmt(earliest) : `${fmt(earliest)}–${fmt(latest)}`}
+              </span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
