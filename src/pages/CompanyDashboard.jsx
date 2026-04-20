@@ -3,7 +3,7 @@ import PageWrapper from "../components/PageWrapper";
 import { jobCategories } from "../data/jobCategories";
 import { geocodeAddress } from "../utils/geo";
 import { supabase, withTimeout } from "../lib/supabase";
-import { sendEmail, emailApplicantAccepted, emailApplicantDeclined, fetchAvailabilityHeatmap, fetchAllVerifiedStudents, fetchMessages, sendMessage } from "../lib/auth";
+import { sendEmail, emailApplicantAccepted, emailApplicantDeclined, emailCompanyInterested, fetchAvailabilityHeatmap, fetchAllVerifiedStudents, fetchMessages, sendMessage } from "../lib/auth";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -446,6 +446,7 @@ export default function CompanyDashboard({ setPage, currentUser }) {
           fetched={studentsFetched}
           companyIndustries={currentUser?.industries || []}
           companyId={currentUser?.id}
+          companyName={currentUser?.name}
           chatStudent={chatStudent}
           setChatStudent={setChatStudent}
           setPage={setPage}
@@ -521,7 +522,7 @@ export default function CompanyDashboard({ setPage, currentUser }) {
 
 /* ─── Sub-components ─────────────────────────────────────────────────────── */
 
-function BrowseStudents({ students, loading, fetched, companyIndustries, companyId, chatStudent, setChatStudent, setPage }) {
+function BrowseStudents({ students, loading, fetched, companyIndustries, companyId, companyName, chatStudent, setChatStudent, setPage }) {
   const [filterByIndustries, setFilterByIndustries] = useState(true);
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput]       = useState("");
@@ -555,9 +556,24 @@ function BrowseStudents({ students, loading, fetched, companyIndustries, company
   const sendDM = async () => {
     const text = chatInput.trim();
     if (!text || !chatStudent) return;
+    const isFirst = chatMessages.length === 0;
     setChatInput("");
     try {
       await sendMessage(null, chatStudent.id, companyId, companyId, text);
+      // On first message, email the student
+      if (isFirst) {
+        const { data: emailRows } = await supabase.rpc("get_user_emails", { user_ids: [chatStudent.id] });
+        const studentEmail = emailRows?.[0]?.email;
+        if (studentEmail) {
+          sendEmail({
+            to: studentEmail,
+            subject: `${companyName} is interested in hiring you`,
+            html: emailCompanyInterested(chatStudent.name, companyName),
+            magicLinkEmail: studentEmail,
+            redirectTo: window.location.origin,
+          }).catch(console.warn);
+        }
+      }
     } catch (e) {
       console.error("Send failed:", e);
     }
