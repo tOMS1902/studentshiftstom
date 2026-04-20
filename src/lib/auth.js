@@ -350,7 +350,7 @@ export function emailCompanyApproved(name, appUrl) {
 </html>`;
 }
 
-export function emailApplicantAccepted(studentName, jobTitle, companyName, appUrl) {
+export function emailApplicantAccepted(studentName, jobTitle, companyName) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
@@ -375,7 +375,7 @@ export function emailApplicantAccepted(studentName, jobTitle, companyName, appUr
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
                 <td align="center" style="padding:8px 0 28px;">
-                  <a href="${appUrl}" style="display:inline-block;background:linear-gradient(135deg,#10b981,#059669);color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:50px;box-shadow:0 4px 18px rgba(16,185,129,0.4);">
+                  <a href="MAGIC_LINK_PLACEHOLDER" style="display:inline-block;background:linear-gradient(135deg,#10b981,#059669);color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:50px;box-shadow:0 4px 18px rgba(16,185,129,0.4);">
                     Open Messages →
                   </a>
                 </td>

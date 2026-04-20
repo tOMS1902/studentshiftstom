@@ -291,7 +291,7 @@ export default function CompanyDashboard({ setPage, currentUser }) {
       try {
         const allStudentIds = [applicant.studentId, ...(others || []).map(o => o.student_id)];
         const { data: emailProfiles } = await supabase
-          .from("profiles").select("id, email").in("id", allStudentIds);
+          .rpc("get_user_emails", { user_ids: allStudentIds });
         const emailMap = Object.fromEntries((emailProfiles || []).map(p => [p.id, p.email]));
         const appUrl = window.location.origin;
 
@@ -300,7 +300,9 @@ export default function CompanyDashboard({ setPage, currentUser }) {
           emailMap[applicant.studentId] && sendEmail({
             to: emailMap[applicant.studentId],
             subject: `Congratulations! ${currentUser.name} has accepted your application`,
-            html: emailApplicantAccepted(applicant.name, activePosting.title, currentUser.name, appUrl),
+            html: emailApplicantAccepted(applicant.name, activePosting.title, currentUser.name),
+            magicLinkEmail: emailMap[applicant.studentId],
+            redirectTo: appUrl,
           }),
           // Rejection emails to auto-declined applicants
           ...(others || []).map(o => {
