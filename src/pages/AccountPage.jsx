@@ -249,7 +249,7 @@ export default function AccountPage({
     }
   };
 
-  const goBack = () => setPage(currentUser.role === "student" ? "studentDashboard" : "companyDashboard");
+  const goBack = () => setPage(currentUser.role === "student" ? "studentDashboard" : currentUser.role === "admin" ? "admin" : "companyDashboard");
 
   return (
     <PageWrapper>
