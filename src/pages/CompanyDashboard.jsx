@@ -3,7 +3,7 @@ import PageWrapper from "../components/PageWrapper";
 import { jobCategories } from "../data/jobCategories";
 import { geocodeAddress } from "../utils/geo";
 import { supabase, withTimeout } from "../lib/supabase";
-import { sendEmail, emailApplicantAccepted, emailApplicantDeclined } from "../lib/auth";
+import { sendEmail, emailApplicantAccepted, emailApplicantDeclined, fetchAvailabilityHeatmap } from "../lib/auth";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -42,6 +42,13 @@ export default function CompanyDashboard({ setPage, currentUser }) {
   const [activePosting, setActivePosting] = useState(null);
   const [formData, setFormData]   = useState(null);
   const [extendData, setExtendData] = useState(null);
+  const [heatmap, setHeatmap]     = useState(null);
+  const [showHeatmap, setShowHeatmap] = useState(false);
+
+  // Load availability heatmap once
+  useEffect(() => {
+    fetchAvailabilityHeatmap().then(setHeatmap).catch(() => {});
+  }, []);
 
   // Load this company's jobs on mount, auto-expire any past their deadline
   useEffect(() => {
@@ -378,6 +385,22 @@ export default function CompanyDashboard({ setPage, currentUser }) {
         <StatCard label="Closed" value={postings.length - activeCount} color="#6b7280" />
         <StatCard label="Total Applicants" value={totalApplicants} color="#f59e0b" />
       </div>
+
+      {/* Student Availability Heatmap */}
+      {heatmap && (
+        <div style={{ backgroundColor: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: "0.85rem", padding: "1rem 1.25rem", marginBottom: "1.5rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: showHeatmap ? "1rem" : 0 }}>
+            <div>
+              <p style={{ margin: 0, fontWeight: "700", fontSize: "0.9rem", color: "#1e293b" }}>Student Availability</p>
+              <p style={{ margin: "0.1rem 0 0", fontSize: "0.75rem", color: "#64748b" }}>When verified students are free — use this to plan your job times</p>
+            </div>
+            <button onClick={() => setShowHeatmap(p => !p)} style={{ padding: "0.35rem 0.85rem", borderRadius: "0.5rem", border: "1.5px solid #e2e8f0", backgroundColor: "white", color: "#6366f1", fontWeight: "700", fontSize: "0.8rem", cursor: "pointer", fontFamily: "inherit" }}>
+              {showHeatmap ? "Hide" : "Show"}
+            </button>
+          </div>
+          {showHeatmap && <AvailabilityHeatmap data={heatmap} />}
+        </div>
+      )}
 
       {/* Postings */}
       {loading ? (
@@ -1441,6 +1464,63 @@ function Modal({ title, children, onClose }) {
         </div>
         {children}
       </div>
+    </div>
+  );
+}
+
+/* ─── Availability Heatmap ───────────────────────────────────────────────── */
+
+const DAYS  = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const SLOTS = ["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00"];
+
+function AvailabilityHeatmap({ data }) {
+  const allCounts = DAYS.flatMap(d => SLOTS.map(s => data[d]?.[s] || 0));
+  const max = Math.max(...allCounts, 1);
+
+  return (
+    <div style={{ overflowX: "auto" }}>
+      <table style={{ borderCollapse: "collapse", fontSize: "0.65rem", width: "100%", minWidth: "480px" }}>
+        <thead>
+          <tr>
+            <th style={{ padding: "0 0.4rem 0.4rem 0", textAlign: "left", color: "#94a3b8", fontWeight: "600", minWidth: "72px" }}></th>
+            {SLOTS.map(s => (
+              <th key={s} style={{ padding: "0 2px 0.4rem", textAlign: "center", color: "#94a3b8", fontWeight: "600", whiteSpace: "nowrap" }}>
+                {s.slice(0,2)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {DAYS.map(day => {
+            const isWeekend = day === "Saturday" || day === "Sunday";
+            return (
+              <tr key={day}>
+                <td style={{ padding: "2px 0.4rem 2px 0", fontWeight: "600", color: isWeekend ? "#d97706" : "#374151", whiteSpace: "nowrap" }}>
+                  {day.slice(0, 3)}
+                </td>
+                {SLOTS.map(slot => {
+                  const count = data[day]?.[slot] || 0;
+                  const intensity = count / max;
+                  const bg = count === 0 ? "#f1f5f9"
+                    : isWeekend
+                      ? `rgba(245,158,11,${0.15 + intensity * 0.75})`
+                      : `rgba(99,102,241,${0.15 + intensity * 0.75})`;
+                  return (
+                    <td key={slot} title={`${day} ${slot} — ${count} student${count !== 1 ? "s" : ""}`} style={{ padding: "2px", textAlign: "center" }}>
+                      <div style={{ width: "100%", minWidth: "20px", height: "20px", borderRadius: "3px", backgroundColor: bg, display: "flex", alignItems: "center", justifyContent: "center", color: intensity > 0.5 ? "white" : "#64748b", fontWeight: "700", fontSize: "0.6rem" }}>
+                        {count > 0 ? count : ""}
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <p style={{ fontSize: "0.7rem", color: "#94a3b8", marginTop: "0.5rem", marginBottom: 0 }}>
+        Numbers show how many verified students are free at each time. Hover a cell for details.
+      </p>
     </div>
   );
 }

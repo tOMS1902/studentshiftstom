@@ -61,6 +61,21 @@ export async function updateStudentProfile(userId, updates) {
   if (error) throw error;
 }
 
+export async function fetchAvailabilityHeatmap() {
+  const { data, error } = await withTimeout(
+    supabase.rpc("get_availability_heatmap"),
+    10000, "Timed out loading availability."
+  );
+  if (error) throw error;
+  // Convert rows → { Monday: { "09:00": 5, "10:00": 3 }, ... }
+  const map = {};
+  for (const { day, slot, student_count } of data || []) {
+    if (!map[day]) map[day] = {};
+    map[day][slot] = Number(student_count);
+  }
+  return map;
+}
+
 // Requires these tables:
 //   create table liked_jobs (
 //     student_id uuid references profiles(id) on delete cascade not null,

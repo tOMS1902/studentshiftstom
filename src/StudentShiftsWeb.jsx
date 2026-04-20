@@ -39,6 +39,7 @@ function normaliseProfile(profile) {
     studentIdPath:        extra.student_id_url     || null,
     verificationStatus:   extra.status             || null,
     croNumber:            extra.cro_number          || null,
+    availability:       extra.availability || {},
     savedLocation:      extra.location_lat ? {
       lat:         extra.location_lat,
       lng:         extra.location_lng,

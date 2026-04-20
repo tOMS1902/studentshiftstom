@@ -12,6 +12,7 @@ export default function AccountPage({
   setStudentLocation,
 }) {
 
+  const [availability, setAvailability] = useState(currentUser.availability || {});
   const [linkedIn, setLinkedIn] = useState(currentUser.linkedIn || "");
   const [cv, setCv] = useState(null);
   const [coverLetter, setCoverLetter] = useState(null);
@@ -156,6 +157,7 @@ export default function AccountPage({
         location_lat:      savedLocation?.lat    || null,
         location_lng:      savedLocation?.lng    || null,
         location_display:  savedLocation?.displayName || null,
+        availability,
       };
 
       await updateStudentProfile(currentUser.id, updates);
@@ -363,6 +365,16 @@ export default function AccountPage({
             >
               📡 Use my current GPS location
             </button>
+          </Section>
+        )}
+
+        {/* Availability section */}
+        {currentUser.role === "student" && (
+          <Section title="My Availability">
+            <p style={{ fontSize: "0.8rem", color: "#6b7280", marginBottom: "0.9rem" }}>
+              Select the time slots you're generally free. Companies use this to plan their rosters.
+            </p>
+            <AvailabilityPicker value={availability} onChange={setAvailability} />
           </Section>
         )}
 
@@ -615,6 +627,51 @@ function FileUpload({ label, hint, accept, onChange, file, existingName, require
           {file ? `✓ ${file.name}` : existingName ? `✓ ${existingName}` : "No file chosen"}
         </span>
       </div>
+    </div>
+  );
+}
+
+const DAYS  = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const SLOTS = ["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00"];
+
+function AvailabilityPicker({ value, onChange }) {
+  const toggle = (day, slot) => {
+    const current = value[day] || [];
+    const updated = current.includes(slot) ? current.filter(s => s !== slot) : [...current, slot];
+    onChange({ ...value, [day]: updated });
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
+      {DAYS.map(day => {
+        const selected = value[day] || [];
+        const isWeekend = day === "Saturday" || day === "Sunday";
+        return (
+          <div key={day}>
+            <p style={{ fontSize: "0.78rem", fontWeight: "700", color: isWeekend ? "#d97706" : "#374151", marginBottom: "0.35rem" }}>{day}</p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem" }}>
+              {SLOTS.map(slot => {
+                const active = selected.includes(slot);
+                return (
+                  <button
+                    key={slot}
+                    type="button"
+                    onClick={() => toggle(day, slot)}
+                    style={{
+                      padding: "0.2rem 0.5rem", borderRadius: "0.35rem", fontSize: "0.72rem", fontWeight: "600", cursor: "pointer",
+                      border: `1.5px solid ${active ? (isWeekend ? "#f59e0b" : "#6366f1") : "#e2e8f0"}`,
+                      backgroundColor: active ? (isWeekend ? "#fef3c7" : "#eef2ff") : "white",
+                      color: active ? (isWeekend ? "#d97706" : "#4f46e5") : "#94a3b8",
+                    }}
+                  >
+                    {slot}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

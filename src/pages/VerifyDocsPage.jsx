@@ -7,6 +7,7 @@ export default function VerifyDocsPage({ currentUser, setCurrentUser, setPage })
   const [governmentId, setGovernmentId]   = useState(null);
   const [error, setError]   = useState("");
   const [loading, setLoading] = useState(false);
+  const [showAvailabilityPrompt, setShowAvailabilityPrompt] = useState(false);
 
   const isRejected = currentUser?.verificationStatus === "rejected";
 
@@ -18,7 +19,7 @@ export default function VerifyDocsPage({ currentUser, setCurrentUser, setPage })
     try {
       await uploadVerificationDocs(currentUser.id, studentIdCard, governmentId);
       setCurrentUser(prev => ({ ...prev, studentIdPath: "uploaded", verificationStatus: "pending_review" }));
-      setPage("studentDashboard");
+      setShowAvailabilityPrompt(true);
     } catch (e) {
       setError(e.message || "Upload failed — please try again.");
     } finally {
@@ -27,6 +28,7 @@ export default function VerifyDocsPage({ currentUser, setCurrentUser, setPage })
   };
 
   return (
+    <>
     <PageWrapper>
       <div style={{ maxWidth: "440px", margin: "0 auto" }}>
 
@@ -79,6 +81,33 @@ export default function VerifyDocsPage({ currentUser, setCurrentUser, setPage })
 
       </div>
     </PageWrapper>
+
+    {showAvailabilityPrompt && (
+      <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(15,23,42,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "1rem", backdropFilter: "blur(2px)" }}>
+        <div style={{ backgroundColor: "white", borderRadius: "1.25rem", padding: "2rem 1.75rem", maxWidth: "360px", width: "100%", textAlign: "center", boxShadow: "0 24px 64px rgba(0,0,0,0.2)" }}>
+          <div style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>📅</div>
+          <h3 style={{ fontWeight: "800", fontSize: "1.1rem", marginBottom: "0.4rem", color: "#1e293b" }}>Documents submitted!</h3>
+          <p style={{ fontSize: "0.875rem", color: "#64748b", marginBottom: "1.5rem", lineHeight: 1.6 }}>
+            While you wait for verification, set your available times. Companies use this to plan rosters — it helps you get noticed faster.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+            <button
+              onClick={() => { setShowAvailabilityPrompt(false); setPage("account"); }}
+              style={{ padding: "0.75rem", borderRadius: "2rem", border: "none", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "white", fontWeight: "700", cursor: "pointer", fontFamily: "inherit", fontSize: "0.95rem" }}
+            >
+              Set My Availability →
+            </button>
+            <button
+              onClick={() => { setShowAvailabilityPrompt(false); setPage("studentDashboard"); }}
+              style={{ padding: "0.75rem", borderRadius: "2rem", border: "1.5px solid #e2e8f0", backgroundColor: "white", color: "#64748b", fontWeight: "600", cursor: "pointer", fontFamily: "inherit", fontSize: "0.9rem" }}
+            >
+              Maybe Later
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
 
