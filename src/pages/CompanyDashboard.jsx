@@ -3,7 +3,7 @@ import PageWrapper from "../components/PageWrapper";
 import { jobCategories } from "../data/jobCategories";
 import { geocodeAddress } from "../utils/geo";
 import { supabase, withTimeout } from "../lib/supabase";
-import { sendEmail, emailApplicantAccepted, emailApplicantDeclined, fetchAvailabilityHeatmap } from "../lib/auth";
+import { sendEmail, emailApplicantAccepted, emailApplicantDeclined, fetchAvailabilityHeatmap, fetchStudentsForCompany, fetchMessages, sendMessage } from "../lib/auth";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -44,11 +44,26 @@ export default function CompanyDashboard({ setPage, currentUser }) {
   const [extendData, setExtendData] = useState(null);
   const [heatmap, setHeatmap]     = useState(null);
   const [showHeatmap, setShowHeatmap] = useState(false);
+  const [activeTab, setActiveTab] = useState("jobs"); // "jobs" | "students"
+  const [students, setStudents]   = useState([]);
+  const [studentsLoading, setStudentsLoading] = useState(false);
+  const [studentsFetched, setStudentsFetched] = useState(false);
+  const [chatStudent, setChatStudent] = useState(null); // { id, name } for inline DM
 
   // Load availability heatmap once
   useEffect(() => {
     fetchAvailabilityHeatmap().then(setHeatmap).catch(() => {});
   }, []);
+
+  // Load matching students when Browse Students tab is first opened
+  useEffect(() => {
+    if (activeTab !== "students" || studentsFetched || !currentUser) return;
+    setStudentsLoading(true);
+    fetchStudentsForCompany(currentUser.industries || [])
+      .then(data => { setStudents(data); setStudentsFetched(true); })
+      .catch(() => setStudentsFetched(true))
+      .finally(() => setStudentsLoading(false));
+  }, [activeTab]);
 
   // Load this company's jobs on mount, auto-expire any past their deadline
   useEffect(() => {
@@ -368,26 +383,61 @@ export default function CompanyDashboard({ setPage, currentUser }) {
       )}
 
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
         <div>
           <h1 style={{ fontSize: "1.75rem", fontWeight: "800", margin: 0, color: "#1e293b" }}>Company Dashboard</h1>
           {currentUser && (
             <p style={{ color: "#64748b", fontSize: "0.875rem", margin: "0.25rem 0 0" }}>{currentUser.name}</p>
           )}
         </div>
-        {isVerified && <button onClick={openCreate} style={btnGreen}>+ New Job</button>}
+        {isVerified && activeTab === "jobs" && <button onClick={openCreate} style={btnGreen}>+ New Job</button>}
       </div>
 
-      {/* Stats */}
+      {/* Tab bar */}
+      <div style={{ display: "flex", backgroundColor: "#f1f5f9", borderRadius: "0.75rem", padding: "0.25rem", marginBottom: "1.5rem", gap: "0.25rem" }}>
+        {[{ val: "jobs", label: "My Jobs" }, { val: "students", label: "Browse Students" }].map(({ val, label }) => (
+          <button
+            key={val}
+            onClick={() => setActiveTab(val)}
+            style={{
+              flex: 1, padding: "0.55rem", borderRadius: "0.6rem", border: "none",
+              fontWeight: "600", fontSize: "0.875rem", cursor: "pointer", fontFamily: "inherit",
+              backgroundColor: activeTab === val ? "white" : "transparent",
+              color: activeTab === val ? "#6366f1" : "#64748b",
+              boxShadow: activeTab === val ? "0 1px 6px rgba(0,0,0,0.1)" : "none",
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Stats — jobs tab only */}
+      {activeTab === "jobs" && (
       <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem", flexWrap: "wrap" }}>
         <StatCard label="Total Postings" value={postings.length} color="#3b82f6" />
         <StatCard label="Active" value={activeCount} color="#16a34a" />
         <StatCard label="Closed" value={postings.length - activeCount} color="#6b7280" />
         <StatCard label="Total Applicants" value={totalApplicants} color="#f59e0b" />
       </div>
+      )}
+
+      {/* Browse Students tab */}
+      {activeTab === "students" && (
+        <BrowseStudents
+          students={students}
+          loading={studentsLoading}
+          fetched={studentsFetched}
+          companyIndustries={currentUser?.industries || []}
+          companyId={currentUser?.id}
+          chatStudent={chatStudent}
+          setChatStudent={setChatStudent}
+          setPage={setPage}
+        />
+      )}
 
       {/* Student Availability Heatmap */}
-      {heatmap && (
+      {activeTab === "jobs" && heatmap && (
         <div style={{ backgroundColor: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: "0.85rem", padding: "1rem 1.25rem", marginBottom: "1.5rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: showHeatmap ? "1rem" : 0 }}>
             <div>
@@ -402,33 +452,35 @@ export default function CompanyDashboard({ setPage, currentUser }) {
         </div>
       )}
 
-      {/* Postings */}
-      {loading ? (
-        <div style={{ textAlign: "center", padding: "3rem 1rem", color: "#64748b" }}>
-          <p style={{ fontWeight: "600" }}>Loading your job postings…</p>
-        </div>
-      ) : postings.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "4rem 1rem", color: "#6b7280" }}>
-          <p style={{ fontSize: "1.25rem", fontWeight: "600", marginBottom: "0.5rem" }}>No job postings yet</p>
-          <p style={{ marginBottom: "1.5rem" }}>
-            {isVerified ? "Create your first posting to start receiving applicants." : "Your account must be verified before you can post jobs."}
-          </p>
-          {isVerified && <button onClick={openCreate} style={btnGreen}>+ Create Job Posting</button>}
-        </div>
-      ) : loading ? null : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          {postings.map(posting => (
-            <JobPostingCard
-              key={posting.id}
-              posting={posting}
-              onViewApplicants={() => openApplicants(posting)}
-              onEdit={() => openEdit(posting)}
-              onDelete={() => deletePosting(posting.id)}
-              onToggleStatus={() => toggleStatus(posting.id)}
-              onExtend={() => openExtend(posting)}
-            />
-          ))}
-        </div>
+      {/* Postings — jobs tab only */}
+      {activeTab === "jobs" && (
+        loading ? (
+          <div style={{ textAlign: "center", padding: "3rem 1rem", color: "#64748b" }}>
+            <p style={{ fontWeight: "600" }}>Loading your job postings…</p>
+          </div>
+        ) : postings.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "4rem 1rem", color: "#6b7280" }}>
+            <p style={{ fontSize: "1.25rem", fontWeight: "600", marginBottom: "0.5rem" }}>No job postings yet</p>
+            <p style={{ marginBottom: "1.5rem" }}>
+              {isVerified ? "Create your first posting to start receiving applicants." : "Your account must be verified before you can post jobs."}
+            </p>
+            {isVerified && <button onClick={openCreate} style={btnGreen}>+ Create Job Posting</button>}
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            {postings.map(posting => (
+              <JobPostingCard
+                key={posting.id}
+                posting={posting}
+                onViewApplicants={() => openApplicants(posting)}
+                onEdit={() => openEdit(posting)}
+                onDelete={() => deletePosting(posting.id)}
+                onToggleStatus={() => toggleStatus(posting.id)}
+                onExtend={() => openExtend(posting)}
+              />
+            ))}
+          </div>
+        )
       )}
 
       {/* Footer nav */}
@@ -468,6 +520,161 @@ export default function CompanyDashboard({ setPage, currentUser }) {
 }
 
 /* ─── Sub-components ─────────────────────────────────────────────────────── */
+
+function BrowseStudents({ students, loading, fetched, companyIndustries, companyId, chatStudent, setChatStudent, setPage }) {
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput]       = useState("");
+  const [chatLoading, setChatLoading]   = useState(false);
+  const bottomRef = useRef(null);
+
+  useEffect(() => {
+    if (!chatStudent) return;
+    setChatLoading(true);
+    fetchMessages(null, chatStudent.id, companyId)
+      .then(msgs => { setChatMessages(msgs); setChatLoading(false); })
+      .catch(() => setChatLoading(false));
+
+    const channel = supabase
+      .channel(`direct_${companyId}_${chatStudent.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages", filter: `company_id=eq.${companyId}` },
+        payload => {
+          if (payload.new.student_id === chatStudent.id && payload.new.job_id === null) {
+            setChatMessages(prev => [...prev, payload.new]);
+          }
+        })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [chatStudent?.id]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages]);
+
+  const sendDM = async () => {
+    const text = chatInput.trim();
+    if (!text || !chatStudent) return;
+    setChatInput("");
+    try {
+      await sendMessage(null, chatStudent.id, companyId, companyId, text);
+    } catch (e) {
+      console.error("Send failed:", e);
+    }
+  };
+
+  if (chatStudent) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "55vh", border: "1.5px solid #e2e8f0", borderRadius: "0.85rem", overflow: "hidden" }}>
+        <div style={{ padding: "0.85rem 1.25rem", borderBottom: "1.5px solid #e5e7eb", display: "flex", alignItems: "center", gap: "0.75rem", backgroundColor: "#f8fafc", flexShrink: 0 }}>
+          <button onClick={() => setChatStudent(null)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1rem", color: "#6b7280", padding: "0.2rem 0.5rem" }}>←</button>
+          <div>
+            <p style={{ margin: 0, fontWeight: "700", fontSize: "0.95rem", color: "#1e293b" }}>{chatStudent.name}</p>
+            <p style={{ margin: 0, fontSize: "0.75rem", color: "#64748b" }}>Direct Message</p>
+          </div>
+        </div>
+        <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+          {chatLoading
+            ? <p style={{ color: "#9ca3af", textAlign: "center", fontSize: "0.85rem", marginTop: "2rem" }}>Loading…</p>
+            : chatMessages.length === 0
+              ? <p style={{ color: "#9ca3af", textAlign: "center", fontSize: "0.85rem", marginTop: "2rem" }}>No messages yet. Introduce yourself!</p>
+              : chatMessages.map(m => (
+                <div key={m.id} style={{ alignSelf: m.sender_id === companyId ? "flex-end" : "flex-start", maxWidth: "80%" }}>
+                  <div style={{ backgroundColor: m.sender_id === companyId ? "#6366f1" : "#e5e7eb", color: m.sender_id === companyId ? "white" : "#111827", padding: "0.5rem 0.8rem", borderRadius: "0.65rem", fontSize: "0.85rem", lineHeight: 1.45 }}>
+                    {m.text}
+                  </div>
+                  <p style={{ fontSize: "0.65rem", color: "#9ca3af", margin: "0.1rem 0 0", textAlign: m.sender_id === companyId ? "right" : "left" }}>
+                    {new Date(m.created_at).toLocaleTimeString("en-IE", { hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+              ))
+          }
+          <div ref={bottomRef} />
+        </div>
+        <div style={{ padding: "0.75rem 1rem", borderTop: "1.5px solid #e5e7eb", display: "flex", gap: "0.5rem", backgroundColor: "white" }}>
+          <input
+            value={chatInput}
+            onChange={e => setChatInput(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && sendDM()}
+            placeholder={`Message ${chatStudent.name}…`}
+            style={{ flex: 1, padding: "0.55rem 0.85rem", borderRadius: "2rem", border: "1.5px solid #d1d5db", fontSize: "0.85rem", fontFamily: "inherit", outline: "none" }}
+          />
+          <button onClick={sendDM} style={{ padding: "0.55rem 1.1rem", borderRadius: "2rem", border: "none", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "white", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer", fontFamily: "inherit" }}>
+            Send
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!fetched && loading) {
+    return <p style={{ textAlign: "center", color: "#6b7280", padding: "3rem 1rem" }}>Loading students…</p>;
+  }
+
+  if (fetched && companyIndustries.length === 0) {
+    return (
+      <div style={{ textAlign: "center", padding: "3rem 1rem", color: "#6b7280" }}>
+        <p style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>🏢</p>
+        <p style={{ fontWeight: "700", fontSize: "1rem", marginBottom: "0.4rem" }}>Set your industries first</p>
+        <p style={{ fontSize: "0.875rem", marginBottom: "1.25rem" }}>Add your company's industries in My Account to browse matching students.</p>
+        <button onClick={() => setPage("account")} style={{ padding: "0.7rem 1.5rem", borderRadius: "2rem", border: "none", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "white", fontWeight: "700", fontSize: "0.9rem", cursor: "pointer", fontFamily: "inherit" }}>
+          Set Industries →
+        </button>
+      </div>
+    );
+  }
+
+  if (fetched && students.length === 0) {
+    return (
+      <div style={{ textAlign: "center", padding: "3rem 1rem", color: "#6b7280" }}>
+        <p style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>🎓</p>
+        <p style={{ fontWeight: "700", fontSize: "1rem", marginBottom: "0.4rem" }}>No matching students yet</p>
+        <p style={{ fontSize: "0.875rem" }}>Verified students who set preferences matching your industries will appear here.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
+      <p style={{ fontSize: "0.8rem", color: "#64748b", margin: "0 0 0.25rem" }}>
+        {students.length} verified student{students.length !== 1 ? "s" : ""} interested in your industries
+      </p>
+      {students.map(s => (
+        <div key={s.id} style={{ backgroundColor: "#f9fafb", border: "1.5px solid #e5e7eb", borderRadius: "0.85rem", padding: "1rem 1.25rem", display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+          <div style={{ width: "44px", height: "44px", borderRadius: "50%", overflow: "hidden", flexShrink: 0, backgroundColor: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {s.profile_photo_url
+              ? <img src={s.profile_photo_url} alt={s.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              : <span style={{ fontSize: "1.2rem" }}>👤</span>
+            }
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ margin: "0 0 0.2rem", fontWeight: "700", fontSize: "0.95rem", color: "#1e293b" }}>{s.name}</p>
+            {s.bio && <p style={{ margin: "0 0 0.4rem", fontSize: "0.8rem", color: "#64748b", lineHeight: 1.5 }}>{s.bio}</p>}
+            {s.skills?.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem", marginBottom: "0.4rem" }}>
+                {s.skills.slice(0, 5).map(sk => (
+                  <span key={sk} style={{ fontSize: "0.7rem", backgroundColor: "#eff6ff", color: "#1d4ed8", border: "1.5px solid #bfdbfe", borderRadius: "999px", padding: "0.1rem 0.5rem", fontWeight: "600" }}>{sk}</span>
+                ))}
+              </div>
+            )}
+            {s.job_preferences?.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem" }}>
+                {s.job_preferences.map(p => (
+                  <span key={p} style={{ fontSize: "0.7rem", backgroundColor: "#f0fdf4", color: "#16a34a", border: "1.5px solid #86efac", borderRadius: "999px", padding: "0.1rem 0.5rem", fontWeight: "600" }}>{p}</span>
+                ))}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={() => { setChatStudent({ id: s.id, name: s.name }); setChatMessages([]); }}
+            style={{ padding: "0.45rem 1rem", borderRadius: "2rem", border: "none", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "white", fontWeight: "700", fontSize: "0.8rem", cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", flexShrink: 0 }}
+          >
+            Message
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function StatCard({ label, value, color }) {
   return (

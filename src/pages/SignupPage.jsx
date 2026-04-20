@@ -1,6 +1,7 @@
 import { useState } from "react";
 import PageWrapper from "../components/PageWrapper";
 import { signUp } from "../lib/auth";
+import { jobCategories } from "../data/jobCategories";
 
 
 function getPasswordStrength(pw) {
@@ -23,9 +24,13 @@ export default function SignupPage({ setPage }) {
   const [password, setPassword] = useState("");
   const [role, setRole]         = useState("student");
   const [croNumber, setCroNumber] = useState("");
+  const [industries, setIndustries] = useState([]);
   const [error, setError]       = useState("");
   const [loading, setLoading]   = useState(false);
   const [done, setDone]         = useState(false);
+
+  const toggleIndustry = (cat) =>
+    setIndustries(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]);
 
   const handleSignup = async () => {
     if (!name || !email || !password) { setError("Please fill in all required fields."); return; }
@@ -34,7 +39,7 @@ export default function SignupPage({ setPage }) {
     setLoading(true);
     setError("");
     try {
-      await signUp({ email, password, name, role, croNumber });
+      await signUp({ email, password, name, role, croNumber, industries });
       setDone(true);
     } catch (e) {
       setError(e.message || "Something went wrong. Please try again.");
@@ -183,6 +188,33 @@ export default function SignupPage({ setPage }) {
               <a href="https://search.cro.ie" target="_blank" rel="noreferrer" style={{ color: "#6366f1", fontWeight: "600" }}>search.cro.ie</a>.
               Used by our admin to verify your company.
             </p>
+          </div>
+        )}
+
+        {/* Industries — company only */}
+        {role === "company" && (
+          <div style={{ marginBottom: "0.75rem" }}>
+            <p style={{ fontWeight: "700", fontSize: "0.875rem", color: "#374151", marginBottom: "0.35rem" }}>
+              Industries <span style={{ fontWeight: "400", color: "#9ca3af" }}>(optional — select all that apply)</span>
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
+              {Object.keys(jobCategories).map(cat => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => toggleIndustry(cat)}
+                  style={{
+                    padding: "0.3rem 0.75rem", borderRadius: "999px", fontSize: "0.78rem", fontWeight: "600",
+                    cursor: "pointer", fontFamily: "inherit",
+                    border: `1.5px solid ${industries.includes(cat) ? "#6366f1" : "#e2e8f0"}`,
+                    backgroundColor: industries.includes(cat) ? "#eef2ff" : "white",
+                    color: industries.includes(cat) ? "#4f46e5" : "#64748b",
+                  }}
+                >
+                  {industries.includes(cat) ? "✓ " : ""}{cat}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 

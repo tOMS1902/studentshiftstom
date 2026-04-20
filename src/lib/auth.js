@@ -1,8 +1,9 @@
 import { supabase, withTimeout } from "./supabase";
 
-export async function signUp({ email, password, name, role, croNumber }) {
+export async function signUp({ email, password, name, role, croNumber, industries }) {
   const meta = { name, role };
   if (role === "company" && croNumber) meta.cro_number = croNumber.trim();
+  if (role === "company" && industries?.length) meta.industries = industries;
   const { data, error } = await withTimeout(
     supabase.auth.signUp({ email, password, options: { data: meta } }),
     15000, "Sign up timed out — please try again."
@@ -21,6 +22,34 @@ export async function saveCompanyCroNumber(userId, croNumber) {
     .eq("id", userId)
     .is("cro_number", null);
   if (error) console.warn("CRO save failed:", error.message);
+}
+
+// Called on first SIGNED_IN for a company — persists industries from metadata.
+export async function saveCompanyIndustries(userId, industries) {
+  if (!industries?.length) return;
+  const { error } = await supabase
+    .from("companies")
+    .update({ industries })
+    .eq("id", userId);
+  if (error) console.warn("Industries save failed:", error.message);
+}
+
+export async function updateCompanyProfile(userId, updates) {
+  const { error } = await withTimeout(
+    supabase.from("companies").update(updates).eq("id", userId),
+    10000, "Save timed out — please try again."
+  );
+  if (error) throw error;
+}
+
+export async function fetchStudentsForCompany(companyIndustries) {
+  if (!companyIndustries?.length) return [];
+  const { data, error } = await withTimeout(
+    supabase.rpc("get_students_for_company", { company_industries: companyIndustries }),
+    10000
+  );
+  if (error) throw error;
+  return data || [];
 }
 
 export async function signIn({ email, password }) {
@@ -477,13 +506,16 @@ export async function getSignedDocumentUrl(bucket, path) {
   return data.signedUrl;
 }
 
-export async function fetchMessages(jobId, studentId) {
+export async function fetchMessages(jobId, studentId, companyId = null) {
+  let query = supabase.from("chat_messages")
+    .select("id, sender_id, text, created_at");
+  if (jobId === null) {
+    query = query.is("job_id", null).eq("student_id", studentId).eq("company_id", companyId);
+  } else {
+    query = query.eq("job_id", jobId).eq("student_id", studentId);
+  }
   const { data, error } = await withTimeout(
-    supabase.from("chat_messages")
-      .select("id, sender_id, text, created_at")
-      .eq("job_id", jobId)
-      .eq("student_id", studentId)
-      .order("created_at", { ascending: true }),
+    query.order("created_at", { ascending: true }),
     10000
   );
   if (error) throw error;
@@ -492,9 +524,39 @@ export async function fetchMessages(jobId, studentId) {
 
 export async function sendMessage(jobId, studentId, companyId, senderId, text) {
   const { error } = await supabase.from("chat_messages").insert({
-    job_id: jobId, student_id: studentId, company_id: companyId, sender_id: senderId, text,
+    job_id: jobId ?? null, student_id: studentId, company_id: companyId, sender_id: senderId, text,
   });
   if (error) throw error;
+}
+
+export async function fetchCompanyDirectConversations(companyId) {
+  const { data, error } = await withTimeout(
+    supabase.from("chat_messages").select("student_id").eq("company_id", companyId).is("job_id", null),
+    10000
+  );
+  if (error) throw error;
+  if (!data?.length) return [];
+  const studentIds = [...new Set(data.map(m => m.student_id))];
+  const { data: profiles } = await withTimeout(
+    supabase.from("profiles").select("id, name").in("id", studentIds), 10000
+  );
+  const nameMap = Object.fromEntries((profiles || []).map(p => [p.id, p.name]));
+  return studentIds.map(sid => ({ jobId: null, studentId: sid, studentName: nameMap[sid] || "Student", title: "Direct Message" }));
+}
+
+export async function fetchStudentDirectConversations(studentId) {
+  const { data, error } = await withTimeout(
+    supabase.from("chat_messages").select("company_id").eq("student_id", studentId).is("job_id", null),
+    10000
+  );
+  if (error) throw error;
+  if (!data?.length) return [];
+  const companyIds = [...new Set(data.map(m => m.company_id))];
+  const { data: profiles } = await withTimeout(
+    supabase.from("profiles").select("id, name").in("id", companyIds), 10000
+  );
+  const nameMap = Object.fromEntries((profiles || []).map(p => [p.id, p.name]));
+  return companyIds.map(cid => ({ jobId: null, companyId: cid, companyName: nameMap[cid] || "Company", title: "Direct Message" }));
 }
 
 export async function fetchCompanyConversations(companyId) {

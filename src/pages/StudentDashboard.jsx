@@ -125,6 +125,7 @@ export default function StudentDashboard({
   const timeSlots   = ["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00"];
   const allLocations = [...new Set(jobs.map(j => j.location))].sort();
 
+  const [prefOnly,        setPrefOnly]        = useState(false);
   const [selectedDays,    setSelectedDays]    = useState([]);
   const [dayTimes,        setDayTimes]        = useState({});
   const [warning,         setWarning]         = useState("");
@@ -229,7 +230,12 @@ export default function StudentDashboard({
   const hasActiveFilters = selectedDays.length > 0 || selectedLocations.length > 0 || selectedJobTypes.length > 0 || weekendOnly || allWeekOnly || noWeekends || distanceKm > 0 || searchQuery.trim() !== "";
   const activeFilterCount = (selectedDays.length > 0 ? 1 : 0) + (selectedLocations.length > 0 ? 1 : 0) + (selectedJobTypes.length > 0 ? 1 : 0) + (weekendOnly ? 1 : 0) + (allWeekOnly ? 1 : 0) + (noWeekends ? 1 : 0) + (distanceKm > 0 ? 1 : 0);
 
+  const userPrefs = currentUser?.jobPreferences || [];
   const filteredJobs = jobs.filter(job => {
+    if (prefOnly && userPrefs.length > 0) {
+      const cat = getCategoryForTitle(job.title);
+      if (!cat || !userPrefs.includes(cat)) return false;
+    }
     if (selectedDays.length > 0) {
       const daysMatch = selectedDays.every(day => {
         if (!job.days.includes(day)) return false;
@@ -299,6 +305,27 @@ export default function StudentDashboard({
           <p style={{ margin: 0, fontSize: "0.82rem", color: "#1d4ed8", fontWeight: "600", lineHeight: 1.4 }}>
             Set your location in Account to see how far each job is from you.
           </p>
+        </div>
+      )}
+
+      {/* Preference toggle — only shown to logged-in students who have preferences set */}
+      {currentUser?.role === "student" && userPrefs.length > 0 && (
+        <div style={{ display: "flex", backgroundColor: "#f1f5f9", borderRadius: "0.75rem", padding: "0.25rem", marginBottom: "1rem", gap: "0.25rem" }}>
+          {[{ val: false, label: "All Jobs" }, { val: true, label: "My Preferences" }].map(({ val, label }) => (
+            <button
+              key={String(val)}
+              onClick={() => setPrefOnly(val)}
+              style={{
+                flex: 1, padding: "0.55rem", borderRadius: "0.6rem", border: "none",
+                fontWeight: "600", fontSize: "0.875rem", cursor: "pointer", fontFamily: "inherit",
+                backgroundColor: prefOnly === val ? "white" : "transparent",
+                color: prefOnly === val ? "#6366f1" : "#64748b",
+                boxShadow: prefOnly === val ? "0 1px 6px rgba(0,0,0,0.1)" : "none",
+              }}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       )}
 

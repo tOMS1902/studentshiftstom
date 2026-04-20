@@ -1,7 +1,8 @@
 import { useState } from "react";
 import PageWrapper from "../components/PageWrapper";
 import { geocodeAddress, getCurrentPosition } from "../utils/geo";
-import { updateStudentProfile, uploadAvatar, uploadDocument, signOut, deleteAccount, exportMyData } from "../lib/auth";
+import { updateStudentProfile, updateCompanyProfile, uploadAvatar, uploadDocument, signOut, deleteAccount, exportMyData } from "../lib/auth";
+import { jobCategories } from "../data/jobCategories";
 
 export default function AccountPage({
   currentUser,
@@ -13,6 +14,10 @@ export default function AccountPage({
 }) {
 
   const [availability, setAvailability] = useState(currentUser.availability || {});
+  const [jobPreferences, setJobPreferences] = useState(currentUser.jobPreferences || []);
+  const [industries, setIndustries] = useState(currentUser.industries || []);
+  const [industrySaved, setIndustrySaved] = useState(false);
+  const [industrySaving, setIndustrySaving] = useState(false);
   const [linkedIn, setLinkedIn] = useState(currentUser.linkedIn || "");
   const [cv, setCv] = useState(null);
   const [coverLetter, setCoverLetter] = useState(null);
@@ -158,6 +163,7 @@ export default function AccountPage({
         location_lng:      savedLocation?.lng    || null,
         location_display:  savedLocation?.displayName || null,
         availability,
+        job_preferences:   jobPreferences,
       };
 
       await updateStudentProfile(currentUser.id, updates);
@@ -225,6 +231,20 @@ export default function AccountPage({
     setLikedJobs([]);
     setAppliedJobs([]);
     setPage("studentDashboard");
+  };
+
+  const handleSaveIndustries = async () => {
+    setIndustrySaving(true);
+    try {
+      await updateCompanyProfile(currentUser.id, { industries });
+      setCurrentUser(prev => ({ ...prev, industries }));
+      setIndustrySaved(true);
+      setTimeout(() => setIndustrySaved(false), 2500);
+    } catch (e) {
+      alert("Failed to save: " + (e.message || "Please try again."));
+    } finally {
+      setIndustrySaving(false);
+    }
   };
 
   const goBack = () => setPage(currentUser.role === "student" ? "studentDashboard" : "companyDashboard");
@@ -375,6 +395,72 @@ export default function AccountPage({
               Select the time slots you're generally free. Companies use this to plan their rosters.
             </p>
             <AvailabilityPicker value={availability} onChange={setAvailability} />
+          </Section>
+        )}
+
+        {/* Job Preferences — students only */}
+        {currentUser.role === "student" && (
+          <Section title="Job Preferences">
+            <p style={{ fontSize: "0.8rem", color: "#6b7280", marginBottom: "0.9rem" }}>
+              Select the industries you're interested in. Your dashboard can filter to show only these jobs, and companies can find you in Browse Students.
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginBottom: "1rem" }}>
+              {Object.keys(jobCategories).map(cat => {
+                const active = jobPreferences.includes(cat);
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setJobPreferences(prev => active ? prev.filter(c => c !== cat) : [...prev, cat])}
+                    style={{
+                      padding: "0.3rem 0.75rem", borderRadius: "999px", fontSize: "0.78rem", fontWeight: "600",
+                      cursor: "pointer", fontFamily: "inherit",
+                      border: `1.5px solid ${active ? "#6366f1" : "#e2e8f0"}`,
+                      backgroundColor: active ? "#eef2ff" : "white",
+                      color: active ? "#4f46e5" : "#64748b",
+                    }}
+                  >
+                    {active ? "✓ " : ""}{cat}
+                  </button>
+                );
+              })}
+            </div>
+            <p style={{ fontSize: "0.75rem", color: "#94a3b8", margin: 0 }}>
+              Saved automatically when you click Save Profile below.
+            </p>
+          </Section>
+        )}
+
+        {/* Industries — companies only */}
+        {currentUser.role === "company" && (
+          <Section title="Our Industries">
+            <p style={{ fontSize: "0.8rem", color: "#6b7280", marginBottom: "0.9rem" }}>
+              Which industries does your company hire in? Students matching these will appear in Browse Students.
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginBottom: "1rem" }}>
+              {Object.keys(jobCategories).map(cat => {
+                const active = industries.includes(cat);
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setIndustries(prev => active ? prev.filter(c => c !== cat) : [...prev, cat])}
+                    style={{
+                      padding: "0.3rem 0.75rem", borderRadius: "999px", fontSize: "0.78rem", fontWeight: "600",
+                      cursor: "pointer", fontFamily: "inherit",
+                      border: `1.5px solid ${active ? "#6366f1" : "#e2e8f0"}`,
+                      backgroundColor: active ? "#eef2ff" : "white",
+                      color: active ? "#4f46e5" : "#64748b",
+                    }}
+                  >
+                    {active ? "✓ " : ""}{cat}
+                  </button>
+                );
+              })}
+            </div>
+            <button onClick={handleSaveIndustries} disabled={industrySaving} style={{ ...btnPrimary, opacity: industrySaving ? 0.7 : 1 }}>
+              {industrySaved ? "✓ Saved!" : industrySaving ? "Saving…" : "Save Industries"}
+            </button>
           </Section>
         )}
 

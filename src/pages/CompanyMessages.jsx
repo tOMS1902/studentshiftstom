@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import PageWrapper from "../components/PageWrapper";
-import { fetchCompanyConversations, fetchMessages, sendMessage } from "../lib/auth";
+import { fetchCompanyConversations, fetchCompanyDirectConversations, fetchMessages, sendMessage } from "../lib/auth";
 import { supabase } from "../lib/supabase";
 
 function ChatThread({ jobId, studentId, companyId, senderId, studentName }) {
@@ -10,16 +10,21 @@ function ChatThread({ jobId, studentId, companyId, senderId, studentName }) {
   const bottomRef = useRef(null);
 
   useEffect(() => {
-    fetchMessages(jobId, studentId)
+    fetchMessages(jobId, studentId, companyId)
       .then(msgs => { setMessages(msgs); setLoading(false); })
       .catch(() => setLoading(false));
 
+    const isDirect = jobId === null;
+    const channelName = isDirect ? `direct_${companyId}_${studentId}` : `msgs_${jobId}_${studentId}`;
+    const filter = isDirect ? `company_id=eq.${companyId}` : `job_id=eq.${jobId}`;
+
     const channel = supabase
-      .channel(`msgs_${jobId}_${studentId}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages", filter: `job_id=eq.${jobId}` },
+      .channel(channelName)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages", filter },
         payload => {
-          if (payload.new.student_id === studentId) {
-            setMessages(prev => [...prev, payload.new]);
+          const { new: msg } = payload;
+          if (isDirect ? (msg.student_id === studentId && msg.job_id === null) : (msg.student_id === studentId)) {
+            setMessages(prev => [...prev, msg]);
           }
         })
       .subscribe();
@@ -87,14 +92,20 @@ function ChatThread({ jobId, studentId, companyId, senderId, studentName }) {
 
 export default function CompanyMessages({ currentUser, setPage }) {
   const [conversations, setConversations] = useState([]);
+  const [directConvs, setDirectConvs]     = useState([]);
   const [loading, setLoading]             = useState(true);
   const [active, setActive]               = useState(null);
 
   useEffect(() => {
     if (!currentUser) { setLoading(false); return; }
-    fetchCompanyConversations(currentUser.id)
-      .then(convs => { setConversations(convs); setLoading(false); })
-      .catch(() => setLoading(false));
+    Promise.all([
+      fetchCompanyConversations(currentUser.id).catch(() => []),
+      fetchCompanyDirectConversations(currentUser.id).catch(() => []),
+    ]).then(([convs, directs]) => {
+      setConversations(convs);
+      setDirectConvs(directs);
+      setLoading(false);
+    });
   }, [currentUser?.id]);
 
   if (active) {
@@ -132,31 +143,57 @@ export default function CompanyMessages({ currentUser, setPage }) {
 
       {loading ? (
         <p style={{ textAlign: "center", color: "#6b7280", padding: "3rem 1rem" }}>Loading conversations…</p>
-      ) : conversations.length === 0 ? (
+      ) : conversations.length === 0 && directConvs.length === 0 ? (
         <div style={{ textAlign: "center", padding: "3rem 1rem", color: "#6b7280" }}>
           <p style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>💬</p>
           <p style={{ fontSize: "1.1rem", fontWeight: "600", marginBottom: "0.4rem" }}>No conversations yet</p>
-          <p style={{ fontSize: "0.875rem", marginBottom: "1.5rem" }}>Accept an applicant on your job postings to start messaging them.</p>
+          <p style={{ fontSize: "0.875rem", marginBottom: "1.5rem" }}>Accept an applicant or message a student from Browse Students to start chatting.</p>
           <button onClick={() => setPage("companyDashboard")} style={btnPrimary}>My Jobs</button>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-          {conversations.map(conv => (
-            <button
-              key={`${conv.jobId}_${conv.studentId}`}
-              onClick={() => setActive(conv)}
-              style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "0.9rem 1.1rem", borderRadius: "0.75rem", backgroundColor: "white", border: "1.5px solid #e5e7eb", cursor: "pointer", textAlign: "left", width: "100%", fontFamily: "inherit" }}
-            >
-              <div style={{ width: "42px", height: "42px", borderRadius: "50%", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <span style={{ fontSize: "1.1rem" }}>👤</span>
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ margin: 0, fontWeight: "700", fontSize: "0.92rem", color: "#1e293b" }}>{conv.studentName}</p>
-                <p style={{ margin: 0, fontSize: "0.78rem", color: "#6b7280" }}>{conv.title}</p>
-              </div>
-              <span style={{ fontSize: "1rem", color: "#9ca3af" }}>›</span>
-            </button>
-          ))}
+          {directConvs.length > 0 && (
+            <>
+              <p style={{ fontWeight: "700", fontSize: "0.75rem", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0.25rem 0" }}>Direct Messages</p>
+              {directConvs.map(conv => (
+                <button
+                  key={`direct_${conv.studentId}`}
+                  onClick={() => setActive({ ...conv, jobId: null })}
+                  style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "0.9rem 1.1rem", borderRadius: "0.75rem", backgroundColor: "white", border: "1.5px solid #c7d2fe", cursor: "pointer", textAlign: "left", width: "100%", fontFamily: "inherit" }}
+                >
+                  <div style={{ width: "42px", height: "42px", borderRadius: "50%", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <span style={{ fontSize: "1.1rem" }}>👤</span>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ margin: 0, fontWeight: "700", fontSize: "0.92rem", color: "#1e293b" }}>{conv.studentName}</p>
+                    <p style={{ margin: 0, fontSize: "0.78rem", color: "#6366f1", fontWeight: "600" }}>Direct message</p>
+                  </div>
+                  <span style={{ fontSize: "1rem", color: "#9ca3af" }}>›</span>
+                </button>
+              ))}
+            </>
+          )}
+          {conversations.length > 0 && (
+            <>
+              {directConvs.length > 0 && <p style={{ fontWeight: "700", fontSize: "0.75rem", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0.5rem 0 0.25rem" }}>Job Chats</p>}
+              {conversations.map(conv => (
+                <button
+                  key={`${conv.jobId}_${conv.studentId}`}
+                  onClick={() => setActive(conv)}
+                  style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "0.9rem 1.1rem", borderRadius: "0.75rem", backgroundColor: "white", border: "1.5px solid #e5e7eb", cursor: "pointer", textAlign: "left", width: "100%", fontFamily: "inherit" }}
+                >
+                  <div style={{ width: "42px", height: "42px", borderRadius: "50%", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <span style={{ fontSize: "1.1rem" }}>👤</span>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ margin: 0, fontWeight: "700", fontSize: "0.92rem", color: "#1e293b" }}>{conv.studentName}</p>
+                    <p style={{ margin: 0, fontSize: "0.78rem", color: "#6b7280" }}>{conv.title}</p>
+                  </div>
+                  <span style={{ fontSize: "1rem", color: "#9ca3af" }}>›</span>
+                </button>
+              ))}
+            </>
+          )}
         </div>
       )}
     </PageWrapper>

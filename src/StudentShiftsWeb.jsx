@@ -18,7 +18,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/TermsOfServicePage";
 import CookieBanner from "./components/CookieBanner";
 import { supabase } from "./lib/supabase";
-import { getProfile, fetchLikedJobIds, fetchAppliedJobIds, fetchApplicationStatuses, saveCompanyCroNumber } from "./lib/auth";
+import { getProfile, fetchLikedJobIds, fetchAppliedJobIds, fetchApplicationStatuses, saveCompanyCroNumber, saveCompanyIndustries } from "./lib/auth";
 
 // Normalise Supabase profile shape to match what the app expects
 function normaliseProfile(profile) {
@@ -39,6 +39,8 @@ function normaliseProfile(profile) {
     studentIdPath:        extra.student_id_url     || null,
     verificationStatus:   extra.status             || null,
     croNumber:            extra.cro_number          || null,
+    industries:           extra.industries           || [],
+    jobPreferences:     extra.job_preferences  || [],
     availability:       extra.availability || {},
     savedLocation:      extra.location_lat ? {
       lat:         extra.location_lat,
@@ -109,10 +111,12 @@ export default function StudentShiftsWeb() {
           const profile = await getProfile(session.user.id);
           const user = normaliseProfile({ ...profile, email: profile.email || session.user.email });
           setCurrentUser(user);
-          // Persist CRO number from signup metadata on first login
+          // Persist CRO number and industries from signup metadata on first login
           if (user.role === "company") {
             const metaCro = session.user.user_metadata?.cro_number;
             if (metaCro && !user.croNumber) saveCompanyCroNumber(user.id, metaCro);
+            const metaIndustries = session.user.user_metadata?.industries;
+            if (metaIndustries?.length && !user.industries?.length) saveCompanyIndustries(user.id, metaIndustries);
           }
           // Show verified screen if this is a fresh email confirmation
           const justVerified = window.location.hash.includes("type=signup") || window.location.hash.includes("type=email");
