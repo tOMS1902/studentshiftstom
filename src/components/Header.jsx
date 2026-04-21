@@ -24,7 +24,7 @@ export default function Header({ currentUser, setPage, likedJobs, appliedJobs, n
     }}>
 
       {/* Left — Account (when logged in) + About */}
-      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+      <div className="header-left" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
         {currentUser && (
           <div style={{ position: "relative", display: "inline-block" }}>
             <button onClick={() => setPage("account")} style={{ ...navBtnPrimary, display: "inline-flex", alignItems: "center", gap: "0.45rem" }}>
@@ -55,18 +55,16 @@ export default function Header({ currentUser, setPage, likedJobs, appliedJobs, n
       </div>
 
       {/* Right — Liked/Applied (student) or Login/Sign Up (logged out) */}
-      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", justifyContent: "flex-end" }}>
+      <div className="header-right" style={{ display: "flex", gap: "0.5rem", alignItems: "center", justifyContent: "flex-end" }}>
         {currentUser ? (
           <>
             {currentUser.role === "admin" ? (
               <button onClick={() => setPage("admin")} style={navBtnPrimary}>Admin Dashboard</button>
             ) : currentUser.role === "student" ? (
               <>
-                <div className="nav-liked-wrap" style={{ position: "relative", display: "inline-block" }}>
-                  <button onClick={() => setPage("likedJobs")} style={{ ...navBtnOutline, display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
-                    ❤️ <span className="nav-label">Liked</span> <CountBadge n={likedJobs.length} />
-                  </button>
-                </div>
+                <button onClick={() => setPage("likedJobs")} style={{ ...navBtnOutline, display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
+                  ❤️ <span className="nav-label">Liked</span> <CountBadge n={likedJobs.length} />
+                </button>
                 <div style={{ position: "relative", display: "inline-block" }}>
                   <button onClick={() => setPage("appliedJobs")} style={{ ...navBtnOutline, display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
                     ✅ <span className="nav-label">Applied</span> <CountBadge n={appliedJobs.length} />
@@ -79,9 +77,7 @@ export default function Header({ currentUser, setPage, likedJobs, appliedJobs, n
               </>
             ) : (
               <>
-                <div className="nav-browse-wrap" style={{ display: "inline-block" }}>
-                  <button onClick={() => setPage("studentDashboard")} style={navBtnOutline}>Browse Jobs</button>
-                </div>
+                <button onClick={() => setPage("studentDashboard")} style={navBtnOutline}><span className="nav-label">Browse </span>Jobs</button>
                 <button onClick={() => setPage("companyMessages")} style={{ ...navBtnOutline, display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>💬 <span className="nav-label">Messages</span></button>
                 <button onClick={() => setPage("companyDashboard")} style={navBtnPrimary}><span className="nav-label">My </span>Jobs</button>
               </>

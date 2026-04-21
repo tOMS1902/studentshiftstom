@@ -104,14 +104,47 @@ header {
 }
 
 @media (max-width: 640px) {
+  /* Switch header to two-row flex layout so all buttons stay visible */
   header {
-    padding: 0.55rem 0.85rem !important;
-    /* Switch to auto 1fr auto so sides shrink to content width */
-    grid-template-columns: auto 1fr auto !important;
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.85rem !important;
+    gap: 0;
   }
-  /* Compact nav buttons so the right side fits on narrow screens */
+  /* Row 1: profile+about on left, logo fills remaining space */
+  .header-left {
+    order: 1;
+    flex: 0 0 auto;
+  }
+  .header-logo {
+    order: 2;
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
+  }
+  /* Row 2: all action buttons, full width, centred */
+  .header-right {
+    order: 3;
+    flex: 0 0 100%;
+    justify-content: center !important;
+    flex-wrap: wrap;
+    border-top: 1px solid rgba(255,255,255,0.12);
+    padding-top: 0.4rem;
+    margin-top: 0.3rem;
+  }
+  /* Show nav-labels in the action row so buttons are readable */
+  .header-right .nav-label {
+    display: inline !important;
+  }
+  /* Remove the hide rules from the previous approach */
+  .nav-liked-wrap, .nav-browse-wrap {
+    display: inline-block !important;
+  }
+  /* Compact nav buttons */
   header button {
-    padding: 0.32rem 0.6rem !important;
+    padding: 0.32rem 0.7rem !important;
     font-size: 0.78rem !important;
   }
   .job-card {
@@ -144,13 +177,6 @@ header {
   /* Hide nav button text labels, keep emoji */
   .nav-label {
     display: none;
-  }
-  /* Hide Liked button and Browse Jobs button — too many items for narrow screens */
-  .nav-liked-wrap {
-    display: none !important;
-  }
-  .nav-browse-wrap {
-    display: none !important;
   }
   /* PageWrapper — full width, no rounded card on mobile */
   .page-wrapper-outer {
