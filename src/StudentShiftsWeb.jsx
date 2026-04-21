@@ -204,23 +204,29 @@ export default function StudentShiftsWeb() {
     return () => { clearTimeout(failsafe); subscription.unsubscribe(); };
   }, []);
 
-  // Poll verification status every 30s for pending students
+  // Real-time: watch students table for verification status changes
   useEffect(() => {
     if (!currentUser || currentUser.role !== "student" || currentUser.verificationStatus !== "pending_review") return;
-    const interval = setInterval(async () => {
-      try {
-        const profile = await getProfile(currentUser.id);
-        const updated = normaliseProfile({ ...profile, email: profile.email || currentUser.email });
-        if (updated.verificationStatus === "verified") {
-          setCurrentUser(updated);
-          navigate("/", { replace: true });
-        } else if (updated.verificationStatus === "rejected") {
-          setCurrentUser(updated);
-          navigate("/verify", { replace: true });
+    const channel = supabase
+      .channel(`verify_${currentUser.id}`)
+      .on("postgres_changes",
+        { event: "UPDATE", schema: "public", table: "students", filter: `id=eq.${currentUser.id}` },
+        async () => {
+          try {
+            const profile = await getProfile(currentUser.id);
+            const updated = normaliseProfile({ ...profile, email: profile.email || currentUser.email });
+            if (updated.verificationStatus === "verified") {
+              setCurrentUser(updated);
+              navigate("/", { replace: true });
+            } else if (updated.verificationStatus === "rejected") {
+              setCurrentUser(updated);
+              navigate("/verify", { replace: true });
+            }
+          } catch { /* silently ignore */ }
         }
-      } catch { /* silently ignore */ }
-    }, 30000);
-    return () => clearInterval(interval);
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [currentUser?.id, currentUser?.verificationStatus]);
 
   // Sync studentLocation when user logs in/out
@@ -228,18 +234,22 @@ export default function StudentShiftsWeb() {
     setStudentLocation(currentUser?.savedLocation ?? null);
   }, [currentUser?.id]);
 
-  // Poll application statuses every 30s for students
+  // Real-time: watch applications table for status changes
   useEffect(() => {
     if (!currentUser || currentUser.role !== "student") { setAppStatuses({}); return; }
-    const poll = async () => {
-      try {
-        const map = await fetchApplicationStatuses(currentUser.id);
-        setAppStatuses(map);
-      } catch (_) {}
-    };
-    poll();
-    const interval = setInterval(poll, 30000);
-    return () => clearInterval(interval);
+    // Initial fetch
+    fetchApplicationStatuses(currentUser.id).then(setAppStatuses).catch(() => {});
+    // Live updates
+    const channel = supabase
+      .channel(`app_statuses_${currentUser.id}`)
+      .on("postgres_changes",
+        { event: "UPDATE", schema: "public", table: "applications", filter: `student_id=eq.${currentUser.id}` },
+        ({ new: row }) => {
+          setAppStatuses(prev => ({ ...prev, [row.job_id]: row.status }));
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [currentUser?.id]);
 
   // Recompute notification badge whenever statuses or applied jobs change
