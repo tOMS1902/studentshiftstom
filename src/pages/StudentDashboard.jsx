@@ -30,17 +30,6 @@ const DESC = {
 };
 
 
-const COMPANY_PHOTOS = {
-  "Galway Pub":     "https://picsum.photos/seed/galwaypub/800/140",
-  "SuperMart":      "https://picsum.photos/seed/supermart/800/140",
-  "Campus Library": "https://picsum.photos/seed/campuslibrary/800/140",
-  "Galway Bistro":  "https://picsum.photos/seed/galwaybistro/800/140",
-  "City Mall":      "https://picsum.photos/seed/citymall/800/140",
-  "Coffee Hub":     "https://picsum.photos/seed/coffeehub/800/140",
-  "City Hotel":     "https://picsum.photos/seed/cityhotel/800/140",
-  "Tech Store":     "https://picsum.photos/seed/techstore/800/140",
-  "City Bistro":    "https://picsum.photos/seed/citybistro/800/140",
-};
 
 function deadlineLabel(dateStr) {
   if (!dateStr) return null;
@@ -541,11 +530,18 @@ export default function StudentDashboard({
             <div key={job.id} className="job-card" style={{ flexDirection: "column", alignItems: "stretch", padding: 0, overflow: "hidden", marginBottom: 0 }}>
               {/* Company banner photo carousel */}
               {(() => {
-                const photos = job.photos?.length > 0 ? job.photos : [COMPANY_PHOTOS[job.company] || "https://picsum.photos/seed/default/800/140"];
+                const photos = job.photos?.length > 0 ? job.photos : [];
                 const idx = photoIndexes[job.id] || 0;
                 const crop = job.photoCrops?.[idx] || { zoom: 1, offsetX: 0, offsetY: 0 };
                 const prev = (e) => { e.stopPropagation(); setPhotoIndexes(p => ({ ...p, [job.id]: (idx - 1 + photos.length) % photos.length })); };
                 const next = (e) => { e.stopPropagation(); setPhotoIndexes(p => ({ ...p, [job.id]: (idx + 1) % photos.length })); };
+                if (photos.length === 0) {
+                  return (
+                    <div style={{ width: "100%", aspectRatio: "16/7", background: "linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #312e81 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <span style={{ fontSize: "2rem", opacity: 0.3 }}>🏢</span>
+                    </div>
+                  );
+                }
                 return (
                   <div style={{ position: "relative", width: "100%", aspectRatio: "16/7", backgroundColor: "#0f172a", overflow: "hidden" }}>
                     <div style={{
@@ -574,6 +570,7 @@ export default function StudentDashboard({
                   </div>
                 );
               })()}
+
 
               {/* Content */}
               <div style={{ padding: "0.85rem 1rem" }}>
