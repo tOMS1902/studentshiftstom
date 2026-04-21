@@ -1,11 +1,11 @@
 import { supabase, withTimeout } from "./supabase";
 
 export function toJobSlug(str) {
-  return encodeURIComponent(str.trim());
+  return str.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 }
 
 export function fromJobSlug(slug) {
-  return decodeURIComponent(slug);
+  return slug.replace(/-/g, ' ');
 }
 
 function normaliseJobRow(job, companyName) {
