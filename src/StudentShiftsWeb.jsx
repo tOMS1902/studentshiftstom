@@ -351,10 +351,13 @@ export default function StudentShiftsWeb() {
         } />
 
         {/* Company pages */}
-        <Route path="/company" element={<CompanyDashboard setPage={setPage} currentUser={currentUser} />} />
-        <Route path="/company/messages" element={currentUser
+        <Route path="/company" element={currentUser?.role === "company"
+          ? <CompanyDashboard setPage={setPage} currentUser={currentUser} />
+          : <Navigate to="/" replace />
+        } />
+        <Route path="/company/messages" element={currentUser?.role === "company"
           ? <CompanyMessages currentUser={currentUser} setPage={setPage} />
-          : <Navigate to="/login" replace />
+          : <Navigate to="/" replace />
         } />
 
         {/* Admin */}

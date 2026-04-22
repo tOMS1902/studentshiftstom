@@ -359,7 +359,7 @@ export default function CompanyDashboard({ setPage, currentUser }) {
   };
 
   const verificationStatus = currentUser?.verificationStatus;
-  const isVerified = verificationStatus === "verified" || verificationStatus === null;
+  const isVerified = verificationStatus === "verified";
 
   return (
     <PageWrapper>

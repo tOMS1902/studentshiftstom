@@ -1,7 +1,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+const FRONTEND_URL = Deno.env.get("FRONTEND_URL") || "https://studentshifts.onrender.com";
+
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": FRONTEND_URL,
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
@@ -36,10 +38,22 @@ Deno.serve(async (req: Request) => {
     const { to, subject, html, magicLinkEmail, redirectTo } = await req.json();
     if (!to || !subject || !html) throw new Error("Missing required fields: to, subject, html");
 
-    // Ensure magic links are only generated for the actual recipient
+    // Validate redirectTo against known origins to prevent open redirect
+    if (redirectTo) {
+      const allowed = [FRONTEND_URL, "https://studentshifts.ie", "https://www.studentshifts.ie"];
+      if (!allowed.some(o => redirectTo.startsWith(o))) {
+        throw new Error("Unauthorised: invalid redirectTo");
+      }
+    }
+
+    // Ensure magic links are only generated for the actual recipient.
+    // All addresses in `to` must match magicLinkEmail to prevent sending
+    // the login link to a second attacker-controlled address.
     if (magicLinkEmail) {
-      const recipient = Array.isArray(to) ? to[0] : to;
-      if (magicLinkEmail !== recipient) throw new Error("Unauthorised: magicLinkEmail must match recipient");
+      const recipients = Array.isArray(to) ? to : [to];
+      if (!recipients.every((r: string) => r === magicLinkEmail)) {
+        throw new Error("Unauthorised: all recipients must match magicLinkEmail");
+      }
     }
 
     const apiKey = Deno.env.get("BREVO_API_KEY");
@@ -58,14 +72,16 @@ Deno.serve(async (req: Request) => {
         body: JSON.stringify({
           type: "magiclink",
           email: magicLinkEmail,
-          options: { redirect_to: redirectTo || supabaseUrl },
+          options: { redirect_to: redirectTo || FRONTEND_URL },
         }),
       });
       const linkData = await linkRes.json();
-      if (linkData.action_link) {
-        finalHtml = html.replace("MAGIC_LINK_PLACEHOLDER", linkData.action_link);
-      }
+      if (!linkData.action_link) throw new Error("Failed to generate magic link");
+      finalHtml = html.replaceAll("MAGIC_LINK_PLACEHOLDER", linkData.action_link);
     }
+
+    // Strip newlines from subject to prevent SMTP header injection
+    const safeSubject = String(subject).replace(/[\r\n]/g, "");
 
     const res = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
@@ -76,7 +92,7 @@ Deno.serve(async (req: Request) => {
       body: JSON.stringify({
         sender: { name: "StudentShifts", email: "thomasgallagher3103@gmail.com" },
         to: Array.isArray(to) ? to.map((email: string) => ({ email })) : [{ email: to }],
-        subject,
+        subject: safeSubject,
         htmlContent: finalHtml,
       }),
     });
@@ -89,8 +105,12 @@ Deno.serve(async (req: Request) => {
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    return new Response(JSON.stringify({ error: msg }), {
-      status: 500,
+    // Only surface expected user-facing errors; swallow internal details
+    const safe = ["Unauthorised", "Missing required fields", "Invalid redirectTo", "Failed to generate magic link"]
+      .some(prefix => msg.startsWith(prefix)) ? msg : "Internal server error";
+    console.error("send-email error:", msg);
+    return new Response(JSON.stringify({ error: safe }), {
+      status: safe === "Internal server error" ? 500 : 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

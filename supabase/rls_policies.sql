@@ -61,9 +61,13 @@ DROP POLICY IF EXISTS "students: company read applicants" ON students;
 CREATE POLICY "students: own read" ON students
   FOR SELECT USING (auth.uid() = id);
 
--- Student updates their own row (bio, CV, skills, etc.)
+-- Student updates their own row; status column is locked (cannot self-verify)
 CREATE POLICY "students: own update" ON students
-  FOR UPDATE USING (auth.uid() = id);
+  FOR UPDATE USING (auth.uid() = id)
+  WITH CHECK (
+    auth.uid() = id AND
+    status = (SELECT status FROM students WHERE id = auth.uid())
+  );
 
 -- Admin can read all students (pending review list, verification, etc.)
 CREATE POLICY "students: admin read all" ON students
@@ -100,8 +104,13 @@ DROP POLICY IF EXISTS "companies: student read" ON companies;
 CREATE POLICY "companies: own read" ON companies
   FOR SELECT USING (auth.uid() = id);
 
+-- Company updates their own row; status column is locked (cannot self-approve)
 CREATE POLICY "companies: own update" ON companies
-  FOR UPDATE USING (auth.uid() = id);
+  FOR UPDATE USING (auth.uid() = id)
+  WITH CHECK (
+    auth.uid() = id AND
+    status = (SELECT status FROM companies WHERE id = auth.uid())
+  );
 
 -- Students can read company info (for job detail pages)
 CREATE POLICY "companies: student read" ON companies
@@ -136,9 +145,10 @@ CREATE POLICY "jobs: company insert" ON jobs
     EXISTS (SELECT 1 FROM companies WHERE id = auth.uid() AND status = 'verified')
   );
 
--- Company can only edit their own jobs
+-- Company can only edit their own jobs; company_id cannot be reassigned
 CREATE POLICY "jobs: company update" ON jobs
-  FOR UPDATE USING (auth.uid() = company_id);
+  FOR UPDATE USING (auth.uid() = company_id)
+  WITH CHECK (auth.uid() = company_id);
 
 -- Company can only delete their own jobs
 CREATE POLICY "jobs: company delete" ON jobs
@@ -193,9 +203,9 @@ CREATE POLICY "applications: student own insert" ON applications
     EXISTS (SELECT 1 FROM students WHERE id = auth.uid() AND status = 'verified')
   );
 
--- Student can withdraw their application
+-- Student can only withdraw applications that are still Pending or Rejected (not Accepted)
 CREATE POLICY "applications: student own delete" ON applications
-  FOR DELETE USING (auth.uid() = student_id);
+  FOR DELETE USING (auth.uid() = student_id AND status IN ('Pending', 'Rejected'));
 
 -- Company can read all applications to their own jobs
 CREATE POLICY "applications: company read" ON applications
@@ -207,7 +217,7 @@ CREATE POLICY "applications: company read" ON applications
     )
   );
 
--- Company can update application status (Accepted / Rejected / Pending)
+-- Company can update application status; immutable columns (student_id, job_id) are frozen
 CREATE POLICY "applications: company update status" ON applications
   FOR UPDATE USING (
     EXISTS (
@@ -215,6 +225,16 @@ CREATE POLICY "applications: company update status" ON applications
       WHERE jobs.id = applications.job_id
         AND jobs.company_id = auth.uid()
     )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM jobs
+      WHERE jobs.id = applications.job_id
+        AND jobs.company_id = auth.uid()
+    ) AND
+    status IN ('Pending', 'Accepted', 'Rejected') AND
+    student_id = (SELECT student_id FROM applications a2 WHERE a2.id = applications.id) AND
+    job_id    = (SELECT job_id    FROM applications a2 WHERE a2.id = applications.id)
   );
 
 -- Admin full access
@@ -242,20 +262,34 @@ CREATE POLICY "chat_messages: student read" ON chat_messages
 CREATE POLICY "chat_messages: company read" ON chat_messages
   FOR SELECT USING (auth.uid() = company_id);
 
--- Student can send messages (must be the student in the conversation and the sender)
+-- Student can only send messages in conversations they belong to (must have an accepted application)
 CREATE POLICY "chat_messages: student insert" ON chat_messages
   FOR INSERT WITH CHECK (
     auth.uid() = student_id AND
-    auth.uid() = sender_id
+    auth.uid() = sender_id AND
+    (
+      job_id IS NULL OR
+      EXISTS (
+        SELECT 1 FROM applications a
+        JOIN jobs j ON j.id = a.job_id
+        WHERE a.student_id = auth.uid()
+          AND a.job_id = chat_messages.job_id
+          AND j.company_id = chat_messages.company_id
+          AND a.status = 'Accepted'
+      )
+    )
   );
 
--- Company can send messages only to students who applied to their jobs (accepted apps) or for a specific job
+-- Company can send messages only when they own the job OR have an accepted application with the student
 CREATE POLICY "chat_messages: company insert" ON chat_messages
   FOR INSERT WITH CHECK (
     auth.uid() = company_id AND
     auth.uid() = sender_id AND
     (
-      job_id IS NOT NULL OR
+      (
+        job_id IS NOT NULL AND
+        EXISTS (SELECT 1 FROM jobs WHERE id = chat_messages.job_id AND company_id = auth.uid())
+      ) OR
       EXISTS (
         SELECT 1 FROM applications a
         JOIN jobs j ON j.id = a.job_id
@@ -389,6 +423,38 @@ CREATE POLICY "verification-docs: admin read" ON storage.objects
   FOR SELECT USING (
     bucket_id = 'verification-docs' AND
     is_admin()
+  );
+
+
+-- ================================================================
+-- STORAGE: job-photos bucket
+-- Job banner images — public read, writable only by the owning company
+-- ================================================================
+DROP POLICY IF EXISTS "job-photos: public read"  ON storage.objects;
+DROP POLICY IF EXISTS "job-photos: own upload"   ON storage.objects;
+DROP POLICY IF EXISTS "job-photos: own update"   ON storage.objects;
+DROP POLICY IF EXISTS "job-photos: own delete"   ON storage.objects;
+
+CREATE POLICY "job-photos: public read" ON storage.objects
+  FOR SELECT USING (bucket_id = 'job-photos');
+
+-- Companies can only upload/update/delete photos in their own folder (folder = their user ID)
+CREATE POLICY "job-photos: own upload" ON storage.objects
+  FOR INSERT WITH CHECK (
+    bucket_id = 'job-photos' AND
+    auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+CREATE POLICY "job-photos: own update" ON storage.objects
+  FOR UPDATE USING (
+    bucket_id = 'job-photos' AND
+    auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+CREATE POLICY "job-photos: own delete" ON storage.objects
+  FOR DELETE USING (
+    bucket_id = 'job-photos' AND
+    auth.uid()::text = (storage.foldername(name))[1]
   );
 
 

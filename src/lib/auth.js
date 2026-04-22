@@ -284,10 +284,19 @@ export async function deleteAccount() {
   if (error) throw error;
 }
 
+const ALLOWED_DOC_TYPES  = new Set(["pdf", "doc", "docx"]);
+const ALLOWED_IMAGE_TYPES = new Set(["jpg", "jpeg", "png", "webp", "gif"]);
+const MAX_DOC_BYTES   = 10 * 1024 * 1024;  // 10 MB
+const MAX_IMAGE_BYTES =  5 * 1024 * 1024;  //  5 MB
+
 // Uploads a document (CV, cover letter, ID) to the given storage bucket.
 // Returns the public URL.
 export async function uploadDocument(userId, file, bucket, fileName) {
-  const ext  = file.name.split(".").pop();
+  const ext = file.name.split(".").pop()?.toLowerCase() || "";
+  const isVerificationDoc = bucket === "verification-docs";
+  const allowedExts = isVerificationDoc ? new Set([...ALLOWED_DOC_TYPES, ...ALLOWED_IMAGE_TYPES]) : ALLOWED_DOC_TYPES;
+  if (!allowedExts.has(ext)) throw new Error(`File type .${ext} is not allowed. Please upload a PDF${isVerificationDoc ? ", image," : ""} or Word document.`);
+  if (file.size > MAX_DOC_BYTES) throw new Error("File is too large. Maximum size is 10 MB.");
   const path = `${userId}/${fileName}.${ext}`;
   const { error } = await withTimeout(
     supabase.storage.from(bucket).upload(path, file, { upsert: true }),
@@ -372,6 +381,7 @@ export async function sendEmail({ to, subject, html, magicLinkEmail, redirectTo 
 // ── Email HTML templates ──────────────────────────────────────────────────
 
 export function emailStudentApproved(name) {
+  const safeName = escapeHtml(name);
   return `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
@@ -389,7 +399,7 @@ export function emailStudentApproved(name) {
           <td style="padding:36px 32px 28px;">
             <p style="margin:0 0 8px;font-size:22px;font-weight:800;color:#1e293b;">You're verified! 🎉</p>
             <p style="margin:0 0 24px;font-size:15px;color:#64748b;line-height:1.6;">
-              Hi ${name}, your identity has been verified and your StudentShifts account is now active.<br/><br/>
+              Hi ${safeName}, your identity has been verified and your StudentShifts account is now active.<br/><br/>
               Browse hundreds of flexible student jobs across Ireland and apply in seconds.
             </p>
             <table width="100%" cellpadding="0" cellspacing="0">
@@ -416,6 +426,8 @@ export function emailStudentApproved(name) {
 }
 
 export function emailCompanyApproved(name, appUrl) {
+  const safeName = escapeHtml(name);
+  const safeUrl  = escapeHtml(appUrl);
   return `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
@@ -433,13 +445,13 @@ export function emailCompanyApproved(name, appUrl) {
           <td style="padding:36px 32px 28px;">
             <p style="margin:0 0 8px;font-size:22px;font-weight:800;color:#1e293b;">Company verified! ✅</p>
             <p style="margin:0 0 24px;font-size:15px;color:#64748b;line-height:1.6;">
-              Hi ${name}, your company account on StudentShifts has been verified.<br/><br/>
+              Hi ${safeName}, your company account on StudentShifts has been verified.<br/><br/>
               You can now post job listings and start receiving applications from students across Ireland.
             </p>
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
                 <td align="center" style="padding:8px 0 28px;">
-                  <a href="${appUrl}" style="display:inline-block;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:50px;box-shadow:0 4px 18px rgba(99,102,241,0.4);">
+                  <a href="${safeUrl}" style="display:inline-block;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:50px;box-shadow:0 4px 18px rgba(99,102,241,0.4);">
                     Post a Job →
                   </a>
                 </td>
@@ -742,7 +754,9 @@ export async function fetchAcceptedConversations(userId) {
 }
 
 export async function uploadAvatar(userId, file) {
-  const ext  = file.name.split(".").pop();
+  const ext = file.name.split(".").pop()?.toLowerCase() || "";
+  if (!ALLOWED_IMAGE_TYPES.has(ext)) throw new Error(`File type .${ext} is not allowed. Please upload a JPG, PNG, WebP or GIF.`);
+  if (file.size > MAX_IMAGE_BYTES) throw new Error("Photo is too large. Maximum size is 5 MB.");
   const path = `${userId}/avatar.${ext}`;
   const { error } = await withTimeout(
     supabase.storage.from("avatars").upload(path, file, { upsert: true }),
