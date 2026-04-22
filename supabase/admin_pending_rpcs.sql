@@ -15,6 +15,9 @@ UPDATE companies SET status = 'verified' WHERE status = 'pending_review';
 CREATE OR REPLACE FUNCTION approve_company(company_id uuid)
 RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
+  IF NOT is_admin() THEN
+    RAISE EXCEPTION 'Unauthorised: admin only';
+  END IF;
   UPDATE companies SET status = 'verified' WHERE id = company_id;
 END;
 $$;
@@ -22,28 +25,43 @@ $$;
 CREATE OR REPLACE FUNCTION reject_company(company_id uuid)
 RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
+  IF NOT is_admin() THEN
+    RAISE EXCEPTION 'Unauthorised: admin only';
+  END IF;
   UPDATE companies SET status = 'rejected' WHERE id = company_id;
 END;
 $$;
 
--- Fetch pending students (joins auth.users for email)
+-- Fetch pending students (joins auth.users for email) — admin only
 CREATE OR REPLACE FUNCTION get_pending_students()
 RETURNS TABLE(id uuid, name text, email text, student_id_url text, gov_id_url text, status text)
-LANGUAGE sql SECURITY DEFINER AS $$
-  SELECT s.id, p.name, u.email, s.student_id_url, s.gov_id_url, s.status
-  FROM students s
-  JOIN profiles p ON p.id = s.id
-  JOIN auth.users u ON u.id = s.id
-  WHERE s.status = 'pending_review';
+LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  IF NOT is_admin() THEN
+    RAISE EXCEPTION 'Unauthorised: admin only';
+  END IF;
+  RETURN QUERY
+    SELECT s.id, p.name, u.email, s.student_id_url, s.gov_id_url, s.status
+    FROM students s
+    JOIN profiles p ON p.id = s.id
+    JOIN auth.users u ON u.id = s.id
+    WHERE s.status = 'pending_review';
+END;
 $$;
 
--- Fetch pending companies (joins auth.users for email)
+-- Fetch pending companies (joins auth.users for email) — admin only
 CREATE OR REPLACE FUNCTION get_pending_companies()
 RETURNS TABLE(id uuid, name text, email text, cro_number text, status text)
-LANGUAGE sql SECURITY DEFINER AS $$
-  SELECT c.id, p.name, u.email, c.cro_number, c.status
-  FROM companies c
-  JOIN profiles p ON p.id = c.id
-  JOIN auth.users u ON u.id = c.id
-  WHERE c.status = 'pending_review';
+LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  IF NOT is_admin() THEN
+    RAISE EXCEPTION 'Unauthorised: admin only';
+  END IF;
+  RETURN QUERY
+    SELECT c.id, p.name, u.email, c.cro_number, c.status
+    FROM companies c
+    JOIN profiles p ON p.id = c.id
+    JOIN auth.users u ON u.id = c.id
+    WHERE c.status = 'pending_review';
+END;
 $$;

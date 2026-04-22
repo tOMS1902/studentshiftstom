@@ -1,5 +1,14 @@
 import { supabase, withTimeout } from "./supabase";
 
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export function toJobSlug(str) {
   return str.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 }
@@ -451,6 +460,9 @@ export function emailCompanyApproved(name, appUrl) {
 }
 
 export function emailApplicantAccepted(studentName, jobTitle, companyName) {
+  const sName = escapeHtml(studentName);
+  const jTitle = escapeHtml(jobTitle);
+  const cName = escapeHtml(companyName);
   return `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
@@ -468,8 +480,8 @@ export function emailApplicantAccepted(studentName, jobTitle, companyName) {
           <td style="padding:36px 32px 28px;">
             <p style="margin:0 0 8px;font-size:22px;font-weight:800;color:#1e293b;">You got the job! 🎉</p>
             <p style="margin:0 0 24px;font-size:15px;color:#64748b;line-height:1.6;">
-              Congratulations ${studentName}!<br/><br/>
-              <strong style="color:#1e293b;">${companyName}</strong> has accepted your application for <strong style="color:#1e293b;">${jobTitle}</strong>.<br/><br/>
+              Congratulations ${sName}!<br/><br/>
+              <strong style="color:#1e293b;">${cName}</strong> has accepted your application for <strong style="color:#1e293b;">${jTitle}</strong>.<br/><br/>
               Log in to StudentShifts to send a message to your new employer and get started.
             </p>
             <table width="100%" cellpadding="0" cellspacing="0">
@@ -496,6 +508,9 @@ export function emailApplicantAccepted(studentName, jobTitle, companyName) {
 }
 
 export function emailApplicantDeclined(studentName, jobTitle, companyName) {
+  const sName = escapeHtml(studentName);
+  const jTitle = escapeHtml(jobTitle);
+  const cName = escapeHtml(companyName);
   return `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
@@ -513,8 +528,8 @@ export function emailApplicantDeclined(studentName, jobTitle, companyName) {
           <td style="padding:36px 32px 28px;">
             <p style="margin:0 0 8px;font-size:22px;font-weight:800;color:#1e293b;">Application update</p>
             <p style="margin:0 0 24px;font-size:15px;color:#64748b;line-height:1.6;">
-              Hi ${studentName},<br/><br/>
-              Thank you for applying for <strong style="color:#1e293b;">${jobTitle}</strong> at <strong style="color:#1e293b;">${companyName}</strong>.<br/><br/>
+              Hi ${sName},<br/><br/>
+              Thank you for applying for <strong style="color:#1e293b;">${jTitle}</strong> at <strong style="color:#1e293b;">${cName}</strong>.<br/><br/>
               Unfortunately the position has been filled. We encourage you to keep applying — new shifts are added every day.
             </p>
             <table width="100%" cellpadding="0" cellspacing="0">
@@ -541,6 +556,8 @@ export function emailApplicantDeclined(studentName, jobTitle, companyName) {
 }
 
 export function emailCompanyInterested(studentName, companyName) {
+  const sName = escapeHtml(studentName);
+  const cName = escapeHtml(companyName);
   return `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
@@ -558,8 +575,8 @@ export function emailCompanyInterested(studentName, companyName) {
           <td style="padding:36px 32px 28px;">
             <p style="margin:0 0 8px;font-size:22px;font-weight:800;color:#1e293b;">A company wants to hire you! 🎉</p>
             <p style="margin:0 0 24px;font-size:15px;color:#64748b;line-height:1.6;">
-              Hi ${studentName},<br/><br/>
-              <strong style="color:#1e293b;">${companyName}</strong> is interested in hiring you and has sent you a message on StudentShifts.<br/><br/>
+              Hi ${sName},<br/><br/>
+              <strong style="color:#1e293b;">${cName}</strong> is interested in hiring you and has sent you a message on StudentShifts.<br/><br/>
               Log in to read their message and reply.
             </p>
             <table width="100%" cellpadding="0" cellspacing="0">

@@ -76,7 +76,6 @@ export default function AppliedJobs({ appliedJobs, setAppliedJobs, setSavedAppli
       await removeApplication(currentUser.id, jobId);
       setAppliedJobs(prev => prev.filter(j => j.id !== jobId));
       setSavedAppliedJobIds(prev => prev.filter(id => id !== jobId));
-      setStatuses(prev => { const s = { ...prev }; delete s[jobId]; return s; });
     } catch (e) {
       console.error("Failed to remove application:", e);
       setRemoveError(e.message || "Failed to remove application.");

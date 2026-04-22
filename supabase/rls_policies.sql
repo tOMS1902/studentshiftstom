@@ -33,9 +33,10 @@ DROP POLICY IF EXISTS "profiles: admin all"               ON profiles;
 CREATE POLICY "profiles: authenticated read all" ON profiles
   FOR SELECT USING (auth.role() = 'authenticated');
 
--- Users can only update their own profile
+-- Users can only update their own profile; role column cannot be self-escalated
 CREATE POLICY "profiles: own update" ON profiles
-  FOR UPDATE USING (auth.uid() = id);
+  FOR UPDATE USING (auth.uid() = id)
+  WITH CHECK (auth.uid() = id AND role = (SELECT role FROM profiles WHERE id = auth.uid()));
 
 -- Admin can do everything (read, insert, update, delete)
 CREATE POLICY "profiles: admin all" ON profiles
@@ -128,9 +129,12 @@ DROP POLICY IF EXISTS "jobs: admin all"        ON jobs;
 CREATE POLICY "jobs: public read" ON jobs
   FOR SELECT USING (true);
 
--- Company can only create jobs for themselves
+-- Company can only create jobs for themselves, and only if verified
 CREATE POLICY "jobs: company insert" ON jobs
-  FOR INSERT WITH CHECK (auth.uid() = company_id);
+  FOR INSERT WITH CHECK (
+    auth.uid() = company_id AND
+    EXISTS (SELECT 1 FROM companies WHERE id = auth.uid() AND status = 'verified')
+  );
 
 -- Company can only edit their own jobs
 CREATE POLICY "jobs: company update" ON jobs
@@ -182,9 +186,12 @@ DROP POLICY IF EXISTS "applications: admin all"             ON applications;
 CREATE POLICY "applications: student own read" ON applications
   FOR SELECT USING (auth.uid() = student_id);
 
--- Student can apply for a job
+-- Student can apply for a job, but only if their account is verified
 CREATE POLICY "applications: student own insert" ON applications
-  FOR INSERT WITH CHECK (auth.uid() = student_id);
+  FOR INSERT WITH CHECK (
+    auth.uid() = student_id AND
+    EXISTS (SELECT 1 FROM students WHERE id = auth.uid() AND status = 'verified')
+  );
 
 -- Student can withdraw their application
 CREATE POLICY "applications: student own delete" ON applications
@@ -242,11 +249,21 @@ CREATE POLICY "chat_messages: student insert" ON chat_messages
     auth.uid() = sender_id
   );
 
--- Company can send messages (must own the job and be the sender)
+-- Company can send messages only to students who applied to their jobs (accepted apps) or for a specific job
 CREATE POLICY "chat_messages: company insert" ON chat_messages
   FOR INSERT WITH CHECK (
     auth.uid() = company_id AND
-    auth.uid() = sender_id
+    auth.uid() = sender_id AND
+    (
+      job_id IS NOT NULL OR
+      EXISTS (
+        SELECT 1 FROM applications a
+        JOIN jobs j ON j.id = a.job_id
+        WHERE j.company_id = auth.uid()
+          AND a.student_id = chat_messages.student_id
+          AND a.status = 'Accepted'
+      )
+    )
   );
 
 -- Admin full access
@@ -399,6 +416,28 @@ BEGIN
   END IF;
   UPDATE students SET status = 'rejected' WHERE id = student_id;
 END;
+$$;
+
+-- Returns emails only for users who have a relationship with the caller
+-- (applied to the company's jobs, or is the caller themselves).
+CREATE OR REPLACE FUNCTION get_user_emails(user_ids uuid[])
+RETURNS TABLE(id uuid, email text)
+LANGUAGE sql SECURITY DEFINER STABLE AS $$
+  SELECT u.id, u.email
+  FROM auth.users u
+  WHERE u.id = ANY(user_ids)
+    AND (
+      -- The caller is asking about themselves
+      u.id = auth.uid()
+      OR
+      -- Student applied to a job owned by the calling company
+      EXISTS (
+        SELECT 1 FROM applications a
+        JOIN jobs j ON j.id = a.job_id
+        WHERE j.company_id = auth.uid()
+          AND a.student_id = u.id
+      )
+    );
 $$;
 
 -- Delete the currently authenticated user's own account.
