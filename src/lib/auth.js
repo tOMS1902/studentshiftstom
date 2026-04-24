@@ -220,7 +220,10 @@ export async function fetchAppliedJobIds(userId) {
 
 export async function createApplication(userId, jobId) {
   const { error } = await supabase.from("applications").insert({ student_id: userId, job_id: jobId });
-  if (error && error.code !== "23505") throw error;
+  if (!error) return;
+  if (error.code === "23505") return; // already applied, silent
+  if (error.code === "42501") throw new Error("You've applied to too many jobs this hour. Please try again later.");
+  throw error;
 }
 
 export async function fetchApplicationStatuses(userId) {

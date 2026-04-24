@@ -188,11 +188,16 @@ DROP POLICY IF EXISTS "applications: admin all"             ON applications;
 CREATE POLICY "applications: student own read" ON applications
   FOR SELECT USING (auth.uid() = student_id);
 
--- Student can apply for a job, but only if their account is verified
+-- Student can apply for a job, only if verified and within rate limit (max 20 per hour)
 CREATE POLICY "applications: student own insert" ON applications
   FOR INSERT WITH CHECK (
     auth.uid() = student_id AND
-    EXISTS (SELECT 1 FROM students WHERE id = auth.uid() AND status = 'verified')
+    EXISTS (SELECT 1 FROM students WHERE id = auth.uid() AND status = 'verified') AND
+    (
+      SELECT COUNT(*) FROM applications
+      WHERE student_id = auth.uid()
+        AND created_at > now() - interval '1 hour'
+    ) < 20
   );
 
 -- Student can only withdraw applications that are still Pending or Rejected (not Accepted)
