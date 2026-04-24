@@ -16,8 +16,8 @@ export default function AdminPage() {
 
   useEffect(() => {
     Promise.all([
-      fetchPendingStudents().catch(e => { setError(e.message || "Failed to load."); return []; }),
-      fetchPendingCompanies().catch(e => { setError(e.message || "Failed to load."); return []; }),
+      fetchPendingStudents().catch(() => { setError("Failed to load. Please refresh."); return []; }),
+      fetchPendingCompanies().catch(() => { setError("Failed to load. Please refresh."); return []; }),
     ]).then(([s, c]) => {
       setStudents(s);
       setCompanies(c);

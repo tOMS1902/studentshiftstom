@@ -217,6 +217,7 @@ export default function AccountPage({
     try {
       await verifyPassword(currentUser.email, deletePassword);
       await deleteAccount();
+      try { await signOut(); } catch (_) {}
       for (const key of Object.keys(localStorage)) {
         if (key.startsWith('ss_notif_seen_')) localStorage.removeItem(key);
       }

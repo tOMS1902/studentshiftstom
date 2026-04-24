@@ -519,26 +519,30 @@ BEGIN
 END;
 $$;
 
--- Returns emails only for users who have a relationship with the caller
--- (applied to the company's jobs, or is the caller themselves).
+-- Returns emails only for users who have a relationship with the caller.
+-- Limited to 50 IDs per call to prevent bulk email enumeration.
 CREATE OR REPLACE FUNCTION get_user_emails(user_ids uuid[])
 RETURNS TABLE(id uuid, email text)
-LANGUAGE sql SECURITY DEFINER STABLE AS $$
-  SELECT u.id, u.email
-  FROM auth.users u
-  WHERE u.id = ANY(user_ids)
-    AND (
-      -- The caller is asking about themselves
-      u.id = auth.uid()
-      OR
-      -- Student applied to a job owned by the calling company
-      EXISTS (
-        SELECT 1 FROM applications a
-        JOIN jobs j ON j.id = a.job_id
-        WHERE j.company_id = auth.uid()
-          AND a.student_id = u.id
-      )
-    );
+LANGUAGE plpgsql SECURITY DEFINER STABLE AS $$
+BEGIN
+  IF array_length(user_ids, 1) > 50 THEN
+    RAISE EXCEPTION 'Too many user IDs requested (max 50)';
+  END IF;
+  RETURN QUERY
+    SELECT u.id, u.email
+    FROM auth.users u
+    WHERE u.id = ANY(user_ids)
+      AND (
+        u.id = auth.uid()
+        OR
+        EXISTS (
+          SELECT 1 FROM applications a
+          JOIN jobs j ON j.id = a.job_id
+          WHERE j.company_id = auth.uid()
+            AND a.student_id = u.id
+        )
+      );
+END;
 $$;
 
 -- Delete the currently authenticated user's own account.
@@ -580,7 +584,7 @@ $$;
 
 -- ================================================================
 -- FIX #9: get_all_verified_students — safe columns only (no lat/lng GPS coordinates)
--- Only callable by verified companies.
+-- Only callable by verified companies or admins; raises for all others.
 -- ================================================================
 CREATE OR REPLACE FUNCTION get_all_verified_students()
 RETURNS TABLE (
@@ -594,13 +598,20 @@ RETURNS TABLE (
   availability      jsonb,
   job_preferences   text[]
 )
-LANGUAGE sql SECURITY DEFINER STABLE AS $$
-  SELECT p.id, p.name, s.bio, s.skills, s.linkedin, s.profile_photo_url,
-         s.location_display, s.availability, s.job_preferences
-  FROM students s
-  JOIN profiles p ON p.id = s.id
-  WHERE s.status = 'verified'
-    AND EXISTS (SELECT 1 FROM companies c WHERE c.id = auth.uid() AND c.status = 'verified');
+LANGUAGE plpgsql SECURITY DEFINER STABLE AS $$
+BEGIN
+  IF NOT is_admin() AND NOT EXISTS (
+    SELECT 1 FROM companies WHERE id = auth.uid() AND status = 'verified'
+  ) THEN
+    RAISE EXCEPTION 'Unauthorised: verified company or admin required';
+  END IF;
+  RETURN QUERY
+    SELECT p.id, p.name, s.bio, s.skills, s.linkedin, s.profile_photo_url,
+           s.location_display, s.availability, s.job_preferences
+    FROM students s
+    JOIN profiles p ON p.id = s.id
+    WHERE s.status = 'verified';
+END;
 $$;
 
 
@@ -637,7 +648,7 @@ CREATE POLICY "jobs: company update" ON jobs
   FOR UPDATE USING (auth.uid() = company_id)
   WITH CHECK (
     auth.uid() = company_id AND
-    status IN ('Active', 'Closed')
+    status IN ('Active', 'Closed', 'Expired')
   );
 
 
