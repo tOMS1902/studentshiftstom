@@ -214,7 +214,7 @@ CREATE POLICY "applications: company read" ON applications
     )
   );
 
--- Company can update application status; immutable columns (student_id, job_id) are frozen
+-- Company can update application status, pipeline stage, and notes; immutable columns (student_id, job_id) are frozen
 CREATE POLICY "applications: company update status" ON applications
   FOR UPDATE USING (
     EXISTS (
@@ -230,6 +230,7 @@ CREATE POLICY "applications: company update status" ON applications
         AND jobs.company_id = auth.uid()
     ) AND
     status IN ('Pending', 'Accepted', 'Rejected') AND
+    pipeline_stage IN ('applied', 'shortlisted', 'interview', 'trial', 'decision') AND
     student_id = (SELECT student_id FROM applications a2 WHERE a2.id = applications.id) AND
     job_id    = (SELECT job_id    FROM applications a2 WHERE a2.id = applications.id)
   );
@@ -695,5 +696,40 @@ BEGIN
   ) THEN
     ALTER TABLE chat_messages ADD CONSTRAINT chat_messages_text_length
       CHECK (char_length(text) <= 4000);
+  END IF;
+END $$;
+
+
+-- ================================================================
+-- PIPELINE: Hiring pipeline columns on applications table
+-- pipeline_stage tracks where in the hiring funnel each applicant is.
+-- company_notes stores private notes visible only to the company.
+-- ================================================================
+DO $$
+BEGIN
+  -- Add pipeline_stage with valid-stage constraint
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'applications' AND column_name = 'pipeline_stage'
+  ) THEN
+    ALTER TABLE applications
+      ADD COLUMN pipeline_stage text NOT NULL DEFAULT 'applied';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'applications_pipeline_stage_check'
+  ) THEN
+    ALTER TABLE applications
+      ADD CONSTRAINT applications_pipeline_stage_check
+        CHECK (pipeline_stage IN ('applied', 'shortlisted', 'interview', 'trial', 'decision'));
+  END IF;
+
+  -- Add company_notes (nullable free text, no length limit needed — not public-facing)
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'applications' AND column_name = 'company_notes'
+  ) THEN
+    ALTER TABLE applications
+      ADD COLUMN company_notes text;
   END IF;
 END $$;
