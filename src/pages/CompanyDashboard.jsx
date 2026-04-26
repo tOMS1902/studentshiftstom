@@ -1035,6 +1035,7 @@ function ApplicantsView({ posting, onUpdateStatus, onStageChange, onNotesSaved, 
   const [activeStage, setActiveStage]             = useState("applied");
   const [selectedApplicant, setSelectedApplicant] = useState(null);
   const [showCloseJob, setShowCloseJob]           = useState(false);
+  const [viewMode, setViewMode]                   = useState("list");
 
   if (posting.applicantsLoading) {
     return <p style={{ color: "#6b7280", textAlign: "center", padding: "2rem 1rem" }}>Loading applicants…</p>;
@@ -1062,8 +1063,17 @@ function ApplicantsView({ posting, onUpdateStatus, onStageChange, onNotesSaved, 
 
   return (
     <div>
-      {/* Pipeline stage tabs */}
-      <div style={{ display: "flex", gap: "0.25rem", marginBottom: "1.25rem", overflowX: "auto", borderBottom: "2px solid #e2e8f0", paddingBottom: 0 }}>
+      {/* View toggle */}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0.75rem", gap: "0.35rem" }}>
+        <button onClick={() => setViewMode("list")} style={{ padding: "0.3rem 0.8rem", fontSize: "0.78rem", fontWeight: "600", border: `1.5px solid ${viewMode === "list" ? "#6366f1" : "#e2e8f0"}`, borderRadius: "0.45rem", cursor: "pointer", fontFamily: "inherit", background: viewMode === "list" ? "#eef2ff" : "white", color: viewMode === "list" ? "#4f46e5" : "#64748b" }}>☰ List</button>
+        <button onClick={() => setViewMode("kanban")} style={{ padding: "0.3rem 0.8rem", fontSize: "0.78rem", fontWeight: "600", border: `1.5px solid ${viewMode === "kanban" ? "#6366f1" : "#e2e8f0"}`, borderRadius: "0.45rem", cursor: "pointer", fontFamily: "inherit", background: viewMode === "kanban" ? "#eef2ff" : "white", color: viewMode === "kanban" ? "#4f46e5" : "#64748b" }}>⊞ Board</button>
+      </div>
+
+      {viewMode === "kanban" ? (
+        <KanbanBoard applicants={posting.applicants} onSelectApplicant={setSelectedApplicant} />
+      ) : (<>
+        {/* Pipeline stage tabs */}
+        <div style={{ display: "flex", gap: "0.25rem", marginBottom: "1.25rem", overflowX: "auto", borderBottom: "2px solid #e2e8f0", paddingBottom: 0 }}>
         {PIPELINE_STAGES.map(({ key, label }) => {
           const count  = countFor(key);
           const active = activeStage === key;
@@ -1150,9 +1160,10 @@ function ApplicantsView({ posting, onUpdateStatus, onStageChange, onNotesSaved, 
           </div>
         );
       })()}
+      </>)}
 
-      {/* Close Job button — Decision tab only, no accepted applicant yet */}
-      {activeStage === "decision" && posting.applicants.every(a => a.status !== "Accepted") && (
+      {/* Close Job button — Decision stage only, no accepted applicant yet */}
+      {(viewMode === "list" ? activeStage === "decision" : posting.applicants.some(a => a.pipelineStage === "decision")) && posting.applicants.every(a => a.status !== "Accepted") && (
         <div style={{ marginTop: "1.25rem", paddingTop: "1.25rem", borderTop: "1.5px solid #e2e8f0" }}>
           <button
             onClick={() => setShowCloseJob(true)}
@@ -1222,6 +1233,63 @@ function ApplicantRow({ applicant, onClick }) {
       {/* Chevron */}
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6"/></svg>
     </button>
+  );
+}
+
+function KanbanBoard({ applicants, onSelectApplicant }) {
+  const colColors = {
+    applied:     { bg: "#f8fafc", border: "#e2e8f0", header: "#64748b" },
+    shortlisted: { bg: "#f0f9ff", border: "#bae6fd", header: "#0284c7" },
+    interview:   { bg: "#faf5ff", border: "#e9d5ff", header: "#7c3aed" },
+    trial:       { bg: "#f0fdf4", border: "#bbf7d0", header: "#16a34a" },
+    decision:    { bg: "#fff7ed", border: "#fed7aa", header: "#ea580c" },
+  };
+  return (
+    <div style={{ display: "flex", gap: "0.6rem", overflowX: "auto", paddingBottom: "0.75rem", alignItems: "flex-start" }}>
+      {PIPELINE_STAGES.map(({ key, label }) => {
+        const cards = applicants.filter(a => a.pipelineStage === key);
+        const c = colColors[key];
+        return (
+          <div key={key} style={{ minWidth: "160px", flex: "0 0 160px", backgroundColor: c.bg, border: `1.5px solid ${c.border}`, borderRadius: "0.75rem", padding: "0.6rem" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+              <span style={{ fontSize: "0.72rem", fontWeight: "800", color: c.header, textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</span>
+              <span style={{ fontSize: "0.68rem", fontWeight: "700", backgroundColor: c.border, color: c.header, borderRadius: "999px", padding: "0.05rem 0.4rem" }}>{cards.length}</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+              {cards.length === 0 && (
+                <p style={{ fontSize: "0.72rem", color: "#94a3b8", textAlign: "center", padding: "0.75rem 0", margin: 0 }}>Empty</p>
+              )}
+              {cards.map(applicant => (
+                <button
+                  key={applicant.id}
+                  onClick={() => onSelectApplicant(applicant)}
+                  style={{ width: "100%", display: "flex", alignItems: "center", gap: "0.45rem", padding: "0.5rem 0.55rem", borderRadius: "0.5rem", border: "1.5px solid rgba(0,0,0,0.06)", backgroundColor: "white", cursor: "pointer", fontFamily: "inherit", textAlign: "left" }}
+                >
+                  <div style={{ width: "28px", height: "28px", borderRadius: "50%", overflow: "hidden", flexShrink: 0, backgroundColor: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {applicant.profilePhoto
+                      ? <img src={applicant.profilePhoto} alt={applicant.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                    }
+                  </div>
+                  <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "#1e293b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{applicant.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function CheckItem({ ok, label, warn }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.8rem" }}>
+      <span style={{ fontWeight: "800", minWidth: "14px", color: ok ? "#16a34a" : warn ? "#d97706" : "#ef4444" }}>
+        {ok ? "✓" : warn ? "—" : "✗"}
+      </span>
+      <span style={{ color: ok ? "#374151" : "#6b7280" }}>{label}</span>
+    </div>
   );
 }
 
@@ -1312,6 +1380,24 @@ function DetailPanel({ applicant, postingId, companyId, onClose, onStageAction, 
 
         {/* Body */}
         <div style={{ padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1.1rem", flex: 1 }}>
+
+          {/* Application Screening — applied stage only */}
+          {stage === "applied" && (
+            <Section label="Application Screening">
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                <CheckItem ok={!!applicant.cvName}              label="CV uploaded" />
+                <CheckItem ok={!!applicant.coverLetterName}     label="Cover letter uploaded" />
+                <CheckItem ok={!!applicant.bio}                 label="Bio written" />
+                <CheckItem ok={(applicant.skills?.length||0)>0} label="Skills listed" />
+                <CheckItem ok={!!applicant.linkedin} warn       label="LinkedIn provided (optional)" />
+              </div>
+              {!applicant.cvName && !applicant.bio && !(applicant.skills?.length) && (
+                <p style={{ margin: "0.5rem 0 0", fontSize: "0.75rem", color: "#b45309", fontWeight: "600", backgroundColor: "#fef3c7", border: "1px solid #fcd34d", borderRadius: "0.4rem", padding: "0.35rem 0.6rem" }}>
+                  ⚠ Incomplete profile — consider requesting more info before advancing
+                </p>
+              )}
+            </Section>
+          )}
 
           {/* Bio */}
           <Section label="Bio">
