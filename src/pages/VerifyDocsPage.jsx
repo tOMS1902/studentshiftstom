@@ -93,7 +93,7 @@ export default function VerifyDocsPage({ currentUser, setCurrentUser, setPage })
           <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
             <button
               onClick={() => { setShowAvailabilityPrompt(false); setPage("account"); }}
-              style={{ padding: "0.75rem", borderRadius: "2rem", border: "none", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "white", fontWeight: "700", cursor: "pointer", fontFamily: "inherit", fontSize: "0.95rem" }}
+              style={{ padding: "0.75rem", borderRadius: "2rem", border: "none", background: "linear-gradient(135deg, #A21D54, #C2185B)", color: "white", fontWeight: "700", cursor: "pointer", fontFamily: "inherit", fontSize: "0.95rem" }}
             >
               Set My Availability →
             </button>
@@ -119,7 +119,7 @@ function FileUpload({ label, hint, accept, onChange, file }) {
       </label>
       <p style={{ fontSize: "0.75rem", color: "#64748b", marginBottom: "0.35rem", marginTop: 0 }}>{hint}</p>
       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap", border: `1.5px dashed ${file ? "#10b981" : "#e2e8f0"}`, borderRadius: "0.6rem", padding: "0.55rem 0.75rem", backgroundColor: file ? "#f0fdf4" : "white" }}>
-        <label style={{ cursor: "pointer", fontSize: "0.8rem", fontWeight: "600", color: "#6366f1", whiteSpace: "nowrap" }}>
+        <label style={{ cursor: "pointer", fontSize: "0.8rem", fontWeight: "600", color: "#A21D54", whiteSpace: "nowrap" }}>
           {file ? "Change" : "Upload File"}
           <input type="file" accept={accept} style={{ display: "none" }} onChange={e => onChange(e.target.files[0] || null)} />
         </label>
@@ -131,4 +131,4 @@ function FileUpload({ label, hint, accept, onChange, file }) {
   );
 }
 
-const btnPrimary = { width: "100%", padding: "0.8rem", borderRadius: "2rem", border: "none", color: "white", fontWeight: "700", cursor: "pointer", fontSize: "0.95rem", fontFamily: "inherit", marginTop: "1.25rem", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", boxShadow: "0 4px 18px rgba(99,102,241,0.35)" };
+const btnPrimary = { width: "100%", padding: "0.8rem", borderRadius: "2rem", border: "none", color: "white", fontWeight: "700", cursor: "pointer", fontSize: "0.95rem", fontFamily: "inherit", marginTop: "1.25rem", background: "linear-gradient(135deg, #A21D54, #C2185B)", boxShadow: "0 4px 18px rgba(162,29,84,0.35)" };

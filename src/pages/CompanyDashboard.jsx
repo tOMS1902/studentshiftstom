@@ -434,7 +434,7 @@ export default function CompanyDashboard({ setPage, currentUser }) {
               flex: 1, padding: "0.55rem", borderRadius: "0.6rem", border: "none",
               fontWeight: "600", fontSize: "0.875rem", cursor: "pointer", fontFamily: "inherit",
               backgroundColor: activeTab === val ? "white" : "transparent",
-              color: activeTab === val ? "#6366f1" : "#64748b",
+              color: activeTab === val ? "#A21D54" : "#64748b",
               boxShadow: activeTab === val ? "0 1px 6px rgba(0,0,0,0.1)" : "none",
             }}
           >
@@ -461,7 +461,7 @@ export default function CompanyDashboard({ setPage, currentUser }) {
               <p style={{ margin: 0, fontWeight: "700", fontSize: "0.9rem", color: "#1e293b" }}>Student Availability</p>
               <p style={{ margin: "0.1rem 0 0", fontSize: "0.75rem", color: "#64748b" }}>When verified students are free — use this to plan your job times</p>
             </div>
-            <button onClick={() => setShowHeatmap(p => !p)} style={{ padding: "0.35rem 0.85rem", borderRadius: "0.5rem", border: "1.5px solid #e2e8f0", backgroundColor: "white", color: "#6366f1", fontWeight: "700", fontSize: "0.8rem", cursor: "pointer", fontFamily: "inherit" }}>
+            <button onClick={() => setShowHeatmap(p => !p)} style={{ padding: "0.35rem 0.85rem", borderRadius: "0.5rem", border: "1.5px solid #e2e8f0", backgroundColor: "white", color: "#A21D54", fontWeight: "700", fontSize: "0.8rem", cursor: "pointer", fontFamily: "inherit" }}>
               {showHeatmap ? "Hide" : "Show"}
             </button>
           </div>
@@ -630,7 +630,7 @@ function BrowseStudents({ students, loading, fetched, companyIndustries, company
               ? <p style={{ color: "#9ca3af", textAlign: "center", fontSize: "0.85rem", marginTop: "2rem" }}>No messages yet. Introduce yourself!</p>
               : chatMessages.map(m => (
                 <div key={m.id} style={{ alignSelf: m.sender_id === companyId ? "flex-end" : "flex-start", maxWidth: "80%" }}>
-                  <div style={{ backgroundColor: m.sender_id === companyId ? "#6366f1" : "#e5e7eb", color: m.sender_id === companyId ? "white" : "#111827", padding: "0.5rem 0.8rem", borderRadius: "0.65rem", fontSize: "0.85rem", lineHeight: 1.45 }}>
+                  <div style={{ backgroundColor: m.sender_id === companyId ? "#A21D54" : "#e5e7eb", color: m.sender_id === companyId ? "white" : "#111827", padding: "0.5rem 0.8rem", borderRadius: "0.65rem", fontSize: "0.85rem", lineHeight: 1.45 }}>
                     {m.text}
                   </div>
                   <p style={{ fontSize: "0.65rem", color: "#9ca3af", margin: "0.1rem 0 0", textAlign: m.sender_id === companyId ? "right" : "left" }}>
@@ -652,7 +652,7 @@ function BrowseStudents({ students, loading, fetched, companyIndustries, company
             placeholder={`Message ${chatStudent.name}…`}
             style={{ flex: 1, padding: "0.55rem 0.85rem", borderRadius: "2rem", border: "1.5px solid #d1d5db", fontSize: "0.85rem", fontFamily: "inherit", outline: "none" }}
           />
-          <button onClick={sendDM} style={{ padding: "0.55rem 1.1rem", borderRadius: "2rem", border: "none", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "white", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer", fontFamily: "inherit" }}>
+          <button onClick={sendDM} style={{ padding: "0.55rem 1.1rem", borderRadius: "2rem", border: "none", background: "linear-gradient(135deg, #A21D54, #C2185B)", color: "white", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer", fontFamily: "inherit" }}>
             Send
           </button>
         </div>
@@ -691,13 +691,13 @@ function BrowseStudents({ students, loading, fetched, companyIndustries, company
             onClick={() => setFilterByIndustries(true)}
             disabled={companyIndustries.length === 0}
             title={companyIndustries.length === 0 ? "Set your industries in My Account first" : ""}
-            style={{ padding: "0.3rem 0.85rem", borderRadius: "999px", fontSize: "0.78rem", fontWeight: "600", cursor: companyIndustries.length === 0 ? "not-allowed" : "pointer", fontFamily: "inherit", border: `1.5px solid ${filterByIndustries ? "#6366f1" : "#e2e8f0"}`, backgroundColor: filterByIndustries ? "#eef2ff" : "white", color: filterByIndustries ? "#4f46e5" : "#64748b", opacity: companyIndustries.length === 0 ? 0.5 : 1 }}
+            style={{ padding: "0.3rem 0.85rem", borderRadius: "999px", fontSize: "0.78rem", fontWeight: "600", cursor: companyIndustries.length === 0 ? "not-allowed" : "pointer", fontFamily: "inherit", border: `1.5px solid ${filterByIndustries ? "#A21D54" : "#e2e8f0"}`, backgroundColor: filterByIndustries ? "#fce7f3" : "white", color: filterByIndustries ? "#A21D54" : "#64748b", opacity: companyIndustries.length === 0 ? 0.5 : 1 }}
           >
             My Industries
           </button>
           <button
             onClick={() => setFilterByIndustries(false)}
-            style={{ padding: "0.3rem 0.85rem", borderRadius: "999px", fontSize: "0.78rem", fontWeight: "600", cursor: "pointer", fontFamily: "inherit", border: `1.5px solid ${!filterByIndustries ? "#6366f1" : "#e2e8f0"}`, backgroundColor: !filterByIndustries ? "#eef2ff" : "white", color: !filterByIndustries ? "#4f46e5" : "#64748b" }}
+            style={{ padding: "0.3rem 0.85rem", borderRadius: "999px", fontSize: "0.78rem", fontWeight: "600", cursor: "pointer", fontFamily: "inherit", border: `1.5px solid ${!filterByIndustries ? "#A21D54" : "#e2e8f0"}`, backgroundColor: !filterByIndustries ? "#fce7f3" : "white", color: !filterByIndustries ? "#A21D54" : "#64748b" }}
           >
             All Students
           </button>
@@ -736,7 +736,7 @@ function BrowseStudents({ students, loading, fetched, companyIndustries, company
             <StudentAvailabilityRow availability={s.availability} />
             <button
               onClick={() => { setChatStudent({ id: s.id, name: s.name }); setChatMessages([]); }}
-              style={{ marginTop: "0.75rem", width: "100%", padding: "0.5rem 1rem", borderRadius: "2rem", border: "none", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "white", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer", fontFamily: "inherit" }}
+              style={{ marginTop: "0.75rem", width: "100%", padding: "0.5rem 1rem", borderRadius: "2rem", border: "none", background: "linear-gradient(135deg, #A21D54, #C2185B)", color: "white", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer", fontFamily: "inherit" }}
             >
               Message
             </button>
@@ -773,13 +773,13 @@ function StudentAvailabilityRow({ availability }) {
               title={`${day}: ${slots.join(", ")}`}
               style={{
                 display: "flex", flexDirection: "column", alignItems: "center",
-                backgroundColor: isWeekend ? "#fef3c7" : "#eef2ff",
+                backgroundColor: isWeekend ? "#fef3c7" : "#fce7f3",
                 border: `1.5px solid ${isWeekend ? "#fcd34d" : "#c7d2fe"}`,
                 borderRadius: "0.45rem", padding: "0.2rem 0.4rem", minWidth: "34px",
               }}
             >
-              <span style={{ fontSize: "0.65rem", fontWeight: "800", color: isWeekend ? "#d97706" : "#4f46e5" }}>{DAY_ABBR[day]}</span>
-              <span style={{ fontSize: "0.6rem", color: isWeekend ? "#b45309" : "#6366f1", fontWeight: "600", whiteSpace: "nowrap" }}>
+              <span style={{ fontSize: "0.65rem", fontWeight: "800", color: isWeekend ? "#d97706" : "#A21D54" }}>{DAY_ABBR[day]}</span>
+              <span style={{ fontSize: "0.6rem", color: isWeekend ? "#b45309" : "#A21D54", fontWeight: "600", whiteSpace: "nowrap" }}>
                 {earliest === latest ? fmt(earliest) : `${fmt(earliest)}–${fmt(latest)}`}
               </span>
             </div>
@@ -997,12 +997,12 @@ function ApplicantsView({ posting, onUpdateStatus, onStageChange, onNotesSaved, 
                 flexShrink: 0,
                 padding: "0.5rem 0.9rem",
                 border: "none",
-                borderBottom: active ? "2px solid #6366f1" : "2px solid transparent",
+                borderBottom: active ? "2px solid #A21D54" : "2px solid transparent",
                 marginBottom: "-2px",
                 background: "transparent",
                 fontWeight: active ? "700" : "600",
                 fontSize: "0.82rem",
-                color: active ? "#6366f1" : "#64748b",
+                color: active ? "#A21D54" : "#64748b",
                 cursor: "pointer",
                 fontFamily: "inherit",
                 display: "flex",
@@ -1015,7 +1015,7 @@ function ApplicantsView({ posting, onUpdateStatus, onStageChange, onNotesSaved, 
               {count > 0 && (
                 <span style={{
                   fontSize: "0.68rem", fontWeight: "700",
-                  backgroundColor: active ? "#6366f1" : "#94a3b8",
+                  backgroundColor: active ? "#A21D54" : "#94a3b8",
                   color: "white", borderRadius: "999px",
                   padding: "0.05rem 0.4rem", minWidth: "16px", textAlign: "center",
                 }}>
@@ -1219,7 +1219,7 @@ function DetailPanel({ applicant, postingId, companyId, onClose, onStageAction, 
               <button
                 onClick={openCoverLetter}
                 disabled={!applicant.coverLetterName || clLoading}
-                style={{ padding: "0.4rem 0.9rem", borderRadius: "0.4rem", border: "1.5px solid #e2e8f0", backgroundColor: applicant.coverLetterName ? "white" : "#f8fafc", color: applicant.coverLetterName ? "#6366f1" : "#9ca3af", fontWeight: "600", fontSize: "0.8rem", cursor: applicant.coverLetterName ? "pointer" : "default", fontFamily: "inherit" }}
+                style={{ padding: "0.4rem 0.9rem", borderRadius: "0.4rem", border: "1.5px solid #e2e8f0", backgroundColor: applicant.coverLetterName ? "white" : "#f8fafc", color: applicant.coverLetterName ? "#A21D54" : "#9ca3af", fontWeight: "600", fontSize: "0.8rem", cursor: applicant.coverLetterName ? "pointer" : "default", fontFamily: "inherit" }}
               >
                 {clLoading ? "Loading…" : "📝 Cover Letter"}
               </button>
@@ -1249,17 +1249,17 @@ function DetailPanel({ applicant, postingId, companyId, onClose, onStageAction, 
         {/* Stage action buttons */}
         <div style={{ padding: "1rem 1.25rem", borderTop: "1.5px solid #e2e8f0", display: "flex", flexDirection: "column", gap: "0.5rem", flexShrink: 0 }}>
           {stage === "applied" && (
-            <button onClick={() => onStageAction(applicant.id, "shortlisted")} style={panelActionBtn("#6366f1")}>Shortlist →</button>
+            <button onClick={() => onStageAction(applicant.id, "shortlisted")} style={panelActionBtn("#A21D54")}>Shortlist →</button>
           )}
           {stage === "shortlisted" && (
-            <button onClick={() => onStageAction(applicant.id, "interview")} style={panelActionBtn("#6366f1")}>Invite to Interview →</button>
+            <button onClick={() => onStageAction(applicant.id, "interview")} style={panelActionBtn("#A21D54")}>Invite to Interview →</button>
           )}
           {stage === "interview" && (<>
-            <button onClick={() => onStageAction(applicant.id, "trial")} style={panelActionBtn("#6366f1")}>Advance to Trial →</button>
+            <button onClick={() => onStageAction(applicant.id, "trial")} style={panelActionBtn("#A21D54")}>Advance to Trial →</button>
             <button onClick={() => onStageAction(applicant.id, "decision")} style={panelActionBtn("#475569")}>Skip to Decision →</button>
           </>)}
           {stage === "trial" && (
-            <button onClick={() => onStageAction(applicant.id, "decision")} style={panelActionBtn("#6366f1")}>Move to Decision →</button>
+            <button onClick={() => onStageAction(applicant.id, "decision")} style={panelActionBtn("#A21D54")}>Move to Decision →</button>
           )}
           {stage === "decision" && applicant.status === "Pending" && (<>
             <button onClick={() => onUpdateStatus(applicant.id, "Accepted", applicant)} style={panelActionBtn("#16a34a")}>Hire this Applicant ✓</button>
@@ -1434,7 +1434,7 @@ function ApplicantCard({ applicant, postingId, onUpdateStatus, companyId }) {
               <span style={{ fontSize: "0.68rem", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>Cover Letter</span>
               <div style={{ marginTop: "0.1rem" }}>
                 {applicant.coverLetterName
-                  ? <button onClick={openCoverLetter} disabled={clLoading} style={{ background: "none", border: "none", padding: 0, fontSize: "0.78rem", color: "#6366f1", fontWeight: "600", textDecoration: "underline", cursor: clLoading ? "not-allowed" : "pointer", fontFamily: "inherit" }}>{clLoading ? "Loading…" : "View Cover Letter"}</button>
+                  ? <button onClick={openCoverLetter} disabled={clLoading} style={{ background: "none", border: "none", padding: 0, fontSize: "0.78rem", color: "#A21D54", fontWeight: "600", textDecoration: "underline", cursor: clLoading ? "not-allowed" : "pointer", fontFamily: "inherit" }}>{clLoading ? "Loading…" : "View Cover Letter"}</button>
                   : <span style={{ fontSize: "0.78rem", color: "#9ca3af", fontStyle: "italic" }}>Not uploaded</span>
                 }
               </div>
@@ -1883,7 +1883,7 @@ function JobForm({ formData, setFormData, onSave, onCancel, toggleDay, formSavin
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.35rem" }}>
                 <p style={{ fontSize: "0.75rem", color: "#6b7280", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.04em", margin: 0 }}>Preview · drag to reposition</p>
                 <div style={{ display: "flex", gap: "0.3rem", alignItems: "center" }}>
-                  <button type="button" onClick={() => { dragRef.current.zoom = 1; setCrop(safeIdx, { zoom: 1, offsetX: 0, offsetY: 0 }); }} style={{ ...zoomBtn, color: "#6366f1" }}>Reset</button>
+                  <button type="button" onClick={() => { dragRef.current.zoom = 1; setCrop(safeIdx, { zoom: 1, offsetX: 0, offsetY: 0 }); }} style={{ ...zoomBtn, color: "#A21D54" }}>Reset</button>
                   <button type="button" onClick={() => { const nz = Math.max(1, getCrop(safeIdx).zoom - 2.25); dragRef.current.zoom = nz; setCrop(safeIdx, { zoom: nz }); }} style={zoomBtn}>−</button>
                   <span style={{ fontSize: "0.72rem", color: "#6b7280", minWidth: "32px", textAlign: "center" }}>{Math.round(100 + (crop.zoom - 1) / 9 * 100)}%</span>
                   <button type="button" onClick={() => { const nz = Math.min(10, getCrop(safeIdx).zoom + 2.25); dragRef.current.zoom = nz; setCrop(safeIdx, { zoom: nz }); }} style={zoomBtn}>+</button>
@@ -1916,7 +1916,7 @@ function JobForm({ formData, setFormData, onSave, onCancel, toggleDay, formSavin
             {existingPhotos.map((url, i) => {
               const isActive = Math.min(previewIndex, existingPhotos.length + photoFiles.length - 1) === i;
               return (
-                <div key={url} onClick={() => setPreviewIndex(i)} style={{ position: "relative", width: "72px", height: "72px", borderRadius: "0.4rem", overflow: "hidden", border: `2px solid ${isActive ? "#6366f1" : "#d1d5db"}`, cursor: "pointer", boxShadow: isActive ? "0 0 0 2px #a5b4fc" : "none" }}>
+                <div key={url} onClick={() => setPreviewIndex(i)} style={{ position: "relative", width: "72px", height: "72px", borderRadius: "0.4rem", overflow: "hidden", border: `2px solid ${isActive ? "#A21D54" : "#d1d5db"}`, cursor: "pointer", boxShadow: isActive ? "0 0 0 2px #f48fb1" : "none" }}>
                   <img src={url} alt="job photo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   <button type="button" onClick={e => { e.stopPropagation(); removeExistingPhoto(url); }} style={{ position: "absolute", top: "2px", right: "2px", backgroundColor: "rgba(0,0,0,0.55)", border: "none", borderRadius: "50%", color: "white", width: "18px", height: "18px", fontSize: "0.65rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>✕</button>
                 </div>
@@ -1926,7 +1926,7 @@ function JobForm({ formData, setFormData, onSave, onCancel, toggleDay, formSavin
               const globalIdx = existingPhotos.length + i;
               const isActive = Math.min(previewIndex, existingPhotos.length + photoFiles.length - 1) === globalIdx;
               return (
-                <div key={i} onClick={() => setPreviewIndex(globalIdx)} style={{ position: "relative", width: "72px", height: "72px", borderRadius: "0.4rem", overflow: "hidden", border: `2px solid ${isActive ? "#6366f1" : "#d1d5db"}`, cursor: "pointer", boxShadow: isActive ? "0 0 0 2px #a5b4fc" : "none" }}>
+                <div key={i} onClick={() => setPreviewIndex(globalIdx)} style={{ position: "relative", width: "72px", height: "72px", borderRadius: "0.4rem", overflow: "hidden", border: `2px solid ${isActive ? "#A21D54" : "#d1d5db"}`, cursor: "pointer", boxShadow: isActive ? "0 0 0 2px #f48fb1" : "none" }}>
                   <img src={URL.createObjectURL(file)} alt={file.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   <button type="button" onClick={e => { e.stopPropagation(); removeNewPhoto(i); }} style={{ position: "absolute", top: "2px", right: "2px", backgroundColor: "rgba(0,0,0,0.55)", border: "none", borderRadius: "50%", color: "white", width: "18px", height: "18px", fontSize: "0.65rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>✕</button>
                 </div>
@@ -2119,7 +2119,7 @@ function AvailabilityHeatmap({ data }) {
                   const bg = count === 0 ? "#f1f5f9"
                     : isWeekend
                       ? `rgba(245,158,11,${0.15 + intensity * 0.75})`
-                      : `rgba(99,102,241,${0.15 + intensity * 0.75})`;
+                      : `rgba(162,29,84,${0.15 + intensity * 0.75})`;
                   return (
                     <td key={slot} title={`${day} ${slot} — ${count} student${count !== 1 ? "s" : ""}`} style={{ padding: "2px", textAlign: "center" }}>
                       <div style={{ width: "100%", minWidth: "20px", height: "20px", borderRadius: "3px", backgroundColor: bg, display: "flex", alignItems: "center", justifyContent: "center", color: intensity > 0.5 ? "white" : "#64748b", fontWeight: "700", fontSize: "0.6rem" }}>
@@ -2155,7 +2155,7 @@ const navBtn        = { background: "none", border: "1.5px solid rgba(255,255,25
 const cvHeaderBtn   = { background: "none", border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: "0.4rem", color: "white", fontSize: "0.75rem", fontWeight: "600", padding: "0.25rem 0.6rem", cursor: "pointer", fontFamily: "inherit" };
 const btnSmallBase  = { padding: "0.32rem 0.75rem", borderRadius: "2rem", border: "none", color: "white", fontWeight: "700", cursor: "pointer", fontSize: "0.75rem", fontFamily: "inherit" };
 const btnSmallGreen = { ...btnSmallBase, background: "linear-gradient(135deg, #10b981, #059669)", boxShadow: "0 2px 6px rgba(16,185,129,0.3)" };
-const btnSmallBlue  = { ...btnSmallBase, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", boxShadow: "0 2px 6px rgba(99,102,241,0.3)" };
+const btnSmallBlue  = { ...btnSmallBase, background: "linear-gradient(135deg, #A21D54, #C2185B)", boxShadow: "0 2px 6px rgba(162,29,84,0.3)" };
 const btnSmallGray   = { ...btnSmallBase, backgroundColor: "#64748b" };
 const btnSmallPurple = { ...btnSmallBase, background: "linear-gradient(135deg, #a855f7, #7c3aed)", boxShadow: "0 2px 6px rgba(168,85,247,0.3)" };
 const btnSmallRed    = { ...btnSmallBase, background: "linear-gradient(135deg, #f43f5e, #e11d48)", boxShadow: "0 2px 6px rgba(244,63,94,0.3)" };

@@ -15,9 +15,9 @@ export default function Header({ currentUser, setPage, likedJobs, appliedJobs, n
       gridTemplateColumns: "1fr auto 1fr",
       alignItems: "center",
       padding: "0.9rem 2.5rem",
-      background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+      background: "linear-gradient(135deg, #A21D54 0%, #C2185B 100%)",
       color: "white",
-      boxShadow: "0 4px 20px rgba(0,0,0,0.25)",
+      boxShadow: "0 4px 20px rgba(162,29,84,0.35)",
       position: "sticky",
       top: 0,
       zIndex: 100,
@@ -42,15 +42,12 @@ export default function Header({ currentUser, setPage, likedJobs, appliedJobs, n
       {/* Centre — Logo */}
       <div
         className="header-logo"
-        style={{ display: "flex", alignItems: "center", gap: "0.85rem", cursor: "pointer" }}
+        style={{ display: "flex", alignItems: "center", gap: "0.75rem", cursor: "pointer" }}
         onClick={() => setPage("studentDashboard")}
       >
         <div className="header-logo-icon"><LogoIcon /></div>
-        <div className="header-logo-text" style={{ lineHeight: "1.15" }}>
-          <div className="logo-student" style={{ margin: 0, fontSize: "2.1rem", fontWeight: "800", background: "linear-gradient(90deg, #6366f1, #8b5cf6, #a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", letterSpacing: "-0.02em" }}>Student</div>
-          <div className="logo-shifts" style={{ margin: 0, fontSize: "2.1rem", fontWeight: "800", letterSpacing: "-0.02em" }}>
-            <span style={{ color: "white" }}>Shifts</span><span style={{ color: "#6366f1" }}>.ie</span>
-          </div>
+        <div className="header-logo-text" style={{ lineHeight: "1.1" }}>
+          <div className="logo-student" style={{ margin: 0, fontSize: "1.7rem", fontWeight: "800", color: "white", letterSpacing: "-0.02em" }}>StudentShifts<span style={{ color: "rgba(255,255,255,0.7)" }}>.ie</span></div>
         </div>
       </div>
 
@@ -96,25 +93,22 @@ export default function Header({ currentUser, setPage, likedJobs, appliedJobs, n
 
 function LogoIcon() {
   return (
-    <svg width="68" height="76" viewBox="0 0 46 52" fill="none">
-      <defs>
-        <linearGradient id="logoHeart" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#f43f5e" />
-          <stop offset="100%" stopColor="#e11d48" />
-        </linearGradient>
-        <clipPath id="logoHeartClip">
-          <path d="M23 48 C23 48 3 36 3 22 C3 14 9 8 16.5 8 C19.8 8 22.5 9.6 23 12 C23.5 9.6 26.2 8 29.5 8 C37 8 43 14 43 22 C43 36 23 48 23 48Z" />
-        </clipPath>
-      </defs>
-      <path d="M23 48 C23 48 3 36 3 22 C3 14 9 8 16.5 8 C19.8 8 22.5 9.6 23 12 C23.5 9.6 26.2 8 29.5 8 C37 8 43 14 43 22 C43 36 23 48 23 48Z" fill="url(#logoHeart)" />
-      <g clipPath="url(#logoHeartClip)">
-        <line x1="3" y1="20" x2="43" y2="20" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
-        <line x1="3" y1="28" x2="43" y2="28" stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" />
-        <line x1="3" y1="36" x2="43" y2="36" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" />
-      </g>
-      <rect x="14" y="3" width="4" height="9" rx="2" fill="white" opacity="0.8" />
-      <rect x="28" y="3" width="4" height="9" rx="2" fill="white" opacity="0.8" />
-    </svg>
+    <div style={{
+      width: "44px",
+      height: "44px",
+      borderRadius: "12px",
+      backgroundColor: "white",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+      flexShrink: 0,
+    }}>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+        <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3z" fill="#A21D54"/>
+        <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z" fill="#C2185B"/>
+      </svg>
+    </div>
   );
 }
 
@@ -129,7 +123,7 @@ function PersonIcon() {
 
 function CountBadge({ n }) {
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.18)", borderRadius: "999px", padding: "0 0.45rem", fontSize: "0.68rem", fontWeight: "700", minWidth: "18px", height: "18px" }}>
+    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.25)", borderRadius: "999px", padding: "0 0.45rem", fontSize: "0.68rem", fontWeight: "700", minWidth: "18px", height: "18px" }}>
       {n}
     </span>
   );
@@ -140,22 +134,22 @@ function CountBadge({ n }) {
 const navBtnPrimary = {
   padding: "0.48rem 1.1rem",
   borderRadius: "2rem",
-  background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-  color: "white",
+  background: "white",
+  color: "#A21D54",
   border: "none",
   cursor: "pointer",
   fontWeight: "700",
   fontSize: "0.82rem",
-  boxShadow: "0 4px 14px rgba(99,102,241,0.45)",
+  boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
   fontFamily: "inherit",
 };
 
 const navBtnOutline = {
   padding: "0.45rem 1.1rem",
   borderRadius: "2rem",
-  backgroundColor: "transparent",
+  backgroundColor: "rgba(255,255,255,0.15)",
   color: "white",
-  border: "1.5px solid rgba(255,255,255,0.28)",
+  border: "1.5px solid rgba(255,255,255,0.5)",
   cursor: "pointer",
   fontWeight: "600",
   fontSize: "0.82rem",
@@ -166,8 +160,8 @@ const notifDot = {
   position: "absolute",
   top: "-4px",
   right: "-4px",
-  backgroundColor: "#f43f5e",
-  color: "white",
+  backgroundColor: "#fff",
+  color: "#A21D54",
   fontSize: "0.62rem",
   fontWeight: "700",
   width: "16px",
@@ -177,5 +171,5 @@ const notifDot = {
   alignItems: "center",
   justifyContent: "center",
   pointerEvents: "none",
-  border: "2px solid #0f172a",
+  border: "2px solid #C2185B",
 };

@@ -273,9 +273,9 @@ export default function StudentDashboard({
 
   const dropdownBtnStyle = (isActive) => ({
     padding: "0.45rem 1rem", borderRadius: "2rem",
-    border: `1.5px solid ${isActive ? "#6366f1" : "#e2e8f0"}`,
-    backgroundColor: isActive ? "#eef2ff" : "white",
-    color: isActive ? "#4f46e5" : "#64748b",
+    border: `1.5px solid ${isActive ? "#A21D54" : "#e2e8f0"}`,
+    backgroundColor: isActive ? "#fce7f3" : "white",
+    color: isActive ? "#A21D54" : "#64748b",
     fontWeight: isActive ? "700" : "500",
     fontSize: "0.82rem", cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit",
   });
@@ -308,7 +308,7 @@ export default function StudentDashboard({
                 flex: 1, padding: "0.55rem", borderRadius: "0.6rem", border: "none",
                 fontWeight: "600", fontSize: "0.875rem", cursor: "pointer", fontFamily: "inherit",
                 backgroundColor: prefOnly === val ? "white" : "transparent",
-                color: prefOnly === val ? "#6366f1" : "#64748b",
+                color: prefOnly === val ? "#A21D54" : "#64748b",
                 boxShadow: prefOnly === val ? "0 1px 6px rgba(0,0,0,0.1)" : "none",
               }}
             >
@@ -348,7 +348,7 @@ export default function StudentDashboard({
                     { value: "distanceFar",  label: "Distance: Furthest → Closest" },
                   ] : []),
                 ].map(({ value, label }) => (
-                  <label key={value} style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.4rem", cursor: "pointer", fontWeight: sortBy === value ? "700" : "500", color: sortBy === value ? "#4f46e5" : "#374151", fontSize: "0.85rem" }}>
+                  <label key={value} style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.4rem", cursor: "pointer", fontWeight: sortBy === value ? "700" : "500", color: sortBy === value ? "#A21D54" : "#374151", fontSize: "0.85rem" }}>
                     <input type="radio" name="sortBy" checked={sortBy === value} onChange={() => { setSortBy(value); setOpenDropdown(null); }} style={{ cursor: "pointer" }} />
                     {label}
                   </label>
@@ -432,7 +432,7 @@ export default function StudentDashboard({
                   { label: "All Week",     active: allWeekOnly, toggle: () => setAllWeekOnly(p => !p) },
                   { label: "No Weekends",  active: noWeekends,  toggle: () => setNoWeekends(p => !p) },
                 ].map(({ label, active, toggle }) => (
-                  <label key={label} style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.4rem", cursor: "pointer", fontWeight: active ? "700" : "500", color: active ? "#4f46e5" : "#374151", fontSize: "0.85rem" }}>
+                  <label key={label} style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.4rem", cursor: "pointer", fontWeight: active ? "700" : "500", color: active ? "#A21D54" : "#374151", fontSize: "0.85rem" }}>
                     <input type="checkbox" checked={active} onChange={toggle} style={{ width: "15px", height: "15px", cursor: "pointer" }} />
                     {label}
                   </label>
@@ -449,14 +449,14 @@ export default function StudentDashboard({
                         {distanceKm === 0 ? "Any distance" : `Within ${distanceKm} km`}
                       </span>
                       {distanceKm > 0 && (
-                        <button onClick={() => setDistanceKm(0)} style={{ fontSize: "0.72rem", color: "#6366f1", background: "none", border: "none", cursor: "pointer", fontWeight: "700", padding: 0, fontFamily: "inherit" }}>Reset</button>
+                        <button onClick={() => setDistanceKm(0)} style={{ fontSize: "0.72rem", color: "#A21D54", background: "none", border: "none", cursor: "pointer", fontWeight: "700", padding: 0, fontFamily: "inherit" }}>Reset</button>
                       )}
                     </div>
                     <input
                       type="range" min="0" max="50" step="1"
                       value={distanceKm}
                       onChange={e => setDistanceKm(Number(e.target.value))}
-                      style={{ width: "100%", accentColor: "#6366f1", cursor: "pointer" }}
+                      style={{ width: "100%", accentColor: "#A21D54", cursor: "pointer" }}
                     />
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.68rem", color: "#9ca3af", marginTop: "0.1rem" }}>
                       <span>0 km</span><span>25 km</span><span>50 km</span>
@@ -480,11 +480,11 @@ export default function StudentDashboard({
 
           {/* Grid toggle */}
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "0.3rem", backgroundColor: "#f1f5f9", borderRadius: "0.6rem", padding: "0.2rem" }}>
-            <button onClick={() => setGridCols(1)} title="Single column" style={{ padding: "0.3rem 0.5rem", border: "none", borderRadius: "0.45rem", cursor: "pointer", backgroundColor: gridCols === 1 ? "white" : "transparent", color: gridCols === 1 ? "#6366f1" : "#94a3b8", fontWeight: "700", fontSize: "1rem", boxShadow: gridCols === 1 ? "0 1px 4px rgba(0,0,0,0.1)" : "none", lineHeight: 1, fontFamily: "inherit" }}>▤</button>
-            <button onClick={() => setGridCols(2)} title="Two columns" style={{ padding: "0.3rem 0.5rem", border: "none", borderRadius: "0.45rem", cursor: "pointer", backgroundColor: gridCols === 2 ? "white" : "transparent", color: gridCols === 2 ? "#6366f1" : "#94a3b8", fontWeight: "700", fontSize: "1rem", boxShadow: gridCols === 2 ? "0 1px 4px rgba(0,0,0,0.1)" : "none", lineHeight: 1, fontFamily: "inherit" }}>▦</button>
+            <button onClick={() => setGridCols(1)} title="Single column" style={{ padding: "0.3rem 0.5rem", border: "none", borderRadius: "0.45rem", cursor: "pointer", backgroundColor: gridCols === 1 ? "white" : "transparent", color: gridCols === 1 ? "#A21D54" : "#94a3b8", fontWeight: "700", fontSize: "1rem", boxShadow: gridCols === 1 ? "0 1px 4px rgba(0,0,0,0.1)" : "none", lineHeight: 1, fontFamily: "inherit" }}>▤</button>
+            <button onClick={() => setGridCols(2)} title="Two columns" style={{ padding: "0.3rem 0.5rem", border: "none", borderRadius: "0.45rem", cursor: "pointer", backgroundColor: gridCols === 2 ? "white" : "transparent", color: gridCols === 2 ? "#A21D54" : "#94a3b8", fontWeight: "700", fontSize: "1rem", boxShadow: gridCols === 2 ? "0 1px 4px rgba(0,0,0,0.1)" : "none", lineHeight: 1, fontFamily: "inherit" }}>▦</button>
           </div>
 
-          <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "#4f46e5", backgroundColor: "#eef2ff", padding: "0.25rem 0.7rem", borderRadius: "999px" }}>
+          <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "#A21D54", backgroundColor: "#fce7f3", padding: "0.25rem 0.7rem", borderRadius: "999px" }}>
             {displayJobs.length} job{displayJobs.length !== 1 ? "s" : ""}
           </span>
         </div>
@@ -510,7 +510,7 @@ export default function StudentDashboard({
           <p style={{ fontSize: "0.875rem", marginBottom: "1.25rem" }}>
             {searchQuery.trim() ? `No results for "${searchQuery}" — try a different keyword.` : "Try removing some filters to see more results."}
           </p>
-          <button onClick={clearAll} style={{ padding: "0.6rem 1.5rem", borderRadius: "2rem", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "white", border: "none", fontWeight: "700", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 4px 14px rgba(99,102,241,0.35)" }}>
+          <button onClick={clearAll} style={{ padding: "0.6rem 1.5rem", borderRadius: "2rem", background: "linear-gradient(135deg, #A21D54, #C2185B)", color: "white", border: "none", fontWeight: "700", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 4px 14px rgba(162,29,84,0.35)" }}>
             Clear All Filters
           </button>
         </div>
@@ -625,7 +625,7 @@ export default function StudentDashboard({
                 {/* Day tags */}
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem" }}>
                   {job.days.map(day => (
-                    <span key={day} style={{ fontSize: "0.7rem", backgroundColor: "#eef2ff", color: "#4f46e5", padding: "0.15rem 0.5rem", borderRadius: "999px", fontWeight: "600" }}>
+                    <span key={day} style={{ fontSize: "0.7rem", backgroundColor: "#fce7f3", color: "#A21D54", padding: "0.15rem 0.5rem", borderRadius: "999px", fontWeight: "600" }}>
                       {day.slice(0, 3)} · {job.times[day]?.join(", ")}
                     </span>
                   ))}
@@ -646,7 +646,7 @@ const dropdownPanel = {
 };
 
 const btnBase = { padding: "0.38rem 0.9rem", borderRadius: "2rem", color: "white", border: "none", cursor: "pointer", fontWeight: "700", fontSize: "0.8rem", fontFamily: "inherit" };
-const btnBlue = { ...btnBase, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", boxShadow: "0 2px 8px rgba(99,102,241,0.3)" };
+const btnBlue = { ...btnBase, background: "linear-gradient(135deg, #A21D54, #C2185B)", boxShadow: "0 2px 8px rgba(162,29,84,0.3)" };
 
 const arrowBtn = (side) => ({
   position: "absolute", top: "50%", [side]: "8px",
@@ -659,4 +659,4 @@ const arrowBtn = (side) => ({
 });
 const filterSectionLabel = { fontSize: "0.72rem", fontWeight: "700", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 0.4rem" };
 const subSectionBtn = { display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", background: "none", border: "none", padding: "0.35rem 0", cursor: "pointer", fontWeight: "600", fontSize: "0.88rem", color: "#1e293b", fontFamily: "inherit", textAlign: "left" };
-const activePip = { display: "inline-flex", alignItems: "center", justifyContent: "center", backgroundColor: "#6366f1", color: "white", borderRadius: "999px", fontSize: "0.65rem", fontWeight: "700", minWidth: "16px", height: "16px", padding: "0 0.3rem", marginLeft: "0.3rem" };
+const activePip = { display: "inline-flex", alignItems: "center", justifyContent: "center", backgroundColor: "#A21D54", color: "white", borderRadius: "999px", fontSize: "0.65rem", fontWeight: "700", minWidth: "16px", height: "16px", padding: "0 0.3rem", marginLeft: "0.3rem" };

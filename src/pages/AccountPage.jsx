@@ -273,7 +273,7 @@ export default function AccountPage({
                 : <PersonIcon />
               }
             </div>
-            <label style={{ position: "absolute", bottom: "2px", right: "2px", width: "26px", height: "26px", borderRadius: "50%", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", border: "2px solid white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.7rem" }}>
+            <label style={{ position: "absolute", bottom: "2px", right: "2px", width: "26px", height: "26px", borderRadius: "50%", background: "linear-gradient(135deg, #A21D54, #C2185B)", border: "2px solid white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.7rem" }}>
               📷
               <input type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhotoChange} />
             </label>
@@ -426,9 +426,9 @@ export default function AccountPage({
                     style={{
                       padding: "0.3rem 0.75rem", borderRadius: "999px", fontSize: "0.78rem", fontWeight: "600",
                       cursor: "pointer", fontFamily: "inherit",
-                      border: `1.5px solid ${active ? "#6366f1" : "#e2e8f0"}`,
-                      backgroundColor: active ? "#eef2ff" : "white",
-                      color: active ? "#4f46e5" : "#64748b",
+                      border: `1.5px solid ${active ? "#A21D54" : "#e2e8f0"}`,
+                      backgroundColor: active ? "#fce7f3" : "white",
+                      color: active ? "#A21D54" : "#64748b",
                     }}
                   >
                     {active ? "✓ " : ""}{cat}
@@ -459,9 +459,9 @@ export default function AccountPage({
                     style={{
                       padding: "0.3rem 0.75rem", borderRadius: "999px", fontSize: "0.78rem", fontWeight: "600",
                       cursor: "pointer", fontFamily: "inherit",
-                      border: `1.5px solid ${active ? "#6366f1" : "#e2e8f0"}`,
-                      backgroundColor: active ? "#eef2ff" : "white",
-                      color: active ? "#4f46e5" : "#64748b",
+                      border: `1.5px solid ${active ? "#A21D54" : "#e2e8f0"}`,
+                      backgroundColor: active ? "#fce7f3" : "white",
+                      color: active ? "#A21D54" : "#64748b",
                     }}
                   >
                     {active ? "✓ " : ""}{cat}
@@ -766,9 +766,9 @@ function AvailabilityPicker({ value, onChange }) {
                     onClick={() => toggle(day, slot)}
                     style={{
                       padding: "0.2rem 0.5rem", borderRadius: "0.35rem", fontSize: "0.72rem", fontWeight: "600", cursor: "pointer",
-                      border: `1.5px solid ${active ? (isWeekend ? "#f59e0b" : "#6366f1") : "#e2e8f0"}`,
-                      backgroundColor: active ? (isWeekend ? "#fef3c7" : "#eef2ff") : "white",
-                      color: active ? (isWeekend ? "#d97706" : "#4f46e5") : "#94a3b8",
+                      border: `1.5px solid ${active ? (isWeekend ? "#f59e0b" : "#A21D54") : "#e2e8f0"}`,
+                      backgroundColor: active ? (isWeekend ? "#fef3c7" : "#fce7f3") : "white",
+                      color: active ? (isWeekend ? "#d97706" : "#A21D54") : "#94a3b8",
                     }}
                   >
                     {slot}
@@ -786,7 +786,7 @@ function AvailabilityPicker({ value, onChange }) {
 const labelStyle  = { display: "block", fontWeight: "600", fontSize: "0.875rem", color: "#374151", marginBottom: "0.3rem" };
 const inputStyle  = { width: "100%", padding: "0.6rem 0.75rem", marginBottom: "1rem", borderRadius: "0.65rem", border: "1.5px solid #e2e8f0", fontSize: "0.9rem", boxSizing: "border-box", fontFamily: "inherit", color: "#1e293b", backgroundColor: "white" };
 const btnBase     = { width: "100%", padding: "0.8rem", borderRadius: "2rem", border: "none", color: "white", fontWeight: "700", cursor: "pointer", fontSize: "0.95rem", fontFamily: "inherit" };
-const btnPrimary  = { ...btnBase, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", boxShadow: "0 4px 14px rgba(99,102,241,0.35)" };
+const btnPrimary  = { ...btnBase, background: "linear-gradient(135deg, #A21D54, #C2185B)", boxShadow: "0 4px 14px rgba(162,29,84,0.35)" };
 const btnGray     = { ...btnBase, backgroundColor: "#64748b" };
 const btnRed      = { ...btnBase, background: "linear-gradient(135deg, #f43f5e, #e11d48)", boxShadow: "0 4px 14px rgba(244,63,94,0.3)" };
 const btnDelete   = { ...btnBase, backgroundColor: "transparent", border: "1.5px solid #fca5a5", color: "#dc2626", fontWeight: "600" };

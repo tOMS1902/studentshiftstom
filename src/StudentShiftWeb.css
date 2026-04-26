@@ -1,13 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Material+Icons+Outlined&display=swap');
 
 html, body, #root {
   margin: 0;
   padding: 0;
   min-height: 100%;
   width: 100%;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   color: #1e293b;
-  background-color: #f1f5f9;
+  background-color: #FAFAFA;
   overflow-x: hidden;
 }
 
@@ -48,7 +48,7 @@ header {
   align-items: center;
   justify-content: flex-start;
   padding: 2rem;
-  background-color: #f1f5f9;
+  background-color: #FAFAFA;
   box-sizing: border-box;
 }
 
@@ -74,7 +74,7 @@ header {
   color: #1e293b;
 }
 
-.view-btn  { background-color: #6366f1; color: white; }
+.view-btn  { background-color: #A21D54; color: white; }
 .apply-btn { background-color: #10b981; color: white; }
 .back-btn  { background-color: #64748b; color: white; }
 
@@ -209,7 +209,7 @@ header {
 
 .job-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 32px rgba(99,102,241,0.14);
+  box-shadow: 0 10px 32px rgba(162,29,84,0.14);
 }
 
 .job-card:last-child {
