@@ -4,7 +4,7 @@ import "../StudentShiftWeb.css";
 import { jobCategories } from "../data/jobCategories";
 import { geocodeAddress } from "../utils/geo";
 import { supabase, withTimeout } from "../lib/supabase";
-import { sendEmail, emailApplicantAccepted, emailApplicantDeclined, emailCompanyInterested, fetchAvailabilityHeatmap, fetchAllVerifiedStudents, fetchMessages, sendMessage } from "../lib/auth";
+import { sendEmail, emailApplicantAccepted, emailApplicantDeclined, emailCompanyInterested, fetchAvailabilityHeatmap, fetchAllVerifiedStudents, fetchMessages, sendMessage, updateApplicationStage, saveApplicationNotes } from "../lib/auth";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -365,6 +365,29 @@ export default function CompanyDashboard({ setPage, currentUser }) {
     setActivePosting(prev => updater(prev));
   };
 
+  const handleStageChange = async (applicationId, newStage) => {
+    try {
+      await updateApplicationStage(applicationId, newStage);
+      const updater = p => ({
+        ...p,
+        applicants: p.applicants.map(a => a.id === applicationId ? { ...a, pipelineStage: newStage } : a),
+      });
+      setPostings(prev => prev.map(p => p.id === activePosting?.id ? updater(p) : p));
+      setActivePosting(prev => prev ? updater(prev) : prev);
+    } catch {
+      alert("Failed to update stage. Please try again.");
+    }
+  };
+
+  const handleNotesSaved = (applicationId, notes) => {
+    const updater = p => ({
+      ...p,
+      applicants: p.applicants.map(a => a.id === applicationId ? { ...a, notes } : a),
+    });
+    setPostings(prev => prev.map(p => p.id === activePosting?.id ? updater(p) : p));
+    setActivePosting(prev => prev ? updater(prev) : prev);
+  };
+
   const verificationStatus = currentUser?.verificationStatus;
   const isVerified = verificationStatus === "verified";
 
@@ -500,7 +523,7 @@ export default function CompanyDashboard({ setPage, currentUser }) {
       {/* Applicants Modal */}
       {modal === "applicants" && activePosting && (
         <Modal onClose={closeModal} title={`Applicants — ${activePosting.title}`}>
-          <ApplicantsView posting={activePosting} onUpdateStatus={updateApplicantStatus} companyId={currentUser?.id} />
+          <ApplicantsView posting={activePosting} onUpdateStatus={updateApplicantStatus} onStageChange={handleStageChange} onNotesSaved={handleNotesSaved} companyId={currentUser?.id} />
         </Modal>
       )}
 
@@ -931,8 +954,9 @@ const PIPELINE_STAGES = [
   { key: "decision",    label: "Decision" },
 ];
 
-function ApplicantsView({ posting, onUpdateStatus, companyId }) {
-  const [activeStage, setActiveStage] = useState("applied");
+function ApplicantsView({ posting, onUpdateStatus, onStageChange, onNotesSaved, companyId }) {
+  const [activeStage, setActiveStage]         = useState("applied");
+  const [selectedApplicant, setSelectedApplicant] = useState(null);
 
   if (posting.applicantsLoading) {
     return <p style={{ color: "#6b7280", textAlign: "center", padding: "2rem 1rem" }}>Loading applicants…</p>;
@@ -946,6 +970,17 @@ function ApplicantsView({ posting, onUpdateStatus, companyId }) {
 
   const countFor = (stage) => posting.applicants.filter(a => a.pipelineStage === stage).length;
   const visible  = posting.applicants.filter(a => a.pipelineStage === activeStage);
+
+  // Keep selected applicant in sync when parent state updates (stage/notes changes)
+  const liveSelected = selectedApplicant
+    ? posting.applicants.find(a => a.id === selectedApplicant.id) || selectedApplicant
+    : null;
+
+  const handleStageAction = async (applicationId, newStage) => {
+    await onStageChange(applicationId, newStage);
+    setSelectedApplicant(null);
+    setActiveStage(newStage);
+  };
 
   return (
     <div>
@@ -992,27 +1027,264 @@ function ApplicantsView({ posting, onUpdateStatus, companyId }) {
         })}
       </div>
 
-      {/* Applicant cards for active stage */}
+      {/* Compact applicant rows for active stage */}
       {visible.length === 0 ? (
         <p style={{ color: "#94a3b8", textAlign: "center", padding: "2rem 1rem", fontSize: "0.875rem" }}>
           No applicants in this stage yet.
         </p>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
           {visible.map(applicant => (
-            <ApplicantCard
+            <ApplicantRow
               key={applicant.id}
               applicant={applicant}
-              postingId={posting.id}
-              onUpdateStatus={onUpdateStatus}
-              companyId={companyId}
+              onClick={() => setSelectedApplicant(applicant)}
             />
           ))}
         </div>
       )}
+
+      {/* Detail panel */}
+      {liveSelected && (
+        <DetailPanel
+          applicant={liveSelected}
+          postingId={posting.id}
+          companyId={companyId}
+          onClose={() => setSelectedApplicant(null)}
+          onStageAction={handleStageAction}
+          onUpdateStatus={onUpdateStatus}
+          onNotesSaved={onNotesSaved}
+        />
+      )}
     </div>
   );
 }
+
+function ApplicantRow({ applicant, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: "100%", display: "flex", alignItems: "center", gap: "0.75rem",
+        padding: "0.65rem 0.85rem", borderRadius: "0.6rem",
+        border: "1.5px solid #e2e8f0", backgroundColor: "white",
+        cursor: "pointer", fontFamily: "inherit", textAlign: "left",
+      }}
+    >
+      {/* Photo */}
+      <div style={{ width: "36px", height: "36px", borderRadius: "50%", overflow: "hidden", flexShrink: 0, backgroundColor: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        {applicant.profilePhoto
+          ? <img src={applicant.profilePhoto} alt={applicant.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        }
+      </div>
+      {/* Name + skills */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ margin: 0, fontWeight: "700", fontSize: "0.875rem", color: "#1e293b" }}>{applicant.name}</p>
+        {applicant.skills?.length > 0 && (
+          <div style={{ display: "flex", gap: "0.25rem", marginTop: "0.25rem", flexWrap: "wrap" }}>
+            {applicant.skills.slice(0, 3).map(s => (
+              <span key={s} style={{ fontSize: "0.65rem", backgroundColor: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe", borderRadius: "999px", padding: "0.05rem 0.4rem", fontWeight: "600" }}>{s}</span>
+            ))}
+          </div>
+        )}
+      </div>
+      {/* Chevron */}
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+  );
+}
+
+function DetailPanel({ applicant, postingId, companyId, onClose, onStageAction, onUpdateStatus, onNotesSaved }) {
+  const [cvUrl, setCvUrl]     = useState(null);
+  const [clUrl, setClUrl]     = useState(null);
+  const [cvLoading, setCvLoading] = useState(false);
+  const [clLoading, setClLoading] = useState(false);
+  const [cvOpen, setCvOpen]   = useState(false);
+  const [clOpen, setClOpen]   = useState(false);
+  const [notes, setNotes]     = useState(applicant.notes || "");
+  const [notesSaving, setNotesSaving] = useState(false);
+
+  // Sync notes if applicant prop changes (e.g. parent refresh)
+  useEffect(() => { setNotes(applicant.notes || ""); }, [applicant.id]);
+
+  const openCv = async () => {
+    if (!cvUrl) {
+      setCvLoading(true);
+      try {
+        const { getSignedDocumentUrl } = await import("../lib/auth");
+        setCvUrl(await getSignedDocumentUrl("documents", applicant.cvName));
+      } catch { alert("Could not load CV. Please try again."); setCvLoading(false); return; }
+      setCvLoading(false);
+    }
+    setCvOpen(true);
+  };
+
+  const openCoverLetter = async () => {
+    if (!clUrl) {
+      setClLoading(true);
+      try {
+        const { getSignedDocumentUrl } = await import("../lib/auth");
+        setClUrl(await getSignedDocumentUrl("documents", applicant.coverLetterName));
+      } catch { alert("Could not load cover letter. Please try again."); setClLoading(false); return; }
+      setClLoading(false);
+    }
+    setClOpen(true);
+  };
+
+  const handleNotesBlur = async () => {
+    if (notes === applicant.notes) return;
+    setNotesSaving(true);
+    try {
+      await saveApplicationNotes(applicant.id, notes);
+      onNotesSaved(applicant.id, notes);
+    } catch { /* silently ignore — notes are non-critical */ }
+    setNotesSaving(false);
+  };
+
+  const stage = applicant.pipelineStage || "applied";
+
+  return (
+    <>
+      {cvOpen && cvUrl && <PdfModal url={cvUrl} label={`${applicant.name}'s CV`} fileName={`${applicant.name.replace(/\s+/g, "_")}_CV.pdf`} onClose={() => setCvOpen(false)} />}
+      {clOpen && clUrl && <PdfModal url={clUrl} label={`${applicant.name}'s Cover Letter`} fileName={`${applicant.name.replace(/\s+/g, "_")}_Cover_Letter.pdf`} onClose={() => setClOpen(false)} />}
+
+      {/* Backdrop */}
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(15,23,42,0.45)", zIndex: 1100 }} />
+
+      {/* Panel */}
+      <div style={{
+        position: "fixed", top: 0, right: 0, bottom: 0,
+        width: "min(440px, 100vw)",
+        backgroundColor: "white",
+        zIndex: 1101,
+        display: "flex", flexDirection: "column",
+        boxShadow: "-8px 0 32px rgba(0,0,0,0.18)",
+        overflowY: "auto",
+      }}>
+        {/* Header */}
+        <div style={{ padding: "1rem 1.25rem", borderBottom: "1.5px solid #e2e8f0", display: "flex", alignItems: "center", gap: "0.75rem", flexShrink: 0 }}>
+          <div style={{ width: "48px", height: "48px", borderRadius: "50%", overflow: "hidden", flexShrink: 0, backgroundColor: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {applicant.profilePhoto
+              ? <img src={applicant.profilePhoto} alt={applicant.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              : <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            }
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ margin: 0, fontWeight: "800", fontSize: "1rem", color: "#1e293b" }}>{applicant.name}</p>
+            <StatusBadge status={applicant.status} />
+          </div>
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: "1.3rem", cursor: "pointer", color: "#64748b", lineHeight: 1, padding: "0.25rem" }}>✕</button>
+        </div>
+
+        {/* Body */}
+        <div style={{ padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1.1rem", flex: 1 }}>
+
+          {/* Bio */}
+          <Section label="Bio">
+            <p style={{ margin: 0, fontSize: "0.85rem", color: applicant.bio ? "#374151" : "#9ca3af", fontStyle: applicant.bio ? "normal" : "italic", lineHeight: 1.6 }}>
+              {applicant.bio || "Not provided"}
+            </p>
+          </Section>
+
+          {/* Skills */}
+          <Section label="Skills">
+            {applicant.skills?.length > 0 ? (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem" }}>
+                {applicant.skills.map(s => (
+                  <span key={s} style={{ fontSize: "0.72rem", backgroundColor: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe", borderRadius: "999px", padding: "0.15rem 0.5rem", fontWeight: "600" }}>{s}</span>
+                ))}
+              </div>
+            ) : <p style={{ margin: 0, fontSize: "0.85rem", color: "#9ca3af", fontStyle: "italic" }}>Not listed</p>}
+          </Section>
+
+          {/* LinkedIn */}
+          <Section label="LinkedIn">
+            {applicant.linkedin && /^https?:\/\//i.test(applicant.linkedin)
+              ? <a href={applicant.linkedin} target="_blank" rel="noreferrer" style={{ fontSize: "0.85rem", color: "#0a66c2", fontWeight: "600", textDecoration: "underline" }}>View Profile</a>
+              : <p style={{ margin: 0, fontSize: "0.85rem", color: "#9ca3af", fontStyle: "italic" }}>Not provided</p>
+            }
+          </Section>
+
+          {/* Documents */}
+          <Section label="Documents">
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+              <button
+                onClick={openCv}
+                disabled={!applicant.cvName || cvLoading}
+                style={{ padding: "0.4rem 0.9rem", borderRadius: "0.4rem", border: "1.5px solid #e2e8f0", backgroundColor: applicant.cvName ? "white" : "#f8fafc", color: applicant.cvName ? "#16a34a" : "#9ca3af", fontWeight: "600", fontSize: "0.8rem", cursor: applicant.cvName ? "pointer" : "default", fontFamily: "inherit" }}
+              >
+                {cvLoading ? "Loading…" : "📄 CV"}
+              </button>
+              <button
+                onClick={openCoverLetter}
+                disabled={!applicant.coverLetterName || clLoading}
+                style={{ padding: "0.4rem 0.9rem", borderRadius: "0.4rem", border: "1.5px solid #e2e8f0", backgroundColor: applicant.coverLetterName ? "white" : "#f8fafc", color: applicant.coverLetterName ? "#6366f1" : "#9ca3af", fontWeight: "600", fontSize: "0.8rem", cursor: applicant.coverLetterName ? "pointer" : "default", fontFamily: "inherit" }}
+              >
+                {clLoading ? "Loading…" : "📝 Cover Letter"}
+              </button>
+            </div>
+          </Section>
+
+          {/* Notes */}
+          <Section label={notesSaving ? "Notes (saving…)" : "Notes"}>
+            <textarea
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              onBlur={handleNotesBlur}
+              placeholder="Private notes visible only to your company…"
+              rows={3}
+              style={{ width: "100%", padding: "0.55rem 0.7rem", borderRadius: "0.5rem", border: "1.5px solid #e2e8f0", fontSize: "0.82rem", fontFamily: "inherit", resize: "vertical", boxSizing: "border-box", lineHeight: 1.5, color: "#374151" }}
+            />
+          </Section>
+
+          {/* Chat — only for accepted applicants */}
+          {applicant.status === "Accepted" && (
+            <Section label="Messages">
+              <ChatThread jobId={postingId} studentId={applicant.studentId} companyId={companyId} senderId={companyId} />
+            </Section>
+          )}
+        </div>
+
+        {/* Stage action buttons */}
+        <div style={{ padding: "1rem 1.25rem", borderTop: "1.5px solid #e2e8f0", display: "flex", flexDirection: "column", gap: "0.5rem", flexShrink: 0 }}>
+          {stage === "applied" && (
+            <button onClick={() => onStageAction(applicant.id, "shortlisted")} style={panelActionBtn("#6366f1")}>Shortlist →</button>
+          )}
+          {stage === "shortlisted" && (
+            <button onClick={() => onStageAction(applicant.id, "interview")} style={panelActionBtn("#6366f1")}>Invite to Interview →</button>
+          )}
+          {stage === "interview" && (<>
+            <button onClick={() => onStageAction(applicant.id, "trial")} style={panelActionBtn("#6366f1")}>Advance to Trial →</button>
+            <button onClick={() => onStageAction(applicant.id, "decision")} style={panelActionBtn("#475569")}>Skip to Decision →</button>
+          </>)}
+          {stage === "trial" && (
+            <button onClick={() => onStageAction(applicant.id, "decision")} style={panelActionBtn("#6366f1")}>Move to Decision →</button>
+          )}
+          {stage === "decision" && applicant.status === "Pending" && (<>
+            <button onClick={() => onUpdateStatus(applicant.id, "Accepted", applicant)} style={panelActionBtn("#16a34a")}>Hire this Applicant ✓</button>
+            <button onClick={() => onUpdateStatus(applicant.id, "Rejected", applicant)} style={panelActionBtn("#e11d48")}>Decline ✕</button>
+          </>)}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function Section({ label, children }) {
+  return (
+    <div>
+      <p style={{ margin: "0 0 0.35rem", fontSize: "0.68rem", fontWeight: "700", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</p>
+      {children}
+    </div>
+  );
+}
+
+const panelActionBtn = (color) => ({
+  width: "100%", padding: "0.65rem", borderRadius: "0.6rem", border: "none",
+  backgroundColor: color, color: "white", fontWeight: "700", fontSize: "0.875rem",
+  cursor: "pointer", fontFamily: "inherit",
+});
 
 function PdfModal({ url, label, fileName, onClose }) {
   const modalRef  = useRef(null);
